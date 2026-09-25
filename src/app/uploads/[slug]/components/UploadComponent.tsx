@@ -67,6 +67,15 @@ export interface IFile extends ImageProps {
   file?: File;
 }
 
+function formatVidClass(value: string) {
+  const lower = value.toLowerCase();
+  if (lower === "exclusive") return "Exclusive";
+  if (lower === "premium") return "Premium";
+  if (lower === "free") return "Free";
+  if (lower === "ad") return "AD";
+  return value;
+}
+
 export const AddComponent = ({
   slug,
   selectedMedia,
@@ -81,38 +90,44 @@ export const AddComponent = ({
       ? slug.includes("videos") && selectedMedia.artistName
         ? selectedMedia.artistName
         : selectedMedia.title
-      : ""
+      : "",
   );
   const [subtitle, setSubTitle] = useState<string>("");
   const [releaseDate, setReleaseDate] = useState<string>(
     selectedMedia
       ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString())
-      : ""
+      : "",
   );
   const [expiryDate, setExpiryDate] = useState<string>(
     selectedMedia
       ? new Date(selectedMedia.expiryDate).toISOString()
       : new Date(
-        new Date().setFullYear(new Date().getFullYear() + 1)
-      ).toISOString()
+          new Date().setFullYear(new Date().getFullYear() + 1),
+        ).toISOString(),
   );
   const [class_, setClass] = useState<string>(
-    selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select"
+    selectedMedia ? formatVidClass(selectedMedia.vidClass) : "Select",
   );
-  const [amount, setAmount] = useState<string>("");
-  const [currency, setCurrency] = useState<string>("");
+  const [amount, setAmount] = useState<string>(
+    selectedMedia?.amount != null && selectedMedia.amount !== ""
+      ? Number(selectedMedia.amount).toFixed(2)
+      : "",
+  );
+  const [currency, setCurrency] = useState<string>(
+    selectedMedia?.currency ?? "",
+  );
   const [PG, setPG] = useState<string>(
     selectedMedia
       ? selectedMedia.pg === "0"
         ? "G"
         : `${selectedMedia.pg}+`
-      : "Select"
+      : "Select",
   );
   const [portrait, setPortrait] = useState<IFile | null>(
-    selectedMedia ? { name: "", url: selectedMedia.portraitPhoto } : null
+    selectedMedia ? { name: "", url: selectedMedia.portraitPhoto } : null,
   );
   const [portrait_L, setPortrait_L] = useState<IFile | null>(
-    selectedMedia ? { name: "", url: selectedMedia.landscapePhoto } : null
+    selectedMedia ? { name: "", url: selectedMedia.landscapePhoto } : null,
   );
   const [subtitleFile, setSubtitleFile] = useState<IFile | null>(null);
   const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
@@ -124,10 +139,10 @@ export const AddComponent = ({
   const [urlLink, setUrlLink] = useState<string>("");
   const [urlLink_2, setUrlLink_2] = useState<string>("");
   const [time, setTime] = useState<string>(
-    selectedMedia ? selectedMedia.runtime : ""
+    selectedMedia ? selectedMedia.runtime : "",
   );
   const [rating, setRating] = useState<string>(
-    selectedMedia ? selectedMedia.averageRating.toString() : "Select"
+    selectedMedia ? selectedMedia.averageRating.toString() : "Select",
   );
   const [views, setViews] = useState<string>("Select");
   const [options, setOptions] = useState<string>("Select");
@@ -135,31 +150,31 @@ export const AddComponent = ({
 
   const [genriesList, setGenriesList] = useState<ICategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    selectedMedia ? selectedMedia.category.map((x) => x.name) : []
+    selectedMedia ? selectedMedia.category.map((x) => x.name) : [],
   );
   const [selectedGenries, setSelectedGenries] = useState<string[]>(
-    selectedMedia ? selectedMedia.genre.map((x) => x.name) : []
+    selectedMedia ? selectedMedia.genre.map((x) => x.name) : [],
   );
   const [selectedCasts, setSelectedCasts] = useState<ICast[]>(
-    selectedMedia ? selectedMedia.cast : []
+    selectedMedia ? selectedMedia.cast : [],
   );
   const [castTxt, setCastTxt] = useState<string>("");
   const [genriesPlaceholder, setGenriesPlaceholder] = useState<string>("");
   const [cat_List, setCat_List] = useState<ICategory[]>([]);
   const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
   const [links, setLinks] = useState<LinkViewProps | null>(
-    selectedMedia ? { url: selectedMedia.trailer } : null
+    selectedMedia ? { url: selectedMedia.trailer } : null,
   );
   const [links_2, setLinks_2] = useState<LinkViewProps | null>(
-    selectedMedia ? { url: selectedMedia.video } : null
+    selectedMedia ? { url: selectedMedia.video } : null,
   );
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [isPreview_2, setIsPreview_2] = useState<boolean>(false);
   const [details, setDetails] = useState(
-    selectedMedia ? selectedMedia.description ?? "" : ""
+    selectedMedia ? (selectedMedia.description ?? "") : "",
   );
   const [srtLoading, setSrtLoading] = useState<boolean>(false);
-  const [subtitleProcessingId, setSubtitleProcessingId] = useState<string>('');
+  const [subtitleProcessingId, setSubtitleProcessingId] = useState<string>("");
   const [seasonLoading, setSeasonLoading] = useState<boolean>(false);
   const maxLength = 200;
   const [seasons, setSeasons] = useState<ISeasonData[]>([]);
@@ -169,12 +184,12 @@ export const AddComponent = ({
   const [castContentList, setCastContentList] = useState<ICast[]>([]);
   // const [color, setColor] = useState<string>(selectedMedia ? selectedMedia.primaryColor : '');
   const [color, setColor] = useState<string>(
-    selectedMedia ? selectedMedia.primaryColor : "#D9D9D9" // ✅ Added fallback default
+    selectedMedia ? selectedMedia.primaryColor : "#D9D9D9", // ✅ Added fallback default
   );
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
-    {}
+    {},
   );
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
@@ -246,7 +261,7 @@ export const AddComponent = ({
     }
 
     const formattedTime = `${String(hr).padStart(2, "0")}:${String(
-      min
+      min,
     ).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 
     setTime(formattedTime);
@@ -260,7 +275,7 @@ export const AddComponent = ({
 
   function handleVideo(
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    type?: string
+    type?: string,
   ) {
     e.preventDefault();
     if (type === "2") {
@@ -416,26 +431,31 @@ export const AddComponent = ({
 
   async function handleFetchSubtitle() {
     if (!selectedMedia) return;
-    const res = await getSubtitles({ id: selectedMedia._id, type:'vod' });
+    const res = await getSubtitles({ id: selectedMedia._id, type: "vod" });
     if (res.ok && res.data) {
-      setSRTArray(res.data.data.map(x => ({language:x.language, srtFile:{url:x.src, name:x._id}})))
+      setSRTArray(
+        res.data.data.map((x) => ({
+          language: x.language,
+          srtFile: { url: x.src, name: x._id },
+        })),
+      );
     }
   }
 
-  async function handleDeleteSubtitle(id:string){
+  async function handleDeleteSubtitle(id: string) {
     try {
       setSubtitleProcessingId(id);
-      const res = await deleteSubtitles({id});
-      if(res.ok){
-         toast(`Subtitle Deleted Successfully`, { type: "success" });
-         setSRTArray(p => p.filter(x => x.srtFile.name !== id))
-      }else{
+      const res = await deleteSubtitles({ id });
+      if (res.ok) {
+        toast(`Subtitle Deleted Successfully`, { type: "success" });
+        setSRTArray((p) => p.filter((x) => x.srtFile.name !== id));
+      } else {
         toast(`${res.data?.message}`, { type: "error" });
       }
     } catch (error) {
-       toast(`${error}`, { type: "error" });
-    }finally{
-      setSubtitleProcessingId('');
+      toast(`${error}`, { type: "error" });
+    } finally {
+      setSubtitleProcessingId("");
       handleFetchSubtitle();
     }
   }
@@ -448,7 +468,7 @@ export const AddComponent = ({
       formdata.append("parentId", selectedMedia._id);
       formdata.append(
         "parentType",
-        slug.includes("series") ? "episode" : "vod"
+        slug.includes("series") ? "episode" : "vod",
       );
       formdata.append("language", subtitle_);
       formdata.append("subtitle", subtitleFile.file);
@@ -482,13 +502,13 @@ export const AddComponent = ({
   async function handleFetchSeasons() {
     if (!selectedMedia) return;
     try {
-      start()
+      start();
       const res = await getSeasons({ id: selectedMedia._id });
       if (res.ok && res.data) {
         setSeasons(res.data.data);
       }
     } finally {
-      stop()
+      stop();
     }
   }
 
@@ -583,9 +603,14 @@ export const AddComponent = ({
             amount: Number(amount.trim()),
             currency,
           }),
-          ...(slug.includes("videos") ? { artistName: title } : {
-            cast: typeof selectedCasts[0] === 'string' ? selectedCasts as any : selectedCasts.map((x) => x._id),
-          }),
+          ...(slug.includes("videos")
+            ? { artistName: title }
+            : {
+                cast:
+                  typeof selectedCasts[0] === "string"
+                    ? (selectedCasts as any)
+                    : selectedCasts.map((x) => x._id),
+              }),
         },
       };
 
@@ -610,16 +635,16 @@ export const AddComponent = ({
       const res = selectedMedia
         ? await editContent(formdata, selectedMedia._id)
         : await createContent(
-          formdata,
-          slug.includes("movies")
-            ? "movie"
-            : slug.includes("skits")
-              ? "skit"
-              : slug.includes("music")
-                ? "music-video"
-                : slug
-        );
-      console.log(res.data)
+            formdata,
+            slug.includes("movies")
+              ? "movie"
+              : slug.includes("skits")
+                ? "skit"
+                : slug.includes("music")
+                  ? "music-video"
+                  : slug,
+          );
+      console.log(res.data);
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
         // Reset form after successful upload
@@ -628,8 +653,8 @@ export const AddComponent = ({
         setReleaseDate("");
         setExpiryDate(
           new Date(
-            new Date().setFullYear(new Date().getFullYear() + 1)
-          ).toISOString()
+            new Date().setFullYear(new Date().getFullYear() + 1),
+          ).toISOString(),
         );
         setClass("Select");
         setAmount("");
@@ -761,8 +786,8 @@ export const AddComponent = ({
               </div>
 
               {/* AMOUNT */}
-              {class_ === "Exclusive" && (
-                <div className="flex-row gap-x-10">
+              {class_.toLowerCase() === "exclusive" && (
+                <div className="flex flex-row flex-wrap gap-x-10 gap-y-4">
                   <div className="flex flex-col">
                     <label
                       htmlFor="amount"
@@ -777,9 +802,9 @@ export const AddComponent = ({
                       value={
                         amount
                           ? parseFloat(amount).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
                           : ""
                       }
                       onChange={(e) => {
@@ -804,7 +829,7 @@ export const AddComponent = ({
                     <SelectInputForm
                       placeholder={currency}
                       setType={setCurrency}
-                      selectData={["NGN", "USD"]}
+                      selectData={["NGN", "USD", "GMD"]}
                       className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
                       textStyles="text-grey_500 text-center"
                     />
@@ -842,7 +867,7 @@ export const AddComponent = ({
                               <button
                                 onClick={() =>
                                   setSelectedGenries((prev) =>
-                                    prev.filter((x) => x !== item)
+                                    prev.filter((x) => x !== item),
                                   )
                                 }
                               >
@@ -903,14 +928,16 @@ export const AddComponent = ({
                       value={releaseDate.replaceAll("/", "-")}
                       onChange={(e) => [
                         setReleaseDate(e.target.value),
-                        setExpiryDate(p => {
+                        setExpiryDate((p) => {
                           if (e.target.value) {
                             const dateObj = new Date(e.target.value);
                             dateObj.setFullYear(dateObj.getFullYear() + 1);
-                            const oneYearLater = dateObj.toISOString().split('T')[0];
-                            return oneYearLater
+                            const oneYearLater = dateObj
+                              .toISOString()
+                              .split("T")[0];
+                            return oneYearLater;
                           }
-                          return p
+                          return p;
                         }),
                       ]}
                     />
@@ -938,7 +965,7 @@ export const AddComponent = ({
               </div>
 
               {/* CAST */}
-              {class_ !== "AD" && !(slug.includes("videos")) && (
+              {class_ !== "AD" && !slug.includes("videos") && (
                 <div className="relative z-30">
                   <div className="flex-1">
                     <p
@@ -974,7 +1001,7 @@ export const AddComponent = ({
                               <button
                                 onClick={() =>
                                   setSelectedCasts((prev) =>
-                                    prev.filter((x) => x != item)
+                                    prev.filter((x) => x != item),
                                   )
                                 }
                               >
@@ -1041,7 +1068,7 @@ export const AddComponent = ({
                         <button
                           onClick={() =>
                             setSelectedCategories((prev) =>
-                              prev.filter((x) => x !== item)
+                              prev.filter((x) => x !== item),
                             )
                           }
                         >
@@ -1183,7 +1210,7 @@ export const AddComponent = ({
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                          // onReady={() => setIsPlayerReady(true)}
+                            // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -1216,7 +1243,9 @@ export const AddComponent = ({
                         : "No File selected"}
                     </span>
                     <input
-                      key={videoTrailer ? videoTrailer.name : "empty-videoTrailer"}
+                      key={
+                        videoTrailer ? videoTrailer.name : "empty-videoTrailer"
+                      }
                       type="file"
                       id="file"
                       accept="video/*"
@@ -1226,9 +1255,11 @@ export const AddComponent = ({
                     />
                   </div>
                   <div
-                    className={`${roboto_500.className
-                      } cursor-pointer text-white text-[15px] ${links ? "bg-grey_800" : "bg-[#EE2726]"
-                      } h-[42px] px-4 flex items-center justify-center`}
+                    className={`${
+                      roboto_500.className
+                    } cursor-pointer text-white text-[15px] ${
+                      links ? "bg-grey_800" : "bg-[#EE2726]"
+                    } h-[42px] px-4 flex items-center justify-center`}
                   >
                     UPLOAD
                   </div>
@@ -1321,7 +1352,7 @@ export const AddComponent = ({
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                          // onReady={() => setIsPlayerReady(true)}
+                            // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -1527,7 +1558,7 @@ export const AddComponent = ({
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                              // onReady={() => setIsPlayerReady(true)}
+                                // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1566,7 +1597,11 @@ export const AddComponent = ({
                             : "No File selected"}
                         </span>
                         <input
-                          key={videoTrailer_2 ? videoTrailer_2.name : "empty-videoTrailer_2"}
+                          key={
+                            videoTrailer_2
+                              ? videoTrailer_2.name
+                              : "empty-videoTrailer_2"
+                          }
                           type="file"
                           id="file"
                           accept="video/*"
@@ -1576,9 +1611,11 @@ export const AddComponent = ({
                         />
                       </div>
                       <div
-                        className={`${roboto_500.className
-                          } cursor-pointer text-white text-[15px] ${links_2 ? "bg-grey_800" : "bg-[#EE2726]"
-                          } h-[42px] px-4 flex items-center justify-center`}
+                        className={`${
+                          roboto_500.className
+                        } cursor-pointer text-white text-[15px] ${
+                          links_2 ? "bg-grey_800" : "bg-[#EE2726]"
+                        } h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1676,7 +1713,7 @@ export const AddComponent = ({
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                              // onReady={() => setIsPlayerReady(true)}
+                                // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1772,8 +1809,9 @@ export const AddComponent = ({
                         />
                       </div>
                       <div
-                        className={`${roboto_500.className
-                          } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"} h-[42px] px-4 flex items-center justify-center`}
+                        className={`${
+                          roboto_500.className
+                        } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"} h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1788,9 +1826,11 @@ export const AddComponent = ({
                     className="ml-auto mt-6 px-6 py-3"
                     onClick={() =>
                       subtitleFile &&
-                        !subtitle_.toLowerCase().includes("select")
+                      !subtitle_.toLowerCase().includes("select")
                         ? handleAddSubtitle()
-                        : toast("select srt file & select subtitle language", { type: "info" })
+                        : toast("select srt file & select subtitle language", {
+                            type: "info",
+                          })
                     }
                   />
                 </div>
@@ -1818,21 +1858,22 @@ export const AddComponent = ({
 
                       <button
                         className="hover:scale-110 transition-all duration-200"
-                      onClick={() => handleDeleteSubtitle(x.srtFile.name)}
+                        onClick={() => handleDeleteSubtitle(x.srtFile.name)}
                       >
                         {x.srtFile.name === subtitleProcessingId ? (
-                                <Lottie
-                                  animationData={LoadingSpinner}
-                                  loop
-                                  style={{ width: 35, height: 35, marginRight: 5 }}
-                                />
-                              ):
-                        <Image
-                          src="/delete.svg"
-                          width={16}
-                          height={16}
-                          alt="delete icon"
-                        />}
+                          <Lottie
+                            animationData={LoadingSpinner}
+                            loop
+                            style={{ width: 35, height: 35, marginRight: 5 }}
+                          />
+                        ) : (
+                          <Image
+                            src="/delete.svg"
+                            width={16}
+                            height={16}
+                            alt="delete icon"
+                          />
+                        )}
                       </button>
                     </div>
                   );
@@ -1886,7 +1927,9 @@ export const AddComponent = ({
                     className="px-6 py-3 hover:scale-105 transition-all duration-300"
                     onClick={handleCreateSeason}
                     isLoading={seasonLoading}
-                    disabled={!selectedMedia || seasonLoading || isDisabled_Seasons}
+                    disabled={
+                      !selectedMedia || seasonLoading || isDisabled_Seasons
+                    }
                   />
 
                   <button
@@ -1915,7 +1958,11 @@ export const AddComponent = ({
                   {seasons.map((season, i) => {
                     return (
                       <SeasonComponent
-                        key={season?._id ? `${season._id}${season.episodes.length}` : i}
+                        key={
+                          season?._id
+                            ? `${season._id}${season.episodes.length}`
+                            : i
+                        }
                         season={season}
                         handleFunc={async () => await handleFetchSeasons()}
                       />
@@ -2044,7 +2091,6 @@ export const AddComponent = ({
           </>
         </div>
 
-
         <div className="px-10 lg:px-16 my-10 relative">
           <div className="flex items-center gap-4">
             <p
@@ -2083,17 +2129,30 @@ export const AddComponent = ({
           </div>
 
           {/* Subtext */}
-          <p className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}>
+          <p
+            className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}
+          >
             Select a prominent color from the cover poster above
           </p>
 
           {/* Color Picker Widget (unchanged) */}
           {showPicker && (
-            <div ref={pickerRef} className="absolute mt-5 bg-[#2b2b2b] rounded-xl shadow-lg z-50 bottom-full mb-3 p-3">
+            <div
+              ref={pickerRef}
+              className="absolute mt-5 bg-[#2b2b2b] rounded-xl shadow-lg z-50 bottom-full mb-3 p-3"
+            >
               <HexAlphaColorPicker color={color} onChange={setColor} />
               <div className="w-full mt-4 bg-[#33333a] px-4 py-3 flex items-center rounded-lg border border-[#686666]">
-                <div className={`${roboto_500.className} text-lg text-[#c4c4c4] mr-3`}>Hex</div>
-                <div className={`${roboto_500.className} text-lg text-[#c4c4c4] flex-1`}>{color.toUpperCase()}</div>
+                <div
+                  className={`${roboto_500.className} text-lg text-[#c4c4c4] mr-3`}
+                >
+                  Hex
+                </div>
+                <div
+                  className={`${roboto_500.className} text-lg text-[#c4c4c4] flex-1`}
+                >
+                  {color.toUpperCase()}
+                </div>
               </div>
             </div>
           )}
@@ -2101,7 +2160,7 @@ export const AddComponent = ({
 
         <div className="px-10 lg:px-16 mt-4">
           <AppButton
-            title={selectedMedia ? 'UPDATE' : "UPLOAD"}
+            title={selectedMedia ? "UPDATE" : "UPLOAD"}
             disabled={
               (isDisabled &&
                 !slug.includes("series") &&

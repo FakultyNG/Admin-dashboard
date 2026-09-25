@@ -413,7 +413,7 @@ export const ClientsComponent = () => {
                                     </div>
                                 </div>
 
-                                {_class === "Exclusive" && (
+                                {_class.toLowerCase() === "exclusive" && (
                                     <div className={`flex flex-row items-start ${isChannel ? 'w-[100%]' : 'w-[75%]'} gap-x-5 lg:gap-x-14`}>
                                         <div className="flex flex-col flex-1">
                                             <label
@@ -443,7 +443,7 @@ export const ClientsComponent = () => {
                                             <SelectInputForm
                                                 placeholder={currency_e}
                                                 setType={setCurrency_e}
-                                                selectData={["NGN", "USD"]}
+                                                selectData={["NGN", "USD", "GMD"]}
                                                 className="font-normal h-[34px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
                                                 textStyles="text-grey_500 text-sm"
                                             />
@@ -546,7 +546,7 @@ export const ClientsComponent = () => {
                                 <SelectInputForm
                                     placeholder={currency}
                                     setType={setCurrency}
-                                    selectData={["NGN", "USD"]}
+                                    selectData={["NGN", "USD", "GMD"]}
                                     className="font-normal h-[30px] mt-1 text-sm py-2 lg:pl-3 mt-2.5 border border-border_grey rounded-sm"
                                     textStyles="text-grey_500 text-sm"
                                 />

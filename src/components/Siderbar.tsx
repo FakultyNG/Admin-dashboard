@@ -1,12 +1,9 @@
 "use client";
 
 import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
-import { useGetUserProfileQuery } from "@/api/userSlice.api";
 import { roboto_400, roboto_500 } from "@/config/fonts";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHook";
-import useToggle from "@/hooks/useToggle";
-import { selectUserProfile, setCredentials } from "@/store/slices/usersSlice";
-import Size from "@/utilities/useResponsiveSize";
+import { useAppSelector } from "@/hooks/reduxHook";
+import { selectUserProfile } from "@/store/slices/usersSlice";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -211,40 +208,32 @@ const NavLink = ({ nav, className,hasLive }: NavOptions) => {
 
 function Siderbar() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const pathname = usePathname();
   const user = useAppSelector(selectUserProfile);
-  const { data, isSuccess } = useGetUserProfileQuery(undefined, {});
-  const [hasLive, setHasLive] = useState<boolean>(false)
-  const isSuperadmin = user?.profile.role.toLowerCase() === "superadmin";
-  const isEVENT = user?.profile.role.toLowerCase() === "event";
-  const isTVSHOW = user?.profile.role.toLowerCase() === "tvshow";
-  const isChannel = user?.profile.role.toLowerCase().includes("channel");
-  const isPodcast = user?.profile.role.toLowerCase() === "podcast";
-  const isSport = user?.profile.role.toLowerCase() === "sport";
+  const [hasLive, setHasLive] = useState<boolean>(false);
+  const role = user?.profile?.role?.toLowerCase() ?? "";
+  const isSuperadmin = role === "superadmin";
+  const isEVENT = role === "event";
+  const isTVSHOW = role === "tvshow";
+  const isChannel = role.includes("channel");
+  const isPodcast = role === "podcast";
+  const isSport = role === "sport";
   const FullSideLinks = [...clientsLinks];
-  const WIDTH = Size.getWidth();
   const isActive = pathname === "/cta";
-  const {
-          data: livesteamDetails,
-          isSuccess: isSuccess_L,
-      } = useGetLivestreamDetailsQuery(undefined, {});
+  const { data: livesteamDetails, isSuccess: isSuccess_L } =
+    useGetLivestreamDetailsQuery(undefined, {
+      skip: isSuperadmin || !user,
+    });
 
   useEffect(() => {
-    if (isSuccess) {
-      dispatch(setCredentials(data.data));
-    } else {
-      router.replace("/");
-    }
-  }, []);
+    if (hasLive || isSuperadmin) return;
+    if (isSuccess_L) setHasLive(livesteamDetails.data.length > 0);
+  }, [isSuccess_L]);
 
-  console.log(user?.profile)
-  
-  useEffect(() =>{
-    if(hasLive || isSuperadmin) return
-    if(isSuccess_L) setHasLive(livesteamDetails.data.length > 0)
-  }, [isSuccess_L])
-
+  // Don't paint client/admin nav until profile is restored
+  if (pathname !== "/" && !user?.profile) {
+    return null;
+  }
 
   return (
     <>
@@ -255,21 +244,19 @@ function Siderbar() {
 
             <div className="relative w-[50px] h-[50px] md:-mt-10 transition-all duration-500 ease-in-out">
               <Image
-                src={(user && user.photo_url && typeof user.photo_url === 'string' && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"}
+                src={
+                  user &&
+                  user.photo_url &&
+                  typeof user.photo_url === "string" &&
+                  user.photo_url.startsWith("https")
+                    ? user.photo_url
+                    : "/user.png"
+                }
                 width={50}
                 height={50}
                 alt=""
                 className="h-[50px] w-[50px] rounded-full"
               />
-
-              {/* <button className="absolute right-0 bottom-2">
-                <Image
-                  src="/editIcon.svg"
-                  alt="editIcon"
-                  width={11}
-                  height={11}
-                />
-              </button> */}
             </div>
             {/* UserDetails */}
             <div
@@ -279,26 +266,24 @@ function Siderbar() {
                 {user?.profile.first_name} {user?.profile.last_name}
               </h4>
               <p className="text-grey_600 text-sm text-center uppercase mt-1">
-                {(user && user.profile) ? user.profile.role : 'ADMIN'} PANEL
+                {user?.profile ? user.profile.role : "ADMIN"} PANEL
               </p>
             </div>
-
 
             {/* navigation */}
             <div className="w-full overflow-y-auto overflow-x-visible mt-6">
               <ul className="w-full mt-6 ">
-                {(user?.profile.role !== "superadmin"
-                  ? user?.profile.role !== "channel"
-                    // ? FullSideLinks.splice(4, 0, "withdrawal")
+                {(isSuperadmin
+                  ? navLinks
+                  : role !== "channel"
                     ? FullSideLinks
                     : clientsLinks
-                  : navLinks
                 ).map((link, index) => {
                   return <NavLink key={index} nav={link} hasLive={hasLive} />;
                 })}
               </ul>
 
-              {user?.profile.role === "superadmin" && (
+              {isSuperadmin && (
                 <ul className="w-full mt-2 border-t border-grey_dark">
                   {otherNavs.map((link, index) => {
                     return <NavLink key={index} nav={link} className="" />;
@@ -307,27 +292,30 @@ function Siderbar() {
               )}
             </div>
 
-
-            {(isEVENT || isChannel || isPodcast || isTVSHOW) && <div>
-              <button
-                onClick={() => router.push("/cta")}
-                className={`${roboto_500.className} ${isActive
-                  ? "bg-input_grey text-grey_2"
-                  : "bg-red_500 text-white"
+            {(isEVENT || isChannel || isPodcast || isTVSHOW) && (
+              <div>
+                <button
+                  onClick={() => router.push("/cta")}
+                  className={`${roboto_500.className} ${
+                    isActive
+                      ? "bg-input_grey text-grey_2"
+                      : "bg-red_500 text-white"
                   } hidden md:inline rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
-              >
-                Call To Action
-              </button>
-              <button
-                onClick={() => router.push("/cta")}
-                className={`${roboto_500.className} ${isActive
-                  ? "bg-input_grey text-grey_2"
-                  : "bg-red_500 text-white"
+                >
+                  Call To Action
+                </button>
+                <button
+                  onClick={() => router.push("/cta")}
+                  className={`${roboto_500.className} ${
+                    isActive
+                      ? "bg-input_grey text-grey_2"
+                      : "bg-red_500 text-white"
                   } md:hidden rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
-              >
-                CTA
-              </button>
-            </div>}
+                >
+                  CTA
+                </button>
+              </div>
+            )}
           </div>
         </nav>
       )}

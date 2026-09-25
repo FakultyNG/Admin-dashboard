@@ -83,14 +83,20 @@ function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetDashboardContentListQuery(undefined, {});
+  } = useGetDashboardContentListQuery(undefined, {
+    skip: !isSuperAdmin,
+  });
   const {
     data: livesteamDetails,
     isSuccess: isSuccess_L,
-  } = useGetLivestreamDetailsQuery(undefined, {});
+  } = useGetLivestreamDetailsQuery(undefined, {
+    skip: isSuperAdmin || !user,
+  });
 
   const { data: dashboardTotUsers, refetch: dashboardTotUserRefresh } =
-    useGetDashboardTotalUserQuery(undefined, {});
+    useGetDashboardTotalUserQuery(undefined, {
+      skip: !isSuperAdmin,
+    });
 
   function  handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault();
@@ -104,9 +110,15 @@ function page() {
   }, [isSuccess_L])
 
   useEffect(() => {
+    if (!isSuperAdmin) return;
     refetch();
     dashboardTotUserRefresh();
-  }, []);
+  }, [isSuperAdmin]);
+
+  // Wait for hydrated profile so we don't flash the client overview
+  if (!user?.profile) {
+    return null;
+  }
 
   return (
     <section className={`${roboto_400.className} h-full pl-5`}>

@@ -35,7 +35,7 @@ function MainComponent({ slug }: Props) {
   const [pg, setPg] = useState<number>(1);
   const [searchParams, setSearchParams] = useState<string>("");
   const [paginationList, setPaginationList] = useState(
-    [...Array(8)].map((_, i) => i + 1)
+    [...Array(8)].map((_, i) => i + 1),
   );
   const paginationStep = 8;
   const {
@@ -45,40 +45,56 @@ function MainComponent({ slug }: Props) {
     isSuccess,
     isLoading,
   } = useGetAllMovieQuery({ limit: 5, page: pg }, {});
-  const { data: skitsData, refetch: refetchSkits } = useGetAllSkitsQuery({ limit: 5, page: pg }, {});
+  const { data: skitsData, refetch: refetchSkits } = useGetAllSkitsQuery(
+    { limit: 5, page: pg },
+    {},
+  );
   const { data: musicVideoData, refetch: refetchMusiVid } = useGetAllMusicQuery(
     { limit: 5, page: pg },
-    {}
+    {},
   );
-  const { data: seriesData, refetch: refetchSeries } = useGetAllSeriesQuery({ limit: 5, page: pg }, {});
+  const { data: seriesData, refetch: refetchSeries } = useGetAllSeriesQuery(
+    { limit: 5, page: pg },
+    {},
+  );
 
   const handleNext = () => {
     setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep)
+      prevList.map((num) => num + paginationStep),
     );
   };
 
   const handlePrevious = () => {
     if (paginationList[0] === 1) return;
     setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep))
+      prevList.map((num) => Math.max(1, num - paginationStep)),
     );
   };
-
 
   async function handleDelete(id: string) {
     setMediaList(mediaList.filter((media) => media._id !== id));
     setFilteredList(mediaFilteredList.filter((media) => media._id !== id));
-    const res = await deleteContent({ id, slug });
+    const decodedSlug = decodeURI(slug).toLowerCase();
+    const deleteSlug = decodedSlug.includes("music")
+      ? "music-video"
+      : decodedSlug.replace(/s$/i, "");
+    const res = await deleteContent({ id, slug: deleteSlug });
     if (
       res.ok &&
-      res.data &&
-      res.data.message.includes("deleted successfully")
+      res.data
+      // &&
+      // res.data.message.includes("deleted successfully")
     ) {
-      toast("user deleted successfully", { type: "info" });
-      slug.includes('movie') ? await refetch() : slug.includes('skit') ? await refetchSkits() : slug.includes('videos') ? await refetchMusiVid() : await refetchSeries();
+      toast(`${deleteSlug} deleted successfully`, { type: "info" });
+      slug.includes("movie")
+        ? await refetch()
+        : slug.includes("skit")
+          ? await refetchSkits()
+          : slug.includes("videos")
+            ? await refetchMusiVid()
+            : await refetchSeries();
     } else {
-      toast("Opps! couldn't delete user", { type: "info" });
+      toast(`Opps! couldn't delete ${deleteSlug}`, { type: "info" });
     }
     await refetch();
   }
@@ -111,7 +127,6 @@ function MainComponent({ slug }: Props) {
               ? await getFetchSeries({ limit: 5, page: query ?? pg })
               : await getFetchMusicVideo({ limit: 5, page: query ?? pg });
       if (res.ok && res.data) {
-        console.log(res.data)
         handleMediaList(res.data);
       } else {
         toast(`Opps! couldn't get ${slug} list`, { type: "error" });
@@ -210,13 +225,13 @@ function MainComponent({ slug }: Props) {
                           >
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit min-w-[140px]">
                               <div className="w-[42px] h-[42px] rounded-full overflow-hidden">
-                              <Image
-                                src={tx.portraitPhoto}
-                                width={42}
-                                height={42}
-                                alt="profiles"
-                                className="object-cover w-full h-full"
-                              />
+                                <Image
+                                  src={tx.portraitPhoto}
+                                  width={42}
+                                  height={42}
+                                  alt="profiles"
+                                  className="object-cover w-full h-full"
+                                />
                               </div>
                               <div className="ml-2.5">
                                 <p
@@ -258,7 +273,12 @@ function MainComponent({ slug }: Props) {
 
                           <td className="w-[50px] xl:w-[400px]">
                             <div className="flex items-center justify-center gap-x-10">
-                              <button onClick={() => [setSelectedMedia(tx), setIsAdd(!isAdd)]}>
+                              <button
+                                onClick={() => [
+                                  setSelectedMedia(tx),
+                                  setIsAdd(!isAdd),
+                                ]}
+                              >
                                 <Image
                                   src="/edit.svg"
                                   width={14}
@@ -304,8 +324,9 @@ function MainComponent({ slug }: Props) {
                               setPg(num),
                               handleRefreshMedia(num),
                             ]}
-                            className={`${active ? "text-red" : "text-[#C4C4C4]"
-                              } cursor-pointer`}
+                            className={`${
+                              active ? "text-red" : "text-[#C4C4C4]"
+                            } cursor-pointer`}
                           >
                             {num}
                           </p>
@@ -354,7 +375,7 @@ const MainComponentWithAutoRefresh = ({ slug }: { slug: string }) => {
   const [mediaList, setMediaList] = useState<IMediaData[]>([]);
   const [isAdd, setIsAdd] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<IMediaData | null>(null);
-  
+
   const handleRefreshMedia = async () => {
     // Fetch media list logic here
     // After fetching, setMediaList with the new data

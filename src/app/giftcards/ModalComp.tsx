@@ -125,7 +125,7 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
                                     <SelectInputForm
                                         placeholder={wallet}
                                         setType={setWallet}
-                                        selectData={["NGN", "USD"]}
+                                        selectData={["NGN", "USD", "GMD"]}
                                         className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
                                         textStyles="text-grey_500 text-center"
                                     />

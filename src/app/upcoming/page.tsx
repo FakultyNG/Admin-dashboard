@@ -29,9 +29,7 @@ import { editContent } from "@/api/contentSlice";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { IEventData } from "@/types/api/live.types";
 
-
 export const runtime = "edge";
-
 
 export default function page() {
   const [stage, setStage] = useState<string>("main");
@@ -39,8 +37,13 @@ export default function page() {
   const [loading, setLoading] = useState<boolean>(false);
   const [loading_M, setLoading_M] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState<string>("");
-  const [selectedUpcoming, setUpcoming] = useState<IEventData | IUpcomingData | null>(null)
-  const [searchedContentList, setContentList] = useState<(IEventData | IUpcomingData)[]>([]);
+  const [selectedUpcoming, setUpcoming] = useState<
+    IEventData | IUpcomingData | null
+  >(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchedContentList, setContentList] = useState<
+    (IEventData | IUpcomingData)[]
+  >([]);
   const [pg, setPg] = useState<number>(1);
   const [upcomingEvents, setUpcomingEvents] = useState<
     (IEventData | IUpcomingData)[]
@@ -57,23 +60,55 @@ export default function page() {
     isLoading,
   } = useGetUpcomingQuery({ limit: 10, page: 1 }, {});
   const [paginationList, setPaginationList] = useState(
-    [...Array(8)].map((_, i) => i + 1)
+    [...Array(8)].map((_, i) => i + 1),
   );
   const paginationStep = 8;
 
-
   const handleNext = () => {
     setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep)
+      prevList.map((num) => num + paginationStep),
     );
   };
 
   const handlePrevious = () => {
     if (paginationList[0] === 1) return;
     setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep))
+      prevList.map((num) => Math.max(1, num - paginationStep)),
     );
   };
+
+  function getSelectedReleaseDate() {
+    if (!selectedUpcoming) return null;
+    const raw =
+      "start" in selectedUpcoming
+        ? selectedUpcoming.start
+        : (selectedUpcoming.releaseDate ?? "");
+    if (!raw) return null;
+    const date = new Date(raw);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const selectedReleaseDate = getSelectedReleaseDate();
+  const releaseDateIsFuture = (() => {
+    if (!selectedReleaseDate) return false;
+    const today = new Date();
+    const releaseDay = new Date(
+      selectedReleaseDate.getFullYear(),
+      selectedReleaseDate.getMonth(),
+      selectedReleaseDate.getDate(),
+    );
+    const todayDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    return releaseDay.getTime() > todayDay.getTime();
+  })();
+  const blockSave =
+    !!selectedUpcoming &&
+    !isEditing &&
+    !selectedUpcoming.upcoming &&
+    !releaseDateIsFuture;
 
   function handleUpcomingList(data: IUpcomingResponse | undefined) {
     if (!data) return;
@@ -83,11 +118,11 @@ export default function page() {
   }
 
   function handleSearchfilter(value: string) {
-    if (stage === 'add') return
+    if (stage === "add") return;
     setSearchParams(value);
 
     setUpcomingEventsFiltered(
-      upcomingEvents.filter((x) => x.title.includes(searchParams))
+      upcomingEvents.filter((x) => x.title.includes(searchParams)),
     );
     if (value === "") {
       setUpcomingEventsFiltered(upcomingEvents);
@@ -110,16 +145,43 @@ export default function page() {
     }
   }
 
+  async function handleRemoveFromUpcoming(item: IEventData | IUpcomingData) {
+    setUpcomingEvents((prev) => prev.filter((x) => x._id !== item._id));
+    setUpcomingEventsFiltered((prev) => prev.filter((x) => x._id !== item._id));
+    try {
+      const formdata = new FormData();
+      formdata.append("data", JSON.stringify({ upcoming: false }));
+      const res = await editContent(formdata, item._id);
+      if (res.ok && res.data) {
+        toast("Removed from upcoming", { type: "success" });
+        refetch();
+      } else {
+        toast(res.data?.message || "Couldn't remove upcoming content", {
+          type: "error",
+        });
+        refetch();
+      }
+    } catch (error) {
+      toast("Opps! couldn't remove upcoming content!", { type: "error" });
+      refetch();
+    }
+  }
+
   async function handleUpcomingToggle() {
     if (!selectedUpcoming) return;
     try {
       setLoading_M(true);
       const formdata = new FormData();
-      formdata.append('data', JSON.stringify({ upcoming: !selectedUpcoming.upcoming }));
+      formdata.append(
+        "data",
+        JSON.stringify({
+          upcoming: isEditing ? false : !selectedUpcoming.upcoming,
+        }),
+      );
       const res = await editContent(formdata, selectedUpcoming._id);
       if (res.ok && res.data) {
         toast("Upcoming events!", { type: "success" });
-        setStage('main')
+        setStage("main");
         refetch();
       }
     } catch (error) {
@@ -132,7 +194,7 @@ export default function page() {
   async function handleRefreshMedia(query?: number) {
     try {
       setLoading(true);
-      const res = await getUpcomingEvent({ limit: 5, page: query ?? pg })
+      const res = await getUpcomingEvent({ limit: 5, page: query ?? pg });
       if (res.ok && res.data) {
         handleUpcomingList(res.data);
       } else {
@@ -145,14 +207,13 @@ export default function page() {
     }
   }
 
-
   useEffect(() => {
     handleUpcomingList(upcomingData);
   }, [isSuccess]);
 
   useEffect(() => {
     refetch();
-  }, [stage])
+  }, [stage]);
 
   switch (stage) {
     case "main":
@@ -185,7 +246,11 @@ export default function page() {
 
             {/* add butn */}
             <div
-              onClick={() => setStage("add")}
+              onClick={() => [
+                setIsEditing(false),
+                setUpcoming(null),
+                setStage("add"),
+              ]}
               className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
             >
               Add
@@ -195,7 +260,9 @@ export default function page() {
           <div className="relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
             <div className="absolute h-[700px] w-full py-5 pb-6 pl-0  sm:ml-0 sm:pl-3 md:pl-10 overflow-x-auto">
               <div className="h-full relative">
-                <table className={`${roboto_400.className} w-full min-w-[810px]`}>
+                <table
+                  className={`${roboto_400.className} w-full min-w-[810px]`}
+                >
                   <thead className="">
                     <tr>
                       {UP_TableHeads.map((t, i) => {
@@ -220,7 +287,11 @@ export default function page() {
                           >
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                               <Image
-                                src={"coverPhoto" in tx ? tx.coverPhoto : tx.portraitPhoto}
+                                src={
+                                  "coverPhoto" in tx
+                                    ? tx.coverPhoto
+                                    : tx.portraitPhoto
+                                }
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -250,7 +321,9 @@ export default function page() {
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
-                            {formatAmount((tx.upcomingSubscribers.length ?? 0).toString())}
+                            {formatAmount(
+                              (tx.upcomingSubscribers.length ?? 0).toString(),
+                            )}
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
@@ -259,7 +332,13 @@ export default function page() {
 
                           <td className="w-[400px]">
                             <div className="flex items-center justify-center gap-x-10">
-                              <button onClick={() => [setUpcoming(tx), setStage("add")]}>
+                              <button
+                                onClick={() => [
+                                  setUpcoming(tx),
+                                  setIsEditing(true),
+                                  setStage("add"),
+                                ]}
+                              >
                                 <Image
                                   src="/edit.svg"
                                   width={14}
@@ -267,7 +346,9 @@ export default function page() {
                                   alt="edit"
                                 />
                               </button>
-                              <button>
+                              <button
+                                onClick={() => handleRemoveFromUpcoming(tx)}
+                              >
                                 <Image
                                   src="/delete.svg"
                                   width={15}
@@ -305,8 +386,9 @@ export default function page() {
                               setPg(num),
                               handleRefreshMedia(num),
                             ]}
-                            className={`${active ? "text-red" : "text-[#C4C4C4]"
-                              } cursor-pointer`}
+                            className={`${
+                              active ? "text-red" : "text-[#C4C4C4]"
+                            } cursor-pointer`}
                           >
                             {num}
                           </p>
@@ -330,7 +412,6 @@ export default function page() {
                     />
                   )}
                 </div>
-
               </div>
             </div>
           </div>
@@ -384,7 +465,7 @@ export default function page() {
                         onClick={() => [
                           setUpcoming(content),
                           setSearchParams(""),
-                          setContentList([])
+                          setContentList([]),
                         ]}
                         className="text-white cursor-pointer bg-black2 p-3 w-full"
                         key={i}
@@ -398,7 +479,11 @@ export default function page() {
             </div>
             {/* add butn */}
             <div
-              onClick={() => [setStage("main"), setSearchParams('')]}
+              onClick={() => [
+                setStage("main"),
+                setIsEditing(false),
+                setSearchParams(""),
+              ]}
               className={`${roboto_500.className} cursor-pointer ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px]`}
             >
               Back
@@ -445,7 +530,7 @@ export default function page() {
               </div>
 
               {/* implementing release date */}
-              <div className="h-[68px] w-full md:w-[364px] mt-10 items-center">
+              <div className="w-full md:w-[364px] mt-10 items-center">
                 <label
                   htmlFor="date"
                   className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
@@ -456,9 +541,27 @@ export default function page() {
                   type="text"
                   id="date"
                   readOnly
-                  value={!selectedUpcoming ? '' : formatDateToDDMMYYYY(new Date("start" in selectedUpcoming ? selectedUpcoming.start : selectedUpcoming?.releaseDate ?? '').toISOString())}
+                  value={
+                    !selectedUpcoming
+                      ? ""
+                      : formatDateToDDMMYYYY(
+                          new Date(
+                            "start" in selectedUpcoming
+                              ? selectedUpcoming.start
+                              : (selectedUpcoming?.releaseDate ?? ""),
+                          ).toISOString(),
+                        )
+                  }
                   className="font-normal block w-[157px] text-grey_500 text-sm py-2 mt-2.5 border border-[#D9D9D938] rounded-sm"
                 />
+                {blockSave && (
+                  <p
+                    className={`${roboto_400.className} text-red_500 text-xs mt-2 ml-2.5`}
+                  >
+                    Upcoming contents must have a release date greater than
+                    today.
+                  </p>
+                )}
               </div>
 
               {/* implementing the last save and  */}
@@ -468,9 +571,15 @@ export default function page() {
                     style={{ alignSelf: "center" }}
                     className={`${roboto_500.className} font-medium text-lg text-white rounded-[5px] w-[145px] py-2 mt-20 bg-red_500`}
                     onClick={handleUpcomingToggle}
-                    disabled={loading_M}
+                    disabled={loading_M || blockSave}
                     isLoading={loading_M}
-                    title={selectedUpcoming?.upcoming ? 'Remove' : 'Save'}
+                    title={
+                      isEditing
+                        ? !selectedUpcoming?.upcoming
+                          ? "Save"
+                          : "Remove"
+                        : "Save"
+                    }
                   />
                 </div>
               </div>
@@ -490,7 +599,14 @@ export default function page() {
                       <span
                         className={`${roboto_400.className} truncate text-xs text-grey_500`}
                       >
-                        {selectedUpcoming ? truncateText(35, "coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.landscapePhoto) : "No File selected"}
+                        {selectedUpcoming
+                          ? truncateText(
+                              35,
+                              "coverPhoto" in selectedUpcoming
+                                ? selectedUpcoming.coverPhoto
+                                : selectedUpcoming.landscapePhoto,
+                            )
+                          : "No File selected"}
                       </span>
                     </div>
                     <div
@@ -505,7 +621,11 @@ export default function page() {
                       <>
                         <Image
                           id="upload"
-                          src={"coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.landscapePhoto}
+                          src={
+                            "coverPhoto" in selectedUpcoming
+                              ? selectedUpcoming.coverPhoto
+                              : selectedUpcoming.landscapePhoto
+                          }
                           width={298}
                           height={159}
                           alt="uploaded"
@@ -538,7 +658,14 @@ export default function page() {
                       <span
                         className={`${roboto_400.className} truncate text-xs text-grey_500`}
                       >
-                        {selectedUpcoming ? truncateText(35, "coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.portraitPhoto) : "No File selected"}
+                        {selectedUpcoming
+                          ? truncateText(
+                              35,
+                              "coverPhoto" in selectedUpcoming
+                                ? selectedUpcoming.coverPhoto
+                                : selectedUpcoming.portraitPhoto,
+                            )
+                          : "No File selected"}
                       </span>
                     </div>
                     <div
@@ -553,7 +680,11 @@ export default function page() {
                       <>
                         <Image
                           // id="upload"
-                          src={"coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.portraitPhoto}
+                          src={
+                            "coverPhoto" in selectedUpcoming
+                              ? selectedUpcoming.coverPhoto
+                              : selectedUpcoming.portraitPhoto
+                          }
                           width={108}
                           height={161}
                           alt="uploaded"
@@ -580,5 +711,4 @@ export default function page() {
         </section>
       );
   }
-};
-
+}

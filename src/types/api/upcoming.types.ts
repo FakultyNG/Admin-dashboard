@@ -47,3 +47,34 @@ export interface IUpcomingEventFormated {
     ContentType: string;
   };
 }
+
+export type UpcomingEventType =
+  | "movie"
+  | "series"
+  | "music video"
+  | "documentary"
+  | "skit";
+
+export interface ICreateUpcomingData {
+  title: string;
+  type: UpcomingEventType;
+  details: string;
+  releaseDate: string;
+  active?: boolean;
+  trailerLink?: string;
+}
+
+export interface ICreateUpcomingResponse extends IGeneric {
+  data: {
+    title: string;
+    type: string;
+    details: string;
+    reminder: unknown[];
+    releaseDate: string;
+    active: boolean;
+    _id: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  };
+}

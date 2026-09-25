@@ -37,7 +37,7 @@ export const ClientsComponent = () => {
                     <SelectInputForm
                         placeholder={wallet}
                         setType={setWallet}
-                        selectData={["NGN WALLET", "USD WALLET"]}
+                        selectData={["NGN WALLET", "USD WALLET", "GMD WALLET"]}
                         className="font-normal w-[316px] h-[36px] text-sm py-2 border border-border_grey rounded-sm"
                         textStyles="text-grey_500 text-center"
                     />
@@ -47,7 +47,11 @@ export const ClientsComponent = () => {
             <p
                 className={`${roboto_700} text-xl md:text-3xl lg:text-5xl text-center text-white mt-6`}
             >
-                {wallet === "NGN WALLET" ? "₦190,203.00" : "$190,203.00"}
+                {wallet === "NGN WALLET"
+                  ? "₦190,203.00"
+                  : wallet === "USD WALLET"
+                    ? "$190,203.00"
+                    : "D190,203.00"}
             </p>
 
             <div className="flex items-center flex-col mt-8 w-full">

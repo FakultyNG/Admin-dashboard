@@ -1,41 +1,67 @@
-import { createLive, deleteLive, getFetchChannels, getFetchEvents, getFetchPodcast, getFetchSport, getFetchTVShows, useGetChannelsQuery, useGetEventsQuery, useGetPodcastQuery, useGetSportQuery, useGetTVShowsQuery } from '@/api/liveSlice';
-import { roboto_400, roboto_500 } from '@/config/fonts'
-import Lottie from 'lottie-react';
-import Image from 'next/image'
-import React, { useEffect, useState } from 'react';
+import {
+  createLive,
+  deleteLive,
+  getFetchChannels,
+  getFetchEvents,
+  getFetchPodcast,
+  getFetchSport,
+  getFetchTVShows,
+  useGetChannelsQuery,
+  useGetEventsQuery,
+  useGetPodcastQuery,
+  useGetSportQuery,
+  useGetTVShowsQuery,
+} from "@/api/liveSlice";
+import { roboto_400, roboto_500 } from "@/config/fonts";
+import Lottie from "lottie-react";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
-import { toast } from 'react-toastify';
-import { LIVE_TH } from '@/config/data/live';
-import { ICreateLiveData, IEventData, IEventResponse } from '@/types/api/live.types';
-import { AppButton, CustomInput, SelectInputForm } from '@/components/AppLayout';
-import ReactPlayer from 'react-player';
-import { formatAmount } from '@/utilities/formatAmount';
-import { calculateEventDurationHours, calculateRemainingEventHours, getDates } from '@/utilities/dateUtilities';
-import { useEventEstimateMutation } from '@/api/extra.api';
-import { truncateText } from '@/utilities/textUtils';
-import { ImageProps } from '../plans/ClientComponent';
-import { ICategory } from '@/types/api/category.types';
-import { useGetCategoryQuery } from '@/api/categorySlice';
-import { searchClient } from '@/api/clientSlice';
-import { IClientsData } from '@/types/api/clients.types';
+import { toast } from "react-toastify";
+import { LIVE_TH } from "@/config/data/live";
+import {
+  ICreateLiveData,
+  IEventData,
+  IEventResponse,
+} from "@/types/api/live.types";
+import {
+  AppButton,
+  CustomInput,
+  SelectInputForm,
+} from "@/components/AppLayout";
+import ReactPlayer from "react-player";
+import { formatAmount } from "@/utilities/formatAmount";
+import {
+  calculateEventDurationHours,
+  calculateRemainingEventHours,
+  getDates,
+} from "@/utilities/dateUtilities";
+import { useEventEstimateMutation } from "@/api/extra.api";
+import { truncateText } from "@/utilities/textUtils";
+import { ImageProps } from "../plans/ClientComponent";
+import { ICategory } from "@/types/api/category.types";
+import { useGetCategoryQuery } from "@/api/categorySlice";
+import { searchClient } from "@/api/clientSlice";
+import { IClientsData } from "@/types/api/clients.types";
 
-
-const TABS = ['Channels', 'Events', 'Tv Shows', 'Podcasts', 'Sports']
+const TABS = ["Channels", "Events", "Tv Shows", "Podcasts", "Sports"];
 
 interface IFile extends ImageProps {
-  file?: File
+  file?: File;
 }
 
 function SuperAdminComp() {
-  const [stage, setStage] = useState<string>('main')
-  const [tab, setTab] = useState<string>('channels');
-  const [liveTable, setTable] = useState<IEventData[]>([])
-  const [liveTableFiltered, setFilteredTable] = useState<IEventData[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [loading_B, setLoading_B] = useState<boolean>(false)
-  const [loading_C, setLoading_C] = useState<boolean>(false)
+  const [stage, setStage] = useState<string>("main");
+  const [tab, setTab] = useState<string>("channels");
+  const [liveTable, setTable] = useState<IEventData[]>([]);
+  const [liveTableFiltered, setFilteredTable] = useState<IEventData[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loading_B, setLoading_B] = useState<boolean>(false);
+  const [loading_C, setLoading_C] = useState<boolean>(false);
   const [pg, setPg] = useState<number>(1);
-  const [paginationList, setPaginationList] = useState([...Array(8)].map((_, i) => i + 1));
+  const [paginationList, setPaginationList] = useState(
+    [...Array(8)].map((_, i) => i + 1),
+  );
   const paginationStep = 8;
   const isEVENT = tab.toLowerCase() === "events";
   const isTVSHOW = tab.toLowerCase() === "tv shows";
@@ -46,15 +72,27 @@ function SuperAdminComp() {
   const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
   const [eventHours, setEventHours] = useState<string>("0");
   const [searchParams, setSearchParams] = useState<string>("");
-  const [selectedEvent, setEvent] = useState<IEventData | null>(null)
+  const [selectedEvent, setEvent] = useState<IEventData | null>(null);
   const [catText, setCatText] = useState("");
   const [items, setItems] = useState<string[]>([]);
-  const [details, setDetails] = useState(selectedEvent ? selectedEvent.description : "");
-  const [_class, setClass] = useState<string>(selectedEvent ? selectedEvent.vidClass : "Select");
-  const [pg_M, setPG_] = useState<string>(selectedEvent ? selectedEvent.pg : "Select");
-  const [title, setTitle] = useState<string>(selectedEvent ? selectedEvent.title : "")
-  const [location, setLocation] = useState<string>(selectedEvent ? selectedEvent.location : "")
-  const [isActive, setActive] = useState<boolean>(selectedEvent ? selectedEvent.active : false);
+  const [details, setDetails] = useState(
+    selectedEvent ? selectedEvent.description : "",
+  );
+  const [_class, setClass] = useState<string>(
+    selectedEvent ? selectedEvent.vidClass : "Select",
+  );
+  const [pg_M, setPG_] = useState<string>(
+    selectedEvent ? selectedEvent.pg : "Select",
+  );
+  const [title, setTitle] = useState<string>(
+    selectedEvent ? selectedEvent.title : "",
+  );
+  const [location, setLocation] = useState<string>(
+    selectedEvent ? selectedEvent.location : "",
+  );
+  const [isActive, setActive] = useState<boolean>(
+    selectedEvent ? selectedEvent.active : false,
+  );
   const [coverImage, setCoverImage] = useState<IFile | null>(null);
   const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
   const [image, setImage] = useState<IFile | null>(null);
@@ -74,34 +112,29 @@ function SuperAdminComp() {
     isSuccess,
     isLoading,
   } = useGetEventsQuery({ limit: 5, page: pg }, {});
-  const {
-    data: allChannels,
-  } = useGetChannelsQuery({ limit: 5, page: pg }, {});
-  const {
-    data: allTVShows,
-  } = useGetTVShowsQuery({ limit: 5, page: pg }, {});
-  const {
-    data: allPodcast,
-  } = useGetPodcastQuery({ limit: 5, page: pg }, {});
-  const {
-    data: allSport,
-  } = useGetSportQuery({ limit: 5, page: pg }, {});
+  const { data: allChannels } = useGetChannelsQuery({ limit: 5, page: pg }, {});
+  const { data: allTVShows } = useGetTVShowsQuery({ limit: 5, page: pg }, {});
+  const { data: allPodcast } = useGetPodcastQuery({ limit: 5, page: pg }, {});
+  const { data: allSport } = useGetSportQuery({ limit: 5, page: pg }, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
-    {}
+    {},
   );
 
   const [handleEstimate, { isLoading: isEstimatedLoading }] =
     useEventEstimateMutation();
 
-
   const handleNext = () => {
-    setPaginationList((prevList) => prevList.map((num) => num + paginationStep));
+    setPaginationList((prevList) =>
+      prevList.map((num) => num + paginationStep),
+    );
   };
 
   const handlePrevious = () => {
     if (paginationList[0] === 1) return;
-    setPaginationList((prevList) => prevList.map((num) => Math.max(1, num - paginationStep)));
+    setPaginationList((prevList) =>
+      prevList.map((num) => Math.max(1, num - paginationStep)),
+    );
   };
 
   function handleLiveList(data: IEventResponse | undefined) {
@@ -115,9 +148,7 @@ function SuperAdminComp() {
     // if (stage === 'add') return
     setSearchParams(value);
 
-    setFilteredTable(
-      liveTable.filter((x) => x.title.includes(searchParams))
-    );
+    setFilteredTable(liveTable.filter((x) => x.title.includes(searchParams)));
     if (value === "") {
       setFilteredTable(liveTable);
     }
@@ -141,7 +172,8 @@ function SuperAdminComp() {
 
   const handleInputChange = (value: string) => {
     if (value === "") return;
-    if (!selectedCategories.includes(value)) setSelectedCategories([value, ...selectedCategories]);
+    if (!selectedCategories.includes(value))
+      setSelectedCategories([value, ...selectedCategories]);
 
     setCat_Placeholder("");
   };
@@ -149,22 +181,31 @@ function SuperAdminComp() {
   async function handleRefreshLive(query?: number) {
     try {
       setLoading(true);
-      const res = tab === 'channels' ? await getFetchChannels({ limit: 5, page: query ?? pg }) : tab === 'events' ? await getFetchEvents({ limit: 5, page: query ?? pg }) : tab === 'podcasts' ? await getFetchPodcast({ limit: 5, page: query ?? pg }) : tab === 'sports' ? await getFetchSport({ limit: 5, page: query ?? pg }) : await getFetchTVShows({ limit: 5, page: query ?? pg })
+      const res =
+        tab === "channels"
+          ? await getFetchChannels({ limit: 5, page: query ?? pg })
+          : tab === "events"
+            ? await getFetchEvents({ limit: 5, page: query ?? pg })
+            : tab === "podcasts"
+              ? await getFetchPodcast({ limit: 5, page: query ?? pg })
+              : tab === "sports"
+                ? await getFetchSport({ limit: 5, page: query ?? pg })
+                : await getFetchTVShows({ limit: 5, page: query ?? pg });
       if (res.ok && res.data) {
-        handleLiveList(res.data)
+        handleLiveList(res.data);
       } else {
         toast(`${res.data?.message}`, { type: "error" });
       }
     } catch (error) {
       toast(`${error}`, { type: "error" });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  };
+  }
 
   async function handleCreateLive() {
-    if (!client) return
-    console.log(tab.toLowerCase().slice(0, -1), coverImage?.name)
+    if (!client) return;
+    console.log(tab.toLowerCase().slice(0, -1), coverImage?.name);
     try {
       setLoading_B(true);
       const { end, start } = getDates(Number(eventHours), startDate);
@@ -177,23 +218,25 @@ function SuperAdminComp() {
         expiry: end,
         pg: pg_M,
         vidClass: _class.toLowerCase(),
-        type: tab.toLowerCase().slice(0, -1).trim().replace(' ', ''),
+        type: tab.toLowerCase().slice(0, -1).trim().replace(" ", ""),
         start,
-        subTitle: 'subtitle',
+        subTitle: "subtitle",
 
-        category: [tab.toLowerCase().slice(0, -1).trim().replace(" ", "")], 
-      }
+        category: [tab.toLowerCase().slice(0, -1).trim().replace(" ", "")],
+      };
 
-      if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
-      if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
-      if (image && image.file) formdata.append('channelLogo', image.file);
-      formdata.append('data', JSON.stringify(data));
+      if (coverImage && coverImage.file)
+        formdata.append("coverPhoto", coverImage.file);
+      if (videoTrailer && videoTrailer.file)
+        formdata.append("previewVideo", videoTrailer.file);
+      if (image && image.file) formdata.append("channelLogo", image.file);
+      formdata.append("data", JSON.stringify(data));
 
       const res = await createLive(formdata);
       // console.log(res.data)
       if (res.ok && res.data) {
         toast(`${res.data.message}`, { type: "success" });
-        setStage('main')
+        setStage("main");
       } else {
         toast(`${res.data?.message}`, { type: "error" });
       }
@@ -204,7 +247,6 @@ function SuperAdminComp() {
       handleRefreshLive();
     }
   }
-
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
     const files = e.target.files;
@@ -232,7 +274,7 @@ function SuperAdminComp() {
   }
 
   const handleGetEstimatedPrice = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { end, start } = getDates(Number(e.target.value), startDate);
     setEventHours(e.target.value);
@@ -250,14 +292,14 @@ function SuperAdminComp() {
     const res = await deleteLive({ _id: id });
     if (
       res.ok &&
-      res.data &&
-      res.data.message.includes("deleted successfully")
+      res.data
+      // && res.data.message.includes("deleted successfully")
     ) {
       toast("Live deleted successfully", { type: "info" });
       await handleRefreshLive();
     } else {
       toast("Opps! couldn't delete Live", { type: "info" });
-      await handleRefreshLive()
+      await handleRefreshLive();
     }
   }
 
@@ -280,11 +322,12 @@ function SuperAdminComp() {
         url: selectedEvent.coverPhoto,
       });
 
-      if (selectedEvent.type === 'channel') {
-        if (selectedEvent.channelLogo) setImage({
-          name: truncateText(30, selectedEvent.channelLogo),
-          url: selectedEvent.channelLogo,
-        })
+      if (selectedEvent.type === "channel") {
+        if (selectedEvent.channelLogo)
+          setImage({
+            name: truncateText(30, selectedEvent.channelLogo),
+            url: selectedEvent.channelLogo,
+          });
       } else {
         setVideoTrailer({
           name: truncateText(30, selectedEvent.previewVideo),
@@ -299,7 +342,7 @@ function SuperAdminComp() {
       setActive(selectedEvent.active);
       setDetails(selectedEvent.description);
 
-      const hrs = calculateRemainingEventHours(selectedEvent.expiry)
+      const hrs = calculateRemainingEventHours(selectedEvent.expiry);
       setEventHours(formatAmount(hrs.toString()));
     }
   }
@@ -314,28 +357,27 @@ function SuperAdminComp() {
 
   useEffect(() => {
     if (categories) {
-      const liveCategories = categories.data.filter(x => x.name.toLowerCase().includes('live'))
-      setCat_List(liveCategories)
-    };
-
-  }, [categories, isSuccess_C])
+      const liveCategories = categories.data.filter((x) =>
+        x.name.toLowerCase().includes("live"),
+      );
+      setCat_List(liveCategories);
+    }
+  }, [categories, isSuccess_C]);
 
   useEffect(() => {
-    if (tab === 'channels') handleLiveList(allChannels)
-    if (tab === 'events') handleLiveList(allEvents)
-    if (tab === 'tv shows') handleLiveList(allTVShows)
-    if (tab === 'podcasts') handleLiveList(allPodcast)
-    if (tab === 'sports') handleLiveList(allSport)
-  }, [tab, allChannels, allTVShows, allPodcast, allSport, isSuccess])
-
+    if (tab === "channels") handleLiveList(allChannels);
+    if (tab === "events") handleLiveList(allEvents);
+    if (tab === "tv shows") handleLiveList(allTVShows);
+    if (tab === "podcasts") handleLiveList(allPodcast);
+    if (tab === "sports") handleLiveList(allSport);
+  }, [tab, allChannels, allTVShows, allPodcast, allSport, isSuccess]);
 
   switch (stage) {
-    case 'main':
+    case "main":
       return (
-        <div className='h-[calc(100%-58px)] min-h-fit relative'>
-
+        <div className="h-[calc(100%-58px)] min-h-fit relative">
           <div className="mt-8 flex flex-col-reverse md:flex-row items-start justify-between pr-5">
-            <div className='flex-row flex items-start gap-x-10 mt-6 md:mt-0 flex-wrap gap-y-10'>
+            <div className="flex-row flex items-start gap-x-10 mt-6 md:mt-0 flex-wrap gap-y-10">
               <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
                 <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
                   <Image
@@ -356,29 +398,34 @@ function SuperAdminComp() {
 
               <div className="flex flex-row w-fit h-[43px]">
                 {TABS.map((x, i) => {
-                  const active = x.toLowerCase() === tab
+                  const active = x.toLowerCase() === tab;
                   return (
-                    <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
+                    <div
+                      key={i}
+                      onClick={() => setTab(x.toLowerCase())}
+                      className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? "text-white" : "text-grey_800"} w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? "bg-[#0096D6C9]" : "bg-black3"}`}
+                    >
                       {x}
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
 
             {/* add butn */}
             <div
-              onClick={() => setStage('add')}
+              onClick={() => setStage("add")}
               className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
             >
               Add
             </div>
           </div>
 
-
           <div className="min-h-[500px] relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
             <div className="absolute w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
-              <table className={`${roboto_400.className} w-[calc(100%-20px)] min-w-[810px] lg:ml-5`}>
+              <table
+                className={`${roboto_400.className} w-[calc(100%-20px)] min-w-[810px] lg:ml-5`}
+              >
                 <thead className="mb-3">
                   <tr>
                     {LIVE_TH.map((t, i) => {
@@ -396,12 +443,11 @@ function SuperAdminComp() {
                 <tbody>
                   {liveTableFiltered.map((tx, indx) => {
                     return (
-
-                      <tr key={indx} className={`${roboto_400.className} text-white h-[110px]`}>
-                        <td
-                          className=" text-white py-2 w-[250px]"
-                          key={indx}
-                        >
+                      <tr
+                        key={indx}
+                        className={`${roboto_400.className} text-white h-[110px]`}
+                      >
+                        <td className=" text-white py-2 w-[250px]" key={indx}>
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
                             <Image
                               src={tx.coverPhoto}
@@ -441,13 +487,14 @@ function SuperAdminComp() {
                           {tx.vidClass}
                         </td>
 
-
                         <td className="text-center font-normal text-xs uppercase">
-                          {new Date(tx.expiry).toLocaleDateString().replaceAll('/', '-')}
+                          {new Date(tx.expiry)
+                            .toLocaleDateString()
+                            .replaceAll("/", "-")}
                         </td>
 
                         <td className="text-center font-normal text-xs capitalize">
-                          {tx.active ? 'active' : 'inactive'}
+                          {tx.active ? "active" : "inactive"}
                         </td>
 
                         <td className="">
@@ -461,7 +508,11 @@ function SuperAdminComp() {
                               />
                             </button>
                             <button
-                              onClick={() => [setEvent(tx), setTab(tx.type + 's'), setStage('add')]}
+                              onClick={() => [
+                                setEvent(tx),
+                                setTab(tx.type + "s"),
+                                setStage("add"),
+                              ]}
                             >
                               <Image
                                 src="/edit.svg"
@@ -470,9 +521,7 @@ function SuperAdminComp() {
                                 alt="edit"
                               />
                             </button>
-                            <button
-                              onClick={() => handleDelete(tx._id)}
-                            >
+                            <button onClick={() => handleDelete(tx._id)}>
                               <Image
                                 src="/delete.svg"
                                 width={15}
@@ -490,7 +539,6 @@ function SuperAdminComp() {
             </div>
           </div>
 
-
           <div className="mt-auto ml-5 md:ml-10 lg:ml-16 bg-black2 absolute bottom-10 z-50 flex flex-row items-center">
             <div
               className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
@@ -504,12 +552,17 @@ function SuperAdminComp() {
               </button>
               <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
                 {paginationList.map((num, index) => {
-                  const active = pg === num
+                  const active = pg === num;
 
                   return (
-
-                    <p key={index} onClick={() => [setPg(num), handleRefreshLive(num)]} className={`${active ? 'text-red' : 'text-[#C4C4C4]'} cursor-pointer`}>{num}</p>
-                  )
+                    <p
+                      key={index}
+                      onClick={() => [setPg(num), handleRefreshLive(num)]}
+                      className={`${active ? "text-red" : "text-[#C4C4C4]"} cursor-pointer`}
+                    >
+                      {num}
+                    </p>
+                  );
                 })}
                 {"   "} ...
               </div>
@@ -521,51 +574,62 @@ function SuperAdminComp() {
               </button>
             </div>
 
-            {loading && <Lottie
-              animationData={LoadingSpinner}
-              loop
-              style={{ width: 35, height: 35, marginLeft: 15 }}
-            />}
+            {loading && (
+              <Lottie
+                animationData={LoadingSpinner}
+                loop
+                style={{ width: 35, height: 35, marginLeft: 15 }}
+              />
+            )}
           </div>
         </div>
-      )
+      );
 
-    case 'add':
+    case "add":
       return (
-        <div className='h-[calc(100%-58px)] flex flex-col min-h-fit relative'>
+        <div className="h-[calc(100%-58px)] flex flex-col min-h-fit relative">
           <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
-            <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
-
-            </div>
+            <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center"></div>
 
             {/* add butn */}
             <div
-              onClick={() => [setStage('main'), setEvent(null), setVideoTrailer(null), setCoverImage(null), setImage(null)]}
+              onClick={() => [
+                setStage("main"),
+                setEvent(null),
+                setVideoTrailer(null),
+                setCoverImage(null),
+                setImage(null),
+              ]}
               className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
             >
               Back
             </div>
           </div>
 
-
           <div className="mt-12 flex flex-row w-fit h-[43px]">
-            {!selectedEvent && TABS.map((x, i) => {
-              const active = x.toLowerCase() === tab
-              return (
-                <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
-                  {x}
-                </div>
-              )
-            })}
+            {!selectedEvent &&
+              TABS.map((x, i) => {
+                const active = x.toLowerCase() === tab;
+                return (
+                  <div
+                    key={i}
+                    onClick={() => setTab(x.toLowerCase())}
+                    className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? "text-white" : "text-grey_800"} w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? "bg-[#0096D6C9]" : "bg-black3"}`}
+                  >
+                    {x}
+                  </div>
+                );
+              })}
           </div>
 
           <div
-            className={`flex-1 ${(isEVENT || isPodcast || isTVSHOW) ? 'min-h-[1400px]' : 'min-h-[850px]'} md:min-h-[500px] lg:min-h-fit min-w-fit w-full h-full bg-black3 -mt-1 p-5 lg:p-10 lg:pl-16 lg:pt-16`}>
+            className={`flex-1 ${isEVENT || isPodcast || isTVSHOW ? "min-h-[1400px]" : "min-h-[850px]"} md:min-h-[500px] lg:min-h-fit min-w-fit w-full h-full bg-black3 -mt-1 p-5 lg:p-10 lg:pl-16 lg:pt-16`}
+          >
             <div className="flex mt-10 sm:mt-0 md:flex-row items-start gap-x-16 lg:gap-x-16">
               {/* LEFT START */}
               <div className="flex-1 min-w-[300px] space-y-7">
-                <div className='flex items-start flex-wrap gap-y-4'>
-                  <div className='space-y-7 flex-1'>
+                <div className="flex items-start flex-wrap gap-y-4">
+                  <div className="space-y-7 flex-1">
                     {isChannel ? (
                       <div className="w-[75%]">
                         <label
@@ -581,7 +645,7 @@ function SuperAdminComp() {
                           id="name"
                           className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
                           value={title}
-                          onChange={e => setTitle(e.target.value)}
+                          onChange={(e) => setTitle(e.target.value)}
                         />
                       </div>
                     ) : (
@@ -600,7 +664,7 @@ function SuperAdminComp() {
                             id="name"
                             className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
                             value={title}
-                            onChange={e => setTitle(e.target.value)}
+                            onChange={(e) => setTitle(e.target.value)}
                           />
                         </div>
 
@@ -618,7 +682,7 @@ function SuperAdminComp() {
                             id="name"
                             className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
                             value={location}
-                            onChange={e => setLocation(e.target.value)}
+                            onChange={(e) => setLocation(e.target.value)}
                           />
                         </div>
                       </>
@@ -657,8 +721,8 @@ function SuperAdminComp() {
                     </div>
                   </div>
 
-                  {(isEVENT || isTVSHOW || isPodcast) &&
-                    <div className='flex items-start gap-x-10 lg:gap-x-20'>
+                  {(isEVENT || isTVSHOW || isPodcast) && (
+                    <div className="flex items-start gap-x-10 lg:gap-x-20">
                       <div className="w-full md:w-[350px] md:ml-auto mt-10">
                         <p
                           className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
@@ -675,7 +739,9 @@ function SuperAdminComp() {
                             <span
                               className={`${roboto_400.className} flex-1 truncate text-xs text-grey_500`}
                             >
-                              {coverImage ? truncateText(20, coverImage.name) : "No File selected"}
+                              {coverImage
+                                ? truncateText(20, coverImage.name)
+                                : "No File selected"}
                             </span>
                             <input
                               type="file"
@@ -735,7 +801,9 @@ function SuperAdminComp() {
                             <span
                               className={`${roboto_400.className} text-xs truncate text-grey_500`}
                             >
-                              {videoTrailer ? truncateText(20, videoTrailer.name) : "No File selected"}
+                              {videoTrailer
+                                ? truncateText(20, videoTrailer.name)
+                                : "No File selected"}
                             </span>
                             <input
                               type="file"
@@ -774,7 +842,9 @@ function SuperAdminComp() {
 
                                 <div className="flex items-center justify-center absolute w-full h-full bg-black/50 z-[9999px]">
                                   <button
-                                    style={{ display: isPlaying ? "none" : "inline" }}
+                                    style={{
+                                      display: isPlaying ? "none" : "inline",
+                                    }}
                                     onClick={(e) => handleVideo(e)}
                                   >
                                     <Image
@@ -803,14 +873,9 @@ function SuperAdminComp() {
                           )}
                         </div>
                       </div>
-
-                    </div>}
-
+                    </div>
+                  )}
                 </div>
-
-
-
-
 
                 <div className="">
                   <label
@@ -843,7 +908,7 @@ function SuperAdminComp() {
                                 <button
                                   onClick={() =>
                                     setSelectedCategories((prev) =>
-                                      prev.filter((x) => x !== item)
+                                      prev.filter((x) => x !== item),
                                     )
                                   }
                                 >
@@ -863,7 +928,6 @@ function SuperAdminComp() {
                       selectData={cat_List.map((x) => x.name)}
                       className="border-[#D9D9D938] h-[110px] items-start text-white rounded-sm flex-1"
                     />
-
                   </div>
                 </div>
 
@@ -891,8 +955,8 @@ function SuperAdminComp() {
 
                 <div className="pt-8 flex sm:flex-row flex-col flex-wrap gap-y-5 sm:items-end sm:justify-between">
                   {/* //here */}
-                  <div className='relative'>
-                    <div className='flex-row flex items-end gap-x-1'>
+                  <div className="relative">
+                    <div className="flex-row flex items-end gap-x-1">
                       <div className="min-w-fit w-[207]">
                         <label
                           htmlFor="client"
@@ -903,19 +967,27 @@ function SuperAdminComp() {
                         <CustomInput
                           required
                           type="text"
-                          placeholder={selectedEvent ? selectedEvent.clientDetails.fullName : client ? client.fullname : "Search client here and select from dropdown"}
+                          placeholder={
+                            selectedEvent
+                              ? selectedEvent.clientDetails.fullName
+                              : client
+                                ? client.fullname
+                                : "Search client here and select from dropdown"
+                          }
                           id="client"
                           className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-[#C4C4C4]"
                           value={searchClientParams}
-                          onChange={e => handleSearch(e.target.value)}
+                          onChange={(e) => handleSearch(e.target.value)}
                         />
                       </div>
 
-                      {loading_C && <Lottie
-                        animationData={LoadingSpinner}
-                        loop
-                        style={{ width: 35, height: 35, marginLeft: 15 }}
-                      />}
+                      {loading_C && (
+                        <Lottie
+                          animationData={LoadingSpinner}
+                          loop
+                          style={{ width: 35, height: 35, marginLeft: 15 }}
+                        />
+                      )}
                     </div>
 
                     {clientList.length > 0 && (
@@ -926,7 +998,7 @@ function SuperAdminComp() {
                               onClick={() => [
                                 setClient(content),
                                 setSearchClient(""),
-                                setClientList([])
+                                setClientList([]),
                               ]}
                               className="text-white cursor-pointer bg-black2 p-3 w-full"
                               key={i}
@@ -946,20 +1018,22 @@ function SuperAdminComp() {
                       Active
                     </span>
                     <div
-                      className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${isActive ? "bg-[#00E3A373]" : "bg-[#BCBDBD73]"
-                        }`}
+                      className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${
+                        isActive ? "bg-[#00E3A373]" : "bg-[#BCBDBD73]"
+                      }`}
                     >
                       <div
                         onClick={() => setActive(!isActive)}
-                        className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${isActive
-                          ? "translate-x-5 bg-green_400"
-                          : "-translate-x-0 bg-[#BCBDBD]"
-                          } `}
+                        className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${
+                          isActive
+                            ? "translate-x-5 bg-green_400"
+                            : "-translate-x-0 bg-[#BCBDBD]"
+                        } `}
                       />
                     </div>
                   </div>
 
-                  {(isEVENT || isPodcast || isTVSHOW) &&
+                  {(isEVENT || isPodcast || isTVSHOW) && (
                     <div className="min-w-[350px] flex flex-col sm:items-center sm:ml-10 lg:ml-36">
                       <label
                         className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -979,7 +1053,6 @@ function SuperAdminComp() {
                           placeholder="0"
                           id="name"
                           className="w-[83px] font-normal text-sm text-center py-1 border border-border_grey rounded-sm"
-
                           onChange={(e) => handleGetEstimatedPrice(e)}
                         />
 
@@ -1002,176 +1075,181 @@ function SuperAdminComp() {
                         )}
                       </div>
                     </div>
-
-                  }
+                  )}
                 </div>
               </div>
               {/* LEFT END */}
 
               {/* RIGHT START */}
-              {isChannel && <div className="flex-1 min-w-[350px] lg:mr-2">
-                <div className="w-full md:w-[350px] md:ml-auto mt-10">
-                  <p
-                    className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
-                  >
-                    Upload Cover Image *
-                  </p>
-                  <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
-                    <div className="flex items-center ml-5 py-2 relative">
-                      <div
-                        className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
-                      >
-                        Choose File
+              {isChannel && (
+                <div className="flex-1 min-w-[350px] lg:mr-2">
+                  <div className="w-full md:w-[350px] md:ml-auto mt-10">
+                    <p
+                      className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
+                    >
+                      Upload Cover Image *
+                    </p>
+                    <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
+                      <div className="flex items-center ml-5 py-2 relative">
+                        <div
+                          className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
+                        >
+                          Choose File
+                        </div>
+                        <span
+                          className={`${roboto_400.className} truncate text-xs text-grey_500`}
+                        >
+                          {coverImage
+                            ? truncateText(20, coverImage.name)
+                            : "No File selected"}
+                        </span>
+                        <input
+                          type="file"
+                          id="file"
+                          onChange={(e) => handleInput(e, "cover")}
+                          className="absolute z-20 opacity-0"
+                        />
                       </div>
-                      <span
-                        className={`${roboto_400.className} truncate text-xs text-grey_500`}
+                      <div
+                        className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
                       >
-                        {coverImage ? truncateText(20, coverImage.name) : "No File selected"}
+                        UPLOAD
+                      </div>
+                    </div>
+
+                    <div className="h-[150px] flex flex-row items-end mt-5 justify-center gap-x-3">
+                      {coverImage && (
+                        <>
+                          <Image
+                            id="upload"
+                            src={coverImage.url}
+                            width={298}
+                            height={159}
+                            alt="uploaded"
+                            className="rounded-[10px] w-[298px] h-[159px]"
+                          />
+                          <button
+                            className="hover:scale-110 transition-all duration-200"
+                            onClick={() => setCoverImage(null)}
+                          >
+                            <Image
+                              src="/delete.svg"
+                              width={16}
+                              height={16}
+                              alt="delete icon"
+                            />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* {isChannel ? ( */}
+                  <div className="w-full md:w-[350px] md:ml-auto mt-16">
+                    <p
+                      className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
+                    >
+                      Upload Channel logo *
+                    </p>
+                    <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
+                      <div className="flex items-center ml-5 py-2 relative">
+                        <div
+                          className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
+                        >
+                          Choose File
+                        </div>
+                        <span
+                          className={`${roboto_400.className} truncate text-xs text-grey_500`}
+                        >
+                          {image
+                            ? truncateText(20, image.name)
+                            : "No File selected"}
+                        </span>
+                        <input
+                          type="file"
+                          id="file"
+                          onChange={handleInput}
+                          className="absolute z-20 opacity-0"
+                        />
+                      </div>
+                      <div
+                        className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
+                      >
+                        UPLOAD
+                      </div>
+                    </div>
+
+                    <div className="h-[133px] flex flex-row items-end mt-5 justify-center gap-x-3">
+                      {image && (
+                        <>
+                          <Image
+                            // id="upload"
+                            src={image.url}
+                            width={110}
+                            height={153}
+                            alt="uploaded"
+                            className="h-[153px] w-[110px] rounded-[10px]"
+                          />
+                          <button
+                            className="hover:scale-110 transition-all duration-200"
+                            onClick={() => setImage(null)}
+                          >
+                            <Image
+                              src="/delete.svg"
+                              width={16}
+                              height={16}
+                              alt="delete icon"
+                            />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="min-w-fit flex flex-col items-center sm:ml-10 lg:ml-36">
+                    <label
+                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
+                    >
+                      EXPIRES{" "}
+                      <span
+                        className={`${roboto_500.className} font-medium text-[15px] text-[#909090]`}
+                      >
+                        (in Hours)
                       </span>
-                      <input
-                        type="file"
-                        id="file"
-                        onChange={(e) => handleInput(e, "cover")}
-                        className="absolute z-20 opacity-0"
+                      *
+                    </label>
+                    <div className="flex flex-row gap-x-2 items-center mt-2.5">
+                      <CustomInput
+                        required
+                        type="text"
+                        placeholder="0"
+                        id="name"
+                        className="w-[83px] font-normal text-sm text-center py-1 border border-border_grey rounded-sm"
+                        value={eventHours}
+                        onChange={(e) => handleGetEstimatedPrice(e)}
                       />
+
+                      <button
+                        className={`${roboto_400.className} min-w-fit py-1 px-2 text-[#747474] text-sm bg-[#333333]`}
+                      >
+                        Extend Hours
+                      </button>
                     </div>
                     <div
-                      className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
+                      className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
                     >
-                      UPLOAD
-                    </div>
-                  </div>
-
-                  <div className="h-[150px] flex flex-row items-end mt-5 justify-center gap-x-3">
-                    {coverImage && (
-                      <>
-                        <Image
-                          id="upload"
-                          src={coverImage.url}
-                          width={298}
-                          height={159}
-                          alt="uploaded"
-                          className="rounded-[10px] w-[298px] h-[159px]"
+                      ₦{formatAmount(eventEstimatedPrice.toString())}.00
+                      {isEstimatedLoading && (
+                        <Lottie
+                          animationData={LoadingSpinner}
+                          loop
+                          style={{ width: 35, height: 35, marginRight: 5 }}
                         />
-                        <button
-                          className="hover:scale-110 transition-all duration-200"
-                          onClick={() => setCoverImage(null)}
-                        >
-                          <Image
-                            src="/delete.svg"
-                            width={16}
-                            height={16}
-                            alt="delete icon"
-                          />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* {isChannel ? ( */}
-                <div className="w-full md:w-[350px] md:ml-auto mt-16">
-                  <p
-                    className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
-                  >
-                    Upload Channel logo *
-                  </p>
-                  <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
-                    <div className="flex items-center ml-5 py-2 relative">
-                      <div
-                        className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
-                      >
-                        Choose File
-                      </div>
-                      <span
-                        className={`${roboto_400.className} truncate text-xs text-grey_500`}
-                      >
-                        {image ? truncateText(20, image.name) : "No File selected"}
-                      </span>
-                      <input
-                        type="file"
-                        id="file"
-                        onChange={handleInput}
-                        className="absolute z-20 opacity-0"
-                      />
-                    </div>
-                    <div
-                      className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
-                    >
-                      UPLOAD
+                      )}
                     </div>
                   </div>
-
-                  <div className="h-[133px] flex flex-row items-end mt-5 justify-center gap-x-3">
-                    {image && (
-                      <>
-                        <Image
-                          // id="upload"
-                          src={image.url}
-                          width={110}
-                          height={153}
-                          alt="uploaded"
-                          className="h-[153px] w-[110px] rounded-[10px]"
-                        />
-                        <button
-                          className="hover:scale-110 transition-all duration-200"
-                          onClick={() => setImage(null)}
-                        >
-                          <Image
-                            src="/delete.svg"
-                            width={16}
-                            height={16}
-                            alt="delete icon"
-                          />
-                        </button>
-                      </>
-                    )}
-                  </div>
                 </div>
-
-                <div className="min-w-fit flex flex-col items-center sm:ml-10 lg:ml-36">
-                  <label
-                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
-                  >
-                    EXPIRES{" "}
-                    <span
-                      className={`${roboto_500.className} font-medium text-[15px] text-[#909090]`}
-                    >
-                      (in Hours)
-                    </span>
-                    *
-                  </label>
-                  <div className="flex flex-row gap-x-2 items-center mt-2.5">
-                    <CustomInput
-                      required
-                      type="text"
-                      placeholder="0"
-                      id="name"
-                      className="w-[83px] font-normal text-sm text-center py-1 border border-border_grey rounded-sm"
-                      value={eventHours}
-                      onChange={(e) => handleGetEstimatedPrice(e)}
-                    />
-
-                    <button
-                      className={`${roboto_400.className} min-w-fit py-1 px-2 text-[#747474] text-sm bg-[#333333]`}
-                    >
-                      Extend Hours
-                    </button>
-                  </div>
-                  <div
-                    className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
-                  >
-                    ₦{formatAmount(eventEstimatedPrice.toString())}.00
-                    {isEstimatedLoading && (
-                      <Lottie
-                        animationData={LoadingSpinner}
-                        loop
-                        style={{ width: 35, height: 35, marginRight: 5 }}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>}
+              )}
               {/* RIGHT END */}
             </div>
 
@@ -1181,15 +1259,22 @@ function SuperAdminComp() {
                 title="SAVE"
                 className="w-full"
                 isLoading={loading_B}
-                disabled={location === '' || title === '' || pg_M === '' || _class === '' || !client || loading_B || !coverImage || (tab.toLowerCase() === 'channel' ? !image : !videoTrailer)}
+                disabled={
+                  location === "" ||
+                  title === "" ||
+                  pg_M === "" ||
+                  _class === "" ||
+                  !client ||
+                  loading_B ||
+                  !coverImage ||
+                  (tab.toLowerCase() === "channel" ? !image : !videoTrailer)
+                }
               />
             </div>
           </div>
-
         </div>
-      )
-
+      );
   }
 }
 
-export default SuperAdminComp
+export default SuperAdminComp;
