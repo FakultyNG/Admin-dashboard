@@ -29,6 +29,7 @@ import LoadingSpinner from "@/config/lottie/loading.json";
 import { editContent } from "@/api/contentSlice";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { IEventData } from "@/types/api/live.types";
+import { deleteLive } from "@/api/liveSlice";
 
 export const runtime = "edge";
 
@@ -147,24 +148,37 @@ export default function page() {
   }
 
   async function handleRemoveFromUpcoming(item: IEventData | IUpcomingData) {
-    setUpcomingEvents((prev) => prev.filter((x) => x._id !== item._id));
-    setUpcomingEventsFiltered((prev) => prev.filter((x) => x._id !== item._id));
     try {
-      const formdata = new FormData();
-      formdata.append("data", JSON.stringify({ upcoming: false }));
-      const res = await editContent(formdata, item._id);
+      const isLiveProject = "start" in item;
+      let res;
+
+      if (isLiveProject) {
+        // Postman: DELETE /superadmin/shared/lives/delete/:liveId
+        res = await deleteLive({_id: item._id});
+      } else {
+        // Postman: PUT /superadmin/uploads/edit/:vodId with upcoming=false.
+        const formdata = new FormData();
+        formdata.append("data", JSON.stringify({upcoming: false}));
+        res = await editContent(formdata, item._id);
+      }
+
       if (res.ok && res.data) {
-        toast("Removed from upcoming", { type: "success" });
-        refetch();
+        setUpcomingEvents((prev) => prev.filter((x) => x._id !== item._id));
+        setUpcomingEventsFiltered((prev) =>
+          prev.filter((x) => x._id !== item._id),
+        );
+        toast(
+          isLiveProject ? "Live project deleted" : "Removed from upcoming",
+          {type: "success"},
+        );
+        await refetch();
       } else {
         toast(res.data?.message || "Couldn't remove upcoming content", {
           type: "error",
         });
-        refetch();
       }
     } catch (error) {
       toast("Opps! couldn't remove upcoming content!", { type: "error" });
-      refetch();
     }
   }
 
