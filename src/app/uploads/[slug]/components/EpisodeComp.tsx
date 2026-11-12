@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
+import SafeImage from '@/components/SafeImage';
 import useToggle from '@/hooks/useToggle';
 import { roboto_400, roboto_400_italic, roboto_500 } from '@/config/fonts';
 import { AppButton, CustomInput, SelectInputForm } from '@/components/AppLayout';
@@ -349,8 +350,9 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                     <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
 
                                         <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                                            <Image
+                                            <SafeImage
                                                 src={links.image ? links.image : ''}
+                                                fallbackSrc="/coverphoto.png"
                                                 width={42}
                                                 height={42}
                                                 alt="profiles"
@@ -480,8 +482,9 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                             <div className="rounded-[10px] relative overflow-hidden">
 
                                                 <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                                                    <Image
+                                                    <SafeImage
                                                         src={thumbnailUrl ?? ''}
+                                                        fallbackSrc="/coverphoto.png"
                                                         width={42}
                                                         height={42}
                                                         alt="profiles"
@@ -744,8 +747,9 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                                     <div className="rounded-[10px] relative overflow-hidden">
 
                                                         <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                                                            <Image
+                                                            <SafeImage
                                                                 src={thumbnailUrl_recap ?? ''}
+                                                                fallbackSrc="/coverphoto.png"
                                                                 width={42}
                                                                 height={42}
                                                                 alt="profiles"
@@ -874,8 +878,9 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                                 <div className="rounded-[10px] relative overflow-hidden">
 
                                                     <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                                                        <Image
+                                                        <SafeImage
                                                             src={thumbnailUrl_intro ?? ''}
+                                                            fallbackSrc="/coverphoto.png"
                                                             width={42}
                                                             height={42}
                                                             alt="profiles"

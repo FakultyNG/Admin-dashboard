@@ -387,15 +387,17 @@ export default function page() {
 
             {selectedContent && (
               <div className="mt-8 min-h-[436px] flex">
-                <Image
+                <SafeImage
                   src={"portraitPhoto" in selectedContent ? selectedContent.portraitPhoto : selectedContent.coverPhoto}
+                  fallbackSrc="/coverphoto.png"
                   alt=""
                   width={347}
                   height={436}
                   className="w-[347px] h-[436px] mr-2 object-cover"
                 />
-                <Image
+                <SafeImage
                   src={"portraitPhoto" in selectedContent ? selectedContent.portraitPhoto : selectedContent.coverPhoto}
+                  fallbackSrc="/coverphoto.png"
                   alt=""
                   width={347}
                   height={436}

@@ -18,6 +18,7 @@ import {
 } from "@/types/api/upcoming.types";
 import { formatAmount } from "@/utilities/formatAmount";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { ImageProps } from "../plans/ClientComponent";
@@ -310,12 +311,13 @@ export default function page() {
                             key={indx}
                           >
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                              <Image
+                              <SafeImage
                                 src={
                                   "coverPhoto" in tx
                                     ? tx.coverPhoto
                                     : tx.portraitPhoto
                                 }
+                                fallbackSrc="/coverphoto.png"
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -655,13 +657,14 @@ export default function page() {
                   <div className="h-[150px] flex flex-row items-end mt-10 justify-center gap-x-3">
                     {selectedUpcoming && (
                       <>
-                        <Image
+                        <SafeImage
                           id="upload"
                           src={
                             "coverPhoto" in selectedUpcoming
                               ? selectedUpcoming.coverPhoto
                               : selectedUpcoming.landscapePhoto
                           }
+                          fallbackSrc="/coverphoto.png"
                           width={298}
                           height={159}
                           alt="uploaded"
@@ -714,13 +717,14 @@ export default function page() {
                   <div className="h-[173px] flex flex-row items-end mt-1 justify-center gap-x-3">
                     {selectedUpcoming && (
                       <>
-                        <Image
+                        <SafeImage
                           // id="upload"
                           src={
                             "coverPhoto" in selectedUpcoming
                               ? selectedUpcoming.coverPhoto
                               : selectedUpcoming.portraitPhoto
                           }
+                          fallbackSrc="/coverphoto.png"
                           width={108}
                           height={161}
                           alt="uploaded"

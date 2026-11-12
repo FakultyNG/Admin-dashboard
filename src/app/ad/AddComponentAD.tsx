@@ -4,6 +4,7 @@
 import { AppButton, CustomInput, SelectInputForm } from "@/components/AppLayout";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { useState } from "react";
 import ReactPlayer from "react-player";
 import useToggle from "@/hooks/useToggle";
@@ -462,9 +463,10 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                             <div className="flex flex-row items-end mt-12 justify-center gap-x-3">
                                 {/* {coverImage && ( */}
                                 <>
-                                    <Image
+                                    <SafeImage
                                         id="upload"
                                         src={landscapeImagePreview_W ? landscapeImagePreview_W.url : '/adsManager/landscape_web.png'}
+                                        fallbackSrc="/adsManager/landscape_web.png"
                                         width={1023}
                                         height={302}
                                         alt="uploaded"
@@ -523,9 +525,10 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                             <div className="flex flex-row items-end mt-12 justify-center gap-x-3">
                                 {/* {coverImage && ( */}
                                 <>
-                                    <Image
+                                    <SafeImage
                                         id="upload"
                                         src={landscapeImageLive_W ? landscapeImageLive_W.url : '/adsManager/landscape_web.png'}
+                                        fallbackSrc="/adsManager/landscape_web.png"
                                         width={1023}
                                         height={302}
                                         alt="uploaded"
@@ -535,7 +538,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                         className="hover:scale-110 transition-all duration-200"
                                         onClick={() => setLandscapeImageLive_W(null)}
                                     >
-                                        <Image
+                                        <SafeImage
                                             src="/delete.svg"
                                             width={16}
                                             height={16}
@@ -586,9 +589,10 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                 <div className="mx-auto flex flex-row items-end mt-12 justify-center gap-x-3">
                                     {/* {coverImage && ( */}
                                     <>
-                                        <Image
+                                        <SafeImage
                                             id="upload"
                                             src={portrait_W ? portrait_W.url : '/adsManager/landscape_web.png'}
+                                            fallbackSrc="/adsManager/portrait_web.png"
                                             height={1023}
                                             width={303}
                                             alt="uploaded"
@@ -775,9 +779,10 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                 <div className="mx-auto flex flex-row items-end mt-12 justify-center gap-x-3">
                                     {/* {coverImage && ( */}
                                     <>
-                                        <Image
+                                        <SafeImage
                                             id="upload"
                                             src={landscapeImage_M ? landscapeImage_M.url : '/adsManager/landscape_web.png'}
+                                            fallbackSrc="/adsManager/landscape_web.png"
                                             width={447}
                                             height={250}
                                             alt="uploaded"

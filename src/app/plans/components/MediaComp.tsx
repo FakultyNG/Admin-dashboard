@@ -1,5 +1,6 @@
 import { roboto_400, roboto_500 } from '@/config/fonts'
 import Image from 'next/image'
+import SafeImage from '@/components/SafeImage'
 import React, { Dispatch, SetStateAction } from 'react'
 import ReactPlayer from 'react-player'
 import { ImageProps } from '../ClientComponent'
@@ -61,9 +62,10 @@ function MediaComp({ coverImage, handleInput, setCoverImage, image, videoTrailer
                 <div className="h-[150px] flex flex-row items-end mt-3 justify-center gap-x-3">
                     {coverImage && (
                         <>
-                            <Image
+                            <SafeImage
                                 id="upload"
                                 src={coverImage.url}
+                                fallbackSrc="/coverphoto.png"
                                 width={238}
                                 height={139}
                                 alt="uploaded"

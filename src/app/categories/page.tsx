@@ -198,19 +198,7 @@ export default function page() {
       </div>
 
       <div className="mt-8 space-y-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-400">
-              Content taxonomy
-            </p>
-            <h2 className={`${roboto_500.className} mt-2 text-2xl font-medium text-white sm:text-3xl`}>
-              Organize your catalogue
-            </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-              Manage the categories, genres, and cast information used across Reeplay.
-            </p>
-          </div>
-
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
             onClick={() => setIsAdd(true)}
@@ -326,7 +314,7 @@ export default function page() {
                           type="button"
                           onClick={() => handleDelete(item._id)}
                           aria-label={`Delete ${item.title}`}
-                          className="grid h-9 w-9 place-items-center rounded-lg border border-red-500/15 bg-red-500/[0.05] hover:bg-red-500/10"
+                          className="grid h-9 w-9 place-items-center rounded-lg border border-white/70 bg-[#0b0e14] transition-colors hover:bg-[#171b24]"
                         >
                           <Image src="/delete.svg" width={15} height={18} alt="" />
                         </button>

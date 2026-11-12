@@ -16,6 +16,7 @@ import { IMediaData, IMediaResponse } from "@/types/api/media.types";
 import { isExpired } from "@/utilities/dateUtilities";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -228,8 +229,9 @@ function MainComponent({ slug }: Props) {
                           >
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit min-w-[140px]">
                               <div className="w-[42px] h-[42px] rounded-full overflow-hidden">
-                                <Image
+                                <SafeImage
                                   src={tx.portraitPhoto}
+                                  fallbackSrc="/coverphoto.png"
                                   width={42}
                                   height={42}
                                   alt="profiles"

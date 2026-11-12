@@ -28,6 +28,7 @@ import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { ContentFormData, ISeasonData } from "@/types/api/content.type";
 import {
   addSeason,
@@ -1123,7 +1124,7 @@ export const AddComponent = ({
                     <>
                       <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
                         <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                          <Image
+                          <SafeImage
                             src={
                               links.image
                                 ? links.image
@@ -1131,6 +1132,7 @@ export const AddComponent = ({
                                   ? selectedMedia.portraitPhoto
                                   : ""
                             }
+                            fallbackSrc="/coverphoto.png"
                             width={42}
                             height={42}
                             alt="profiles"
@@ -1271,8 +1273,9 @@ export const AddComponent = ({
                       <>
                         <div className="rounded-[10px] relative overflow-hidden">
                           <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                            <Image
+                            <SafeImage
                               src={thumbnailUrl ?? ""}
+                              fallbackSrc="/coverphoto.png"
                               width={42}
                               height={42}
                               alt="profiles"
@@ -1469,7 +1472,7 @@ export const AddComponent = ({
                         <>
                           <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                              <Image
+                              <SafeImage
                                 src={
                                   links_2.image
                                     ? links_2.image
@@ -1477,6 +1480,7 @@ export const AddComponent = ({
                                       ? selectedMedia.portraitPhoto
                                       : ""
                                 }
+                                fallbackSrc="/coverphoto.png"
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -1627,8 +1631,9 @@ export const AddComponent = ({
                           <>
                             <div className="rounded-[10px] relative overflow-hidden">
                               <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                                <Image
+                                <SafeImage
                                   src={thumbnailUrl_2 ?? ""}
+                                  fallbackSrc="/coverphoto.png"
                                   width={42}
                                   height={42}
                                   alt="profiles"
@@ -2019,9 +2024,10 @@ export const AddComponent = ({
                 <div className="mt-5">
                   {portrait && (
                     <>
-                      <Image
+                      <SafeImage
                         id="upload"
                         src={portrait.url}
+                        fallbackSrc="/coverphoto.png"
                         width={347}
                         height={436}
                         alt="uploaded"
@@ -2075,9 +2081,10 @@ export const AddComponent = ({
                 <div className="mt-5">
                   {portrait_L && (
                     <>
-                      <Image
+                      <SafeImage
                         id="upload"
                         src={portrait_L.url}
+                        fallbackSrc="/coverphoto.png"
                         width={687}
                         height={436}
                         alt="uploaded"

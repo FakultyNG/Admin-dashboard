@@ -8,6 +8,7 @@ import ProviderContainer from "@/components/Provider";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import 'video.js/dist/video-js.css';
+import AdminPageIntro from "@/components/AdminPageIntro";
 
 
 
@@ -34,7 +35,10 @@ export default function RootLayout({
           <Sidebar />
           <div className="app-main">
             <Header />
-            <main className="app-content">{children}</main>
+            <main className="app-content">
+              <AdminPageIntro />
+              {children}
+            </main>
           </div>
           <ToastContainer
             autoClose={5000}

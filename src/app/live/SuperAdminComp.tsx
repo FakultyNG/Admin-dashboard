@@ -15,6 +15,7 @@ import {
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -457,12 +458,13 @@ function SuperAdminComp() {
                         <td className="w-12"><RowCheckbox group={`live-${tab}`} value={tx._id} label={`Select ${tx.title}`} /></td>
                         <td className=" text-white py-2 w-[250px]" key={indx}>
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
-                            <Image
+                            <SafeImage
                               src={tx.coverPhoto}
+                              fallbackSrc="/coverphoto.png"
                               width={42}
                               height={42}
                               alt="profiles"
-                              className="object-cover h-[42px] rounded-full"
+                              className="h-[42px] w-[42px] rounded-lg object-cover"
                             />
                             <div className="ml-2.5">
                               <p
@@ -772,9 +774,10 @@ function SuperAdminComp() {
                         <div className="h-[150px] flex flex-row items-end mt-5 justify-center gap-x-3">
                           {coverImage && (
                             <>
-                              <Image
+                              <SafeImage
                                 id="upload"
                                 src={coverImage.url}
+                                fallbackSrc="/coverphoto.png"
                                 width={298}
                                 height={159}
                                 alt="uploaded"
@@ -1131,9 +1134,10 @@ function SuperAdminComp() {
                     <div className="h-[150px] flex flex-row items-end mt-5 justify-center gap-x-3">
                       {coverImage && (
                         <>
-                          <Image
+                          <SafeImage
                             id="upload"
                             src={coverImage.url}
+                            fallbackSrc="/coverphoto.png"
                             width={298}
                             height={159}
                             alt="uploaded"
@@ -1193,9 +1197,10 @@ function SuperAdminComp() {
                     <div className="h-[133px] flex flex-row items-end mt-5 justify-center gap-x-3">
                       {image && (
                         <>
-                          <Image
+                          <SafeImage
                             // id="upload"
                             src={image.url}
+                            fallbackSrc="/coverphoto.png"
                             width={110}
                             height={153}
                             alt="uploaded"

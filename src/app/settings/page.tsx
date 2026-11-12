@@ -7,6 +7,7 @@ import { IPrice_C, IPrice_E, PlanPrices } from "@/types/api/settings.types";
 import { formatAmount } from "@/utilities/formatAmount";
 import { truncateText } from "@/utilities/textUtils";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 import { ModalComponent } from "./ModalComp";
@@ -735,9 +736,10 @@ export default function page() {
                   <div className="h-[150px] flex flex-row items-end mt-5 justify-center gap-x-3">
                     {coverImage && (
                       <>
-                        <Image
+                        <SafeImage
                           id="upload"
                           src={coverImage.url}
+                          fallbackSrc="/coverphoto.png"
                           width={298}
                           height={159}
                           alt="uploaded"
