@@ -41,7 +41,10 @@ import {
   seriesButtonValidity,
 } from "@/api/contentSlice";
 import { IMediaData } from "@/types/api/media.types";
-import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
+import {
+  dateInputToLagosISOString,
+  formatDateInputInLagos,
+} from "@/utilities/dateUtilities";
 import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
 import { useProgress } from "@bprogress/next";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -97,7 +100,7 @@ export const AddComponent = ({
   const [subtitle, setSubTitle] = useState<string>("");
   const [releaseDate, setReleaseDate] = useState<string>(
     selectedMedia
-      ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString())
+      ? formatDateInputInLagos(selectedMedia.releaseDate)
       : "",
   );
   const [expiryDate, setExpiryDate] = useState<string>(
@@ -627,11 +630,11 @@ export const AddComponent = ({
         data: {
           category,
           defaultRating: rating,
-          expiryDate: new Date(expiryDate).toISOString(),
+          expiryDate: dateInputToLagosISOString(expiryDate),
           genre,
           description: details,
           pg: PG === "G" ? "0" : PG.replace("+", ""),
-          releasedDate: new Date(releaseDate).toISOString(),
+          releasedDate: dateInputToLagosISOString(releaseDate),
           runtime: time,
           title: slug.includes("videos") ? subtitle : title,
           vidClass: class_.toLowerCase(),
@@ -1016,7 +1019,7 @@ export const AddComponent = ({
                     className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
                     value={
                       selectedMedia
-                        ? formatDateToDDMMYYYY(expiryDate)
+                        ? formatDateInputInLagos(expiryDate)
                         : expiryDate.replaceAll("/", "-")
                     }
                     onChange={(e) => setExpiryDate(e.target.value)}

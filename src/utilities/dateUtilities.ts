@@ -90,3 +90,28 @@ export function calculateRemainingEventHours(expiryTime: string): number {
 
   return remainingHours;
 }
+
+/**
+ * Convert a date-only Admin value to the instant at which that calendar day
+ * begins in Nigeria. Date-only strings are otherwise parsed by JavaScript as
+ * UTC midnight, which delays a Lagos release until 01:00 WAT.
+ */
+export function dateInputToLagosISOString(dateString: string): string {
+  const dateOnly = dateString.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    throw new Error("Invalid date value");
+  }
+
+  return new Date(`${dateOnly}T00:00:00+01:00`).toISOString();
+}
+
+export function formatDateInputInLagos(dateString: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(dateString));
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
