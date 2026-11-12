@@ -13,6 +13,7 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import { AppButton, CustomInput, SelectInputForm } from "@/components/AppLayout";
 import { TableComp } from "@/screens/AccScreen";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
+import SafeImage from "@/components/SafeImage";
 
 
 
@@ -132,8 +133,9 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                                 className="rounded w-[105px] h-[106px] object-cover"
                             />
                         ) : (
-                            <Image
-                                src={(selectedUser && selectedUser.photo) ? selectedUser.photo : "/accDummy.svg"}
+                            <SafeImage
+                                src={selectedUser?.photo}
+                                fallbackSrc="/accDummy.svg"
                                 width={105}
                                 height={106}
                                 alt=""

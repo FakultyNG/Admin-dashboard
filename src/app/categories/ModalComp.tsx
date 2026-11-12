@@ -18,6 +18,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Table } from "./page";
+import SafeImage from "@/components/SafeImage";
 
 interface ModalProps {
   handleClose: () => void;
@@ -134,13 +135,20 @@ export const ModalComponent = ({
           {/* ADD IMAGE FROM CTA MODAL ONLY WHEN TAB === CAST */}
           {tab === 'cast' && <div className="mb-4 mt-1 relative">
                                   {/* Here */}
-                                      <Image
-                                          src={userPic ? URL.createObjectURL(userPic) : (editValue && editValue.photoUrl) ?editValue.photoUrl : "/accDummy.svg"}
+                                      {userPic ? <Image
+                                          src={URL.createObjectURL(userPic)}
                                           width={111}
                                           height={111}
                                           alt=""
                                           className="w-[111px] h-[111px] rounded-full object-cover"
-                                      />
+                                      /> : <SafeImage
+                                          src={editValue?.photoUrl}
+                                          fallbackSrc="/accDummy.svg"
+                                          width={111}
+                                          height={111}
+                                          alt=""
+                                          className="h-[111px] w-[111px] rounded-full object-cover"
+                                      />}
                                  
           
                                   <div className="absolute bottom-2 right-0 z-10">

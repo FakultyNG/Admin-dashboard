@@ -14,7 +14,7 @@ export const userRPApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("superadmin_token");
         return {
-          url: `superadmin/user/fetch?page=${data.page}$limit=${data.limit}`,
+          url: `superadmin/user/fetch?page=${data.page}&limit=${data.limit}`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -39,7 +39,7 @@ export const updateUsers = async (data: FormData, _id: string) =>
 
 export const getAllUsers = async (data: IPagination) =>
   await apiCall<IUsersResponse>((baseApi) =>
-    baseApi.get<IUsersResponse>(`/superadmin/user/fetch?page=${data.page}$limit=${data.limit}`)
+    baseApi.get<IUsersResponse>(`/superadmin/user/fetch?page=${data.page}&limit=${data.limit}`)
   );
 
 export const usersbyID = async (_id: string) =>

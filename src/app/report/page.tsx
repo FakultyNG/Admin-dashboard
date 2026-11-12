@@ -43,18 +43,18 @@ export default function page() {
             </div>
 
 
-            <div className="flex flex-row w-fit h-[43px] mt-10">
+            <div className="admin-tablist mt-8" role="tablist" aria-label="Report type">
                 {TABS.map((x, i) => {
                     const active = x.toLowerCase() === tab
                     return (
-                        <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} ${x.toLowerCase().includes('payments') ? 'w-[120px]' : 'w-[100px]'} text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
+                        <button type="button" role="tab" aria-selected={active} key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} admin-tab ${active ? 'admin-tab-active' : ''}`}>
                             {x}
-                        </div>
+                        </button>
                     )
                 })}
             </div>
 
-            <div className="px-10 bg-black3 py-5 pb-6">
+            <div className="admin-panel mt-4 px-4 py-5 sm:px-6 lg:px-8">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                     <p
                         className={`${roboto_300.className} font-light text-base text-white mb-2 sm:mb-0`}

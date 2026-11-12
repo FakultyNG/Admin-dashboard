@@ -23,6 +23,7 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import useToggle from "@/hooks/useToggle";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -203,8 +204,9 @@ export default function page() {
                           key={indx}
                         >
                           <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[160px]">
-                            <Image
+                            <SafeImage
                               src={image}
+                              fallbackSrc="/coverphoto.png"
                               width={42}
                               height={42}
                               alt="profiles"

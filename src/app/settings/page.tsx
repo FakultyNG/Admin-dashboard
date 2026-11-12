@@ -104,13 +104,13 @@ export default function page() {
       <p className="font-normal text-lg text-grey_700">Home / Settings</p>
     </div>
 
-    <div className="flex flex-row w-fit h-[43px]">
+    <div className="admin-tablist mt-6" role="tablist" aria-label="Settings section">
       {TABS.map((x, i) => {
         const active = x.toLowerCase() === tab
         return (
-          <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} ${x.toLowerCase().includes('settings') ? 'w-[150px]' : 'w-[92px]'} text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
+          <button type="button" role="tab" aria-selected={active} key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} admin-tab ${active ? 'admin-tab-active' : ''}`}>
             {x}
-          </div>
+          </button>
         )
       })}
     </div>

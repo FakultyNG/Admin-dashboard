@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  addCategoryEnums,
   deleteCategoryEnums,
   geetFetchCast,
   geetFetchCategories,
@@ -11,14 +10,13 @@ import {
   useGetGenreQuery,
 } from "@/api/categorySlice";
 import { CAST_TH, CATEGORY_TH, GENRE_TH } from "@/config/data/category";
-import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
+import { roboto_400, roboto_500 } from "@/config/fonts";
 import {
   ICast,
   ICastResponse,
   ICategory,
   ICategoryResponse,
 } from "@/types/api/category.types";
-import { link } from "fs";
 import Image from "next/image";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
@@ -139,14 +137,15 @@ export default function page() {
   }
 
   function handleSearchfilter(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearchParams(e.target.value);
-
+    const value = e.target.value;
+    setSearchParams(value);
     setFilteredTable(
-      categoryTable.filter((x) => x.title.includes(searchParams))
+      value.trim()
+        ? categoryTable.filter((item) =>
+            item.title.toLowerCase().includes(value.trim().toLowerCase())
+          )
+        : categoryTable
     );
-    if (e.target.value === "") {
-      setFilteredTable(categoryTable);
-    }
   }
 
   function handleCategoryList(
@@ -188,194 +187,216 @@ export default function page() {
     if (tab === "category") handleCategoryList(categories);
   }, [tab, isSuccess]);
 
+  const tableHeaders =
+    tab === "category" ? CATEGORY_TH : tab === "genre" ? GENRE_TH : CAST_TH;
+  const activePage = tab === "genre" ? pg_g : tab === "cast" ? pg_C : pg_c;
+
   return (
-    <section
-      className={`${roboto_400.className} relative z-0 h-full overflow-y-auto pl-5`}
-    >
-      <div className="bg-black3 py-3 px-10">
-        <p className="font-normal text-lg text-grey_700">Home / Categories</p>
+    <section className={`${roboto_400.className} min-h-full min-w-0 overflow-x-hidden`}>
+      <div className="bg-black3 px-10 py-3">
+        <p className="text-lg font-normal text-grey_700">Home / Categories</p>
       </div>
 
-      <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
-        <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
-          <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
-            <Image src="/searchIcon.svg" width={20} height={20} alt="search" />
+      <div className="mt-8 space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-400">
+              Content taxonomy
+            </p>
+            <h2 className={`${roboto_500.className} mt-2 text-2xl font-medium text-white sm:text-3xl`}>
+              Organize your catalogue
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+              Manage the categories, genres, and cast information used across Reeplay.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAdd(true)}
+            className={`${roboto_500.className} w-full rounded-xl bg-red_500 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-red-500/10 sm:w-auto`}
+          >
+            Add {tab === "category" ? "category" : tab}
           </button>
-          <input
-            type="text"
-            placeholder={`Search ${tab}`}
-            className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
-            value={searchParams}
-            onChange={(e) => handleSearchfilter(e)}
-          />
         </div>
 
-        {/* add butn */}
-        <div
-          onClick={() => setIsAdd(!isAdd)}
-          className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
-        >
-          Add
-        </div>
-      </div>
-
-      <div className="mt-12 flex flex-row w-fit h-[43px]">
-        {TABS.map((x, i) => {
-          const active = x.toLowerCase() === tab;
-          return (
+        <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#11141b]/80 shadow-2xl shadow-black/10">
+          <div className="flex flex-col gap-4 border-b border-white/[0.08] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
             <div
-              key={i}
-              onClick={() => setTab(x.toLowerCase())}
-              className={`${roboto_500.className
-                } text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? "text-white" : "text-grey_800"
-                } w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? "bg-[#0096D6C9]" : "bg-black3"
-                }`}
+              role="tablist"
+              aria-label="Category type"
+              className="grid w-full grid-cols-3 rounded-xl border border-white/[0.08] bg-black/20 p-1 lg:w-auto"
             >
-              {x}
+              {TABS.map((item) => {
+                const value = item.toLowerCase();
+                const active = value === tab;
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => {
+                      setTab(value);
+                      setSearchParams("");
+                    }}
+                    className={`${roboto_500.className} min-w-0 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                      active
+                        ? "bg-red-500 text-white shadow-md shadow-red-500/15"
+                        : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-200"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
 
-        {(isAdd || editValues) && (
-          <ModalComponent
-            handleClose={() => editValues ? setEditValues(null) : setIsAdd(!isAdd)}
-            tab={tab}
-            editValue={editValues}
-            handleReset={() => [handleRefreshMedia()]}
-          />
-        )}
-      <div className="bg-black3 min-h-[calc(80%-43px)] pt-12 px-5 md:px-10 lg:px-14">
-        <div className="relative -z-1 w-full md:h-[80%] h-[100%] pb-10 pr-5">
-          <div className="absolute h-[450px] w-full py-5 pb-6 pl-0 sm:ml-0 sm:pl-3 overflow-x-auto">
-              <div className="h-full relative z-0">
-            <table className={`${roboto_400.className} w-full min-w-[810px]`}>
-              <thead className="">
+            <label className="relative block w-full lg:max-w-sm">
+              <span className="sr-only">Search {tab}</span>
+              <Image
+                src="/searchIcon.svg"
+                width={17}
+                height={17}
+                alt=""
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 opacity-60"
+              />
+              <input
+                type="search"
+                placeholder={`Search ${tab}`}
+                className="h-11 w-full rounded-xl border border-white/[0.08] bg-black/20 pl-11 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-red-500/60"
+                value={searchParams}
+                onChange={handleSearchfilter}
+              />
+            </label>
+          </div>
+
+          <div className="w-full overflow-x-auto">
+            <table className={`${roboto_400.className} w-full min-w-[760px]`}>
+              <thead>
                 <tr>
-                  <th className="w-12"><SelectAllCheckbox group={`categories-${tab}`} /></th>
-                  {(tab === "category"
-                    ? CATEGORY_TH
-                    : tab === "genre"
-                      ? GENRE_TH
-                      : CAST_TH
-                  ).map((t, i) => {
-                    return (
-                      <th
-                        key={i}
-                        className={`${roboto_500.className} ${t.toLowerCase() === "options" && "text-right"
-                          } font-medium text-lg text-white uppercase`}
-                      >
-                        {t}
-                      </th>
-                    );
-                  })}
+                  <th className="w-14">
+                    <SelectAllCheckbox group={`categories-${tab}`} />
+                  </th>
+                  {tableHeaders.map((heading) => (
+                    <th
+                      key={heading}
+                      className={`${roboto_500.className} ${
+                        heading.toLowerCase() === "options" ? "w-32 text-right" : ""
+                      }`}
+                    >
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {categoryTableFiltered.map((tx, indx) => {
-                  return (
-                    <tr key={indx} className="text-white h-[90px]">
-                      <td className="w-12"><RowCheckbox group={`categories-${tab}`} value={tx._id} label={`Select ${tx.title}`} /></td>
-                      <td className="text-center font-normal text-[15px] capitalize">
-                        {tx.title}
-                      </td>
-
-                      {tx.location && (
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.location}
-                        </td>
-                      )}
-                      {tx.position && (
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.position}
-                        </td>
-                      )}
-
-                      {tx.names && (
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.names}
-                        </td>
-                      )}
-
-                      <td className="w-[50%]">
-                        <div className="flex items-center justify-end gap-x-10">
-                          <button onClick={() => setEditValues(tx)}>
-                            <Image
-                              src="/edit.svg"
-                              width={14}
-                              height={14}
-                              alt="edit"
-                            />
-                          </button>
-                          <button onClick={() => handleDelete(tx._id)}>
-                            <Image
-                              src="/delete.svg"
-                              width={15}
-                              height={18}
-                              alt="delete"
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {categoryTableFiltered.map((item) => (
+                  <tr key={item._id} className="text-white">
+                    <td className="w-14">
+                      <RowCheckbox
+                        group={`categories-${tab}`}
+                        value={item._id}
+                        label={`Select ${item.title}`}
+                      />
+                    </td>
+                    <td className="text-sm font-medium capitalize text-slate-100">
+                      {item.title}
+                    </td>
+                    {item.location && (
+                      <td className="text-sm capitalize text-slate-400">{item.location}</td>
+                    )}
+                    {item.position && (
+                      <td className="text-sm text-slate-400">{item.position}</td>
+                    )}
+                    {item.names && (
+                      <td className="text-sm capitalize text-slate-400">{item.names}</td>
+                    )}
+                    <td className="w-32">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditValues(item)}
+                          aria-label={`Edit ${item.title}`}
+                          className="grid h-9 w-9 place-items-center rounded-lg border border-white/[0.08] hover:bg-white/[0.05]"
+                        >
+                          <Image src="/edit.svg" width={14} height={14} alt="" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item._id)}
+                          aria-label={`Delete ${item.title}`}
+                          className="grid h-9 w-9 place-items-center rounded-lg border border-red-500/15 bg-red-500/[0.05] hover:bg-red-500/10"
+                        >
+                          <Image src="/delete.svg" width={15} height={18} alt="" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!categoryTableFiltered.length && (
+                  <tr>
+                    <td colSpan={tab === "category" ? 5 : 4} className="py-16 text-center text-sm text-slate-500">
+                      No {tab} entries found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
+          </div>
 
-{(!isAdd || !editValues) && <div className="absolute ml-5 md:ml-10 lg:ml-16 bg-black2  -bottom-3 z-50 flex flex-row items-center">
-                  <div
-                    className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-                  >
-                    <button
-                      onClick={handlePrevious}
-                      className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-                    >
-                      <span className="text-white mr-2">{`<<`}</span>
-                      Previous
-                    </button>
-                    <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-                      {paginationList.map((num, index) => {
-                        const active = (tab ==='genre' ? pg_g : tab === 'cast' ? pg_C : pg_c) === num;
-
-                        return (
-                          <p
-                            key={index}
-                            onClick={() => [
-                              tab === 'cast' && setPg_C(num),
-                              tab === 'genre' && setPg_g(num),
-                              tab === 'category' && setPg_c(num),
-                              handleRefreshMedia(num),
-                            ]}
-                            className={`${active ? "text-red" : "text-[#C4C4C4]"
-                              } cursor-pointer`}
-                          >
-                            {num}
-                          </p>
-                        );
-                      })}
-                      {"   "} ...
-                    </div>
-                    <button
-                      onClick={() => handleNext()}
-                      className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-                    >
-                      Next <span className="text-white ml-2">{`>>`}</span>
-                    </button>
-                  </div>
-
-                  {loading && (
-                    <Lottie
-                      animationData={LoadingSpinner}
-                      loop
-                      style={{ width: 35, height: 35, marginLeft: 15 }}
-                    />
-                  )}
-                </div>}
+          <div className="flex flex-col gap-3 border-t border-white/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <p className="text-xs text-slate-600">Page {activePage}</p>
+            <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-white/[0.08] bg-black/20 p-1">
+              <button
+                type="button"
+                onClick={handlePrevious}
+                className="shrink-0 rounded-lg px-3 py-2 text-xs text-slate-400 hover:bg-white/[0.05] hover:text-white"
+              >
+                Previous
+              </button>
+              {paginationList.map((num) => (
+                <button
+                  type="button"
+                  key={num}
+                  onClick={() => {
+                    if (tab === "cast") setPg_C(num);
+                    if (tab === "genre") setPg_g(num);
+                    if (tab === "category") setPg_c(num);
+                    handleRefreshMedia(num);
+                  }}
+                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs ${
+                    activePage === num
+                      ? "bg-red-500 text-white"
+                      : "text-slate-500 hover:bg-white/[0.05] hover:text-white"
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handleNext}
+                className="shrink-0 rounded-lg px-3 py-2 text-xs text-slate-400 hover:bg-white/[0.05] hover:text-white"
+              >
+                Next
+              </button>
             </div>
+            {loading && (
+              <Lottie animationData={LoadingSpinner} loop style={{ width: 32, height: 32 }} />
+            )}
           </div>
         </div>
       </div>
+
+      {(isAdd || editValues) && (
+        <ModalComponent
+          handleClose={() => (editValues ? setEditValues(null) : setIsAdd(false))}
+          tab={tab}
+          editValue={editValues}
+          handleReset={() => [handleRefreshMedia()]}
+        />
+      )}
     </section>
   );
 }

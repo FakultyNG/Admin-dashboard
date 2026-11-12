@@ -143,23 +143,20 @@ export default function page() {
         </div>
       </div>
 
-      <div className="mt-8 mb-4 flex flex-row w-fit h-[43px] shrink-0">
+      <div className="admin-tablist mb-4 mt-8 shrink-0" role="tablist" aria-label="Gift card type">
         {TABS.map((x, i) => {
           const active = x.toLowerCase() === tab;
           return (
-            <div
+            <button
+              type="button"
+              role="tab"
+              aria-selected={active}
               key={i}
               onClick={() => setTab(x.toLowerCase())}
-              className={`${
-                roboto_500.className
-              } text-[15px] uppercase hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${
-                active ? "text-white" : "text-grey_800"
-              } text-center px-4 py-2.5 cursor-pointer h-[46px] ${
-                active ? "bg-[#0096D6C9]" : "bg-black3"
-              }`}
+              className={`${roboto_500.className} admin-tab uppercase ${active ? "admin-tab-active" : ""}`}
             >
               {x}
-            </div>
+            </button>
           );
         })}
       </div>

@@ -4,6 +4,7 @@ import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { useAppSelector } from "@/hooks/reduxHook";
 import { selectUserProfile } from "@/store/slices/usersSlice";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -148,7 +149,7 @@ export default function Sidebar() {
           </nav>
 
           <div className="m-3 flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] p-3">
-            <Image src={user.photo_url?.startsWith("https") ? user.photo_url : "/user.png"} width={40} height={40} alt="" className="h-10 w-10 rounded-xl object-cover ring-1 ring-white/10" />
+            <SafeImage src={user.photo_url} width={40} height={40} alt="" className="h-10 w-10 rounded-xl object-cover ring-1 ring-white/10" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-white">{user.profile.first_name} {user.profile.last_name}</p>
               <p className="truncate text-xs capitalize text-slate-500">{role} panel</p>

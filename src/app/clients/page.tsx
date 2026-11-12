@@ -7,6 +7,7 @@ import { IClientsData, IClientsDepositData, IClientsResponse, IPhoto } from "@/t
 import Lottie from "lottie-react";
 import Image from "next/image";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
+import SafeImage from "@/components/SafeImage";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -114,19 +115,19 @@ export default function page() {
       </div>
 
 
-      <div className="mt-12 flex flex-row w-fit h-[43px]">
+      <div className="admin-tablist mt-8" role="tablist" aria-label="Client records">
         {TABS.map((x, i) => {
           const active = x.toLowerCase() === tab
           return (
-            <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} ${x.toLowerCase() == 'withdrawals' ? 'w-[110px]' : x.toLowerCase() == 'tickets' ? 'w-[180px]' : 'w-[96px]'} text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
+            <button type="button" role="tab" aria-selected={active} key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} admin-tab ${active ? 'admin-tab-active' : ''}`}>
               {x.toLowerCase() === 'tickets' ? 'Support tickets' : x}
-            </div>
+            </button>
           )
         })}
       </div>
 
 
-        <div className="bg-black3 min-h-screen flex flex-col pt-12 px-5 md:px-10 lg:px-14 relative">        
+        <div className="admin-panel mt-4 flex min-h-[480px] flex-col px-4 py-5 sm:px-6 lg:px-8">
 <div className="w-full sm:w-[326px] lg:w-[556px] mb-5 flex items-center shrink-0">         
   <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
             <Image
@@ -183,8 +184,8 @@ export default function page() {
                           key={indx}
                         >
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
-                            <Image
-                              src={tx.photo ?? `/user.png`}
+                            <SafeImage
+                              src={tx.photo}
                               width={42}
                               height={42}
                               alt="profiles"

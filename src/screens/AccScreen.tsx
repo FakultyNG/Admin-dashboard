@@ -20,6 +20,7 @@ import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
 import { useEditProfileMutation } from "@/api/userSlice.api";
 import { getClientProfile, getSuperadminProfile } from "@/api/auth.api";
+import SafeImage from "@/components/SafeImage";
 
 const AccScreen = () => {
   const dispatch = useAppDispatch();
@@ -155,13 +156,22 @@ const AccScreen = () => {
 
       <div className="my-6 ml-14 relative w-fit">
         {/* Here */}
-        {(userPic || (!isSuperAdmin && user && user.photo_url && user.photo_url !=='')) ? (
+        {userPic ? (
           <Image
-            src={!isSuperAdmin ? user?.photo_url ?? '' : userPic ? URL.createObjectURL(userPic):''}
+            src={URL.createObjectURL(userPic)}
             width={105}
             height={106}
             alt=""
             className="rounded w-[105px] h-[106px] object-cover"
+          />
+        ) : !isSuperAdmin && user?.photo_url ? (
+          <SafeImage
+            src={user.photo_url}
+            fallbackSrc="/accDummy.svg"
+            width={105}
+            height={106}
+            alt=""
+            className="h-[106px] w-[105px] rounded object-cover"
           />
         ) : (
           <Image

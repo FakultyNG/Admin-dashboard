@@ -26,6 +26,7 @@ import Size from "@/utilities/useResponsiveSize";
 import Lottie from "lottie-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import React, { Fragment, useEffect, useState } from "react";
 import Loading from "@/config/lottie/dots.json";
 import {
@@ -334,8 +335,9 @@ function page() {
             </div>
 
             {/* {isPlayerReady && ( */}
-            <Image
-              src={(livesteamDetails && livesteamDetails.data.length>0 && livesteamDetails?.data[0].coverPhoto)? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
+            <SafeImage
+              src={(livesteamDetails && livesteamDetails.data.length>0) ? livesteamDetails?.data[0].coverPhoto : null}
+              fallbackSrc="/coverphoto.png"
               alt=""
               width={Size.calcWidth(100)}
               height={Size.calcHeight(100)}
@@ -371,8 +373,8 @@ function page() {
                   style={{ alignSelf: "flex-start" }}
                   className="flex flex-row items-center"
                 >
-                  <Image
-                    src={user.photo_url ?? '/user.png'}
+                  <SafeImage
+                    src={user.photo_url}
                     alt=""
                     width={28}
                     height={28}

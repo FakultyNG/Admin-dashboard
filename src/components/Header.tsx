@@ -3,6 +3,7 @@
 import { useAppSelector } from "@/hooks/reduxHook";
 import { selectUserProfile } from "@/store/slices/usersSlice";
 import Image from "next/image";
+import SafeImage from "@/components/SafeImage";
 import { usePathname, useRouter } from "next/navigation";
 import { destroyCookie } from "nookies";
 import { useEffect, useRef, useState } from "react";
@@ -55,7 +56,7 @@ export default function Header() {
 
           <div className="relative ml-1" ref={menuRef}>
             <button type="button" className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70" onClick={() => setMenuOpen((value) => !value)} aria-label="Open account menu" aria-expanded={menuOpen}>
-              <Image src={user?.photo_url?.startsWith("https") ? user.photo_url : "/user.png"} alt="" width={34} height={34} className="h-[34px] w-[34px] rounded-xl object-cover ring-1 ring-white/10" />
+              <SafeImage src={user?.photo_url} alt="" width={34} height={34} className="h-[34px] w-[34px] rounded-xl object-cover ring-1 ring-white/10" />
               <div className="hidden text-left sm:block"><p className="max-w-28 truncate text-sm font-medium text-slate-100">{user?.profile.first_name || "Account"}</p><p className="text-[11px] capitalize text-slate-500">{user?.profile.role}</p></div>
               <svg className={`hidden h-4 w-4 text-slate-500 transition sm:block ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
             </button>

@@ -134,17 +134,15 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
 
     return (
         <div className="flex flex-col min-h-[calc(100%-120px)]">
-            <div className="mt-12 flex flex-row w-fit h-[43px]">
+            <div className="admin-tablist mt-8" role="tablist" aria-label="Advertisement type">
                 {TABS.map((x, i) => {
                     const isDisabled = i == 1 || i == 2
-                    const cursorStyle = isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-                    const hoverStyle = isDisabled ? '' : 'hover:text-white hover:text-[18.5px] hover:h-[47.5px]'
                     const active = x.toLowerCase() === tab
 
                     return (
-                        <div key={i} onClick={() => {if (!isDisabled) setTab(x.toLowerCase())}} className={`${roboto_500.className} ${cursorStyle} ${hoverStyle} text-[17px]  transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} w-[88px] text-center py-2.5 h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
+                        <button type="button" role="tab" aria-selected={active} disabled={isDisabled} key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} admin-tab disabled:cursor-not-allowed disabled:opacity-40 ${active ? 'admin-tab-active' : ''}`}>
                             {x}
-                        </div>
+                        </button>
                     )
                 })}
             </div>
