@@ -18,7 +18,7 @@ import Lottie from "lottie-react";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
 import { AddComponent } from "./components/UploadComponent";
@@ -36,6 +36,7 @@ function MainComponent({ slug }: Props) {
   const [loading, setLoading] = useState<boolean>(false);
   const [pg, setPg] = useState<number>(1);
   const [searchParams, setSearchParams] = useState<string>("");
+  const searchRequest = useRef(0);
   const [paginationList, setPaginationList] = useState(
     [...Array(8)].map((_, i) => i + 1),
   );
@@ -101,12 +102,43 @@ function MainComponent({ slug }: Props) {
     await refetch();
   }
 
-  function handleSearchfilter(query: string) {
+  async function handleSearchfilter(query: string) {
     setSearchParams(query);
+    const normalizedQuery = query.trim().toLowerCase();
+    const requestId = ++searchRequest.current;
 
-    setFilteredList(mediaList.filter((x) => x.title.includes(query)));
-    if (query === "") {
+    if (!normalizedQuery) {
       setFilteredList(mediaList);
+      return;
+    }
+
+    try {
+      const decodedSlug = decodeURI(slug).toLowerCase();
+      const response = decodedSlug === "movies"
+        ? await getFetchMovies({ limit: 100, page: 1 })
+        : decodedSlug === "skits"
+          ? await getFetchSkit({ limit: 100, page: 1 })
+          : decodedSlug === "series"
+            ? await getFetchSeries({ limit: 100, page: 1 })
+            : await getFetchMusicVideo({ limit: 100, page: 1 });
+
+      if (requestId !== searchRequest.current) return;
+      const searchableMedia = response.ok && response.data
+        ? response.data.data
+        : mediaList;
+      setFilteredList(
+        searchableMedia.filter((item) =>
+          [item.title, item.artistName, item.description, item.vidClass]
+            .some((field) => field?.toLowerCase().includes(normalizedQuery)),
+        ),
+      );
+    } catch {
+      if (requestId !== searchRequest.current) return;
+      setFilteredList(
+        mediaList.filter((item) =>
+          item.title.toLowerCase().includes(normalizedQuery),
+        ),
+      );
     }
   }
 

@@ -57,10 +57,14 @@ export default function page() {
 
   function handleSearchfilter(query: string) {
     setSearchParams(query);
-    setFilteredList(giftCardList.filter((x) => x.code.includes(query)));
-    if (query === "") {
-      setFilteredList(giftCardList);
-    }
+    const normalizedQuery = query.trim().toLowerCase();
+    setFilteredList(
+      normalizedQuery
+        ? giftCardList.filter((item) =>
+            item.code.toLowerCase().includes(normalizedQuery),
+          )
+        : giftCardList,
+    );
   }
 
   function handleGetGiftCards(data: IGiftCardResponse | undefined) {

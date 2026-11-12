@@ -53,13 +53,16 @@ const page = () => {
 
   function handleSearchfilter(query: string) {
     setSearchParams(query);
-
+    const normalizedQuery = query.trim().toLowerCase();
     setFilteredList(
-      ADsList.filter((x) => x.title.includes(query))
+      normalizedQuery
+        ? ADsList.filter((item) =>
+            [item.title, item.brand, item.type].some((field) =>
+              field?.toLowerCase().includes(normalizedQuery),
+            ),
+          )
+        : ADsList,
     );
-    if (query === "") {
-      setFilteredList(ADsList);
-    }
   }
 
   function handleGetADSs(data: IAdsResponse | undefined) {

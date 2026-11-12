@@ -61,13 +61,17 @@ export default function page() {
   function handleSearchfilter(query: string) {
     setSearchParams(query);
     setIsViewMsg(null);
-
+    const normalizedQuery = query.trim().toLowerCase();
     setFilteredList(
-      suggestionList.filter((x) => x.user[0].first_name.includes(searchParams) || x.user[0].last_name.includes(searchParams) || x.message.includes(searchParams))
+      normalizedQuery
+        ? suggestionList.filter((item) => {
+            const user = item.user?.[0];
+            return [user?.first_name, user?.last_name, item.message].some(
+              (field) => field?.toLowerCase().includes(normalizedQuery),
+            );
+          })
+        : suggestionList,
     );
-    if (query === "") {
-      setFilteredList(suggestionList);
-    }
   }
 
   async function handleTopBTN(queryType: string, data?: string[]) {

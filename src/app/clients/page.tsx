@@ -58,12 +58,16 @@ export default function page() {
 
   function handleSearchfilter(value: string) {
     setSearchParams(value)
+    const query = value.trim().toLowerCase();
     setFilteredList(
-      clientList.filter((x) => x.fullname.includes(value))
+      query
+        ? clientList.filter((item) =>
+            [item.fullname, item.email].some((field) =>
+              field?.toLowerCase().includes(query),
+            ),
+          )
+        : clientList,
     );
-    if (value === "") {
-      setFilteredList(clientList);
-    }
   }
 
   async function handleGetRefreshList(query?: number) {

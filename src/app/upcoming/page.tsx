@@ -123,13 +123,14 @@ export default function page() {
   function handleSearchfilter(value: string) {
     if (stage === "add") return;
     setSearchParams(value);
-
+    const query = value.trim().toLowerCase();
     setUpcomingEventsFiltered(
-      upcomingEvents.filter((x) => x.title.includes(searchParams)),
+      query
+        ? upcomingEvents.filter((item) =>
+            item.title.toLowerCase().includes(query),
+          )
+        : upcomingEvents,
     );
-    if (value === "") {
-      setUpcomingEventsFiltered(upcomingEvents);
-    }
   }
 
   async function handleSearch(value: string) {

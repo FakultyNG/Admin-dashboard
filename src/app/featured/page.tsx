@@ -86,13 +86,14 @@ export default function page() {
   function handleSearchfilter(value: string) {
     if (stage === 'add') return
     setSearchParams(value);
-
+    const query = value.trim().toLowerCase();
     setFeaturedEventsFiltered(
-      featuredEvents.filter((x) => x.title.includes(searchParams))
+      query
+        ? featuredEvents.filter((item) =>
+            item.title.toLowerCase().includes(query),
+          )
+        : featuredEvents,
     );
-    if (value === "") {
-      setFeaturedEventsFiltered(featuredEvents);
-    }
   }
 
   async function handleSearch(value: string) {

@@ -70,13 +70,14 @@ function SuperAdminComp() {
 
     function handleSearchfilter(query: string) {
         setSearchParams(query);
-
+        const normalizedQuery = query.trim().toLowerCase();
         setFilteredList(
-            plansList.filter((x) => x.title?.includes(query))
+            normalizedQuery
+                ? plansList.filter((item) =>
+                    item.title?.toLowerCase().includes(normalizedQuery),
+                )
+                : plansList,
         );
-        if (query === "") {
-            setFilteredList(plansList);
-        }
     }
 
     async function handleDelete(id: string) {

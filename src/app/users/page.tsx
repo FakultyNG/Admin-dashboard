@@ -171,13 +171,16 @@ export default function page() {
   }
 
   function handleFilterUsers(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.trim() == "") {
-      setUsersListFiltered(usersList);
-    }
-    const filtered = usersList.filter((user) =>
-      user.fullname.includes(e.target.value)
+    const query = e.target.value.trim().toLowerCase();
+    setUsersListFiltered(
+      query
+        ? usersList.filter((user) =>
+            [user.fullname, user.email].some((field) =>
+              field?.toLowerCase().includes(query),
+            ),
+          )
+        : usersList,
     );
-    setUsersListFiltered(filtered);
   }
 
   async function handleAddUser() { }

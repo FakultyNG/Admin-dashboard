@@ -148,13 +148,17 @@ function SuperAdminComp() {
   }
 
   function handleSearchfilter(value: string) {
-    // if (stage === 'add') return
     setSearchParams(value);
-
-    setFilteredTable(liveTable.filter((x) => x.title.includes(searchParams)));
-    if (value === "") {
-      setFilteredTable(liveTable);
-    }
+    const query = value.trim().toLowerCase();
+    setFilteredTable(
+      query
+        ? liveTable.filter((item) =>
+            [item.title, item.description, item.type, item.location].some(
+              (field) => field?.toLowerCase().includes(query),
+            ),
+          )
+        : liveTable,
+    );
   }
 
   async function handleSearch(value: string) {
