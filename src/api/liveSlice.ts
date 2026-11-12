@@ -124,7 +124,7 @@ export const getFetchSport = async (data: IPagination) =>
 
 export const createLive = async (data: FormData) =>
   await apiCall<IGeneric>((baseApi) =>
-    baseApi.post<IGeneric>(`/superadmin/lives/create`, data, {
+    baseApi.post<IGeneric>(`/superadmin/shared/lives/create`, data, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

@@ -54,6 +54,7 @@ export interface ICreateLiveData {
     type: string;
     location: string;
     subTitle: string;
+    upcoming?: boolean;
     currency?: string;
     amount?: number;
     category:string[]

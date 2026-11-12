@@ -184,6 +184,13 @@ export default function page() {
 
   async function handleUpcomingToggle() {
     if (!selectedUpcoming) return;
+    if ("start" in selectedUpcoming) {
+      toast(
+        "Existing live items cannot be added here. Create the live item with ‘Show on Upcoming’ enabled.",
+        {type: "info"},
+      );
+      return;
+    }
     try {
       setLoading_M(true);
       const formdata = new FormData();
@@ -579,6 +586,14 @@ export default function page() {
                     today.
                   </p>
                 )}
+                {selectedUpcoming && "start" in selectedUpcoming && (
+                  <p
+                    className={`${roboto_400.className} text-grey_700 text-xs mt-2 ml-2.5`}
+                  >
+                    Live items must be created with “Show on Upcoming” enabled
+                    because the API has no live upcoming-update endpoint.
+                  </p>
+                )}
               </div>
 
               {/* implementing the last save and  */}
@@ -588,7 +603,11 @@ export default function page() {
                     style={{ alignSelf: "center" }}
                     className={`${roboto_500.className} font-medium text-lg text-white rounded-[5px] w-[145px] py-2 mt-20 bg-red_500`}
                     onClick={handleUpcomingToggle}
-                    disabled={loading_M || blockSave}
+                    disabled={
+                      loading_M ||
+                      blockSave ||
+                      (!!selectedUpcoming && "start" in selectedUpcoming)
+                    }
                     isLoading={loading_M}
                     title={
                       isEditing

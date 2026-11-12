@@ -94,6 +94,7 @@ function SuperAdminComp() {
   const [isActive, setActive] = useState<boolean>(
     selectedEvent ? selectedEvent.active : false,
   );
+  const [addToUpcoming, setAddToUpcoming] = useState<boolean>(true);
   const [coverImage, setCoverImage] = useState<IFile | null>(null);
   const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
   const [image, setImage] = useState<IFile | null>(null);
@@ -222,6 +223,7 @@ function SuperAdminComp() {
         type: tab.toLowerCase().slice(0, -1).trim().replace(" ", ""),
         start,
         subTitle: "subtitle",
+        upcoming: addToUpcoming,
 
         category: [tab.toLowerCase().slice(0, -1).trim().replace(" ", "")],
       };
@@ -1262,7 +1264,22 @@ function SuperAdminComp() {
               {/* RIGHT END */}
             </div>
 
-            <div className="w-[170px] mt-10">
+            <label className="mt-10 flex w-fit cursor-pointer items-center gap-3 text-sm text-white">
+              <input
+                type="checkbox"
+                checked={addToUpcoming}
+                onChange={(event) => setAddToUpcoming(event.target.checked)}
+                className="h-4 w-4 accent-red_500"
+              />
+              <span>
+                Show on Upcoming
+                <span className="mt-0.5 block text-xs text-grey_700">
+                  Makes this live item visible in the mobile app before it starts.
+                </span>
+              </span>
+            </label>
+
+            <div className="w-[170px] mt-6">
               <AppButton
                 onClick={handleCreateLive}
                 title="SAVE"
