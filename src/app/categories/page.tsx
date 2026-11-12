@@ -20,6 +20,7 @@ import {
 } from "@/types/api/category.types";
 import { link } from "fs";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ModalComponent } from "./ModalComp";
@@ -251,6 +252,7 @@ export default function page() {
             <table className={`${roboto_400.className} w-full min-w-[810px]`}>
               <thead className="">
                 <tr>
+                  <th className="w-12"><SelectAllCheckbox group={`categories-${tab}`} /></th>
                   {(tab === "category"
                     ? CATEGORY_TH
                     : tab === "genre"
@@ -273,6 +275,7 @@ export default function page() {
                 {categoryTableFiltered.map((tx, indx) => {
                   return (
                     <tr key={indx} className="text-white h-[90px]">
+                      <td className="w-12"><RowCheckbox group={`categories-${tab}`} value={tx._id} label={`Select ${tx.title}`} /></td>
                       <td className="text-center font-normal text-[15px] capitalize">
                         {tx.title}
                       </td>

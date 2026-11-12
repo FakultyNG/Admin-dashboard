@@ -1,142 +1,69 @@
 "use client";
 
-import { roboto_400, roboto_500 } from "@/config/fonts";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHook";
-import useToggle from "@/hooks/useToggle";
-import { selectUserProfile, setShowAcc } from "@/store/slices/usersSlice";
+import { useAppSelector } from "@/hooks/reduxHook";
+import { selectUserProfile } from "@/store/slices/usersSlice";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { destroyCookie } from "nookies";
-import React, { useState } from "react";
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from "react";
 import ModalNotificationBox from "./ModalNotification";
 
+const routeLabels: Record<string, string> = { ad: "Ad manager", cta: "Call to action", giftcards: "Gift cards", report: "Reports", uploads: "Content library" };
 
-const userOptions = ["account", "reports", "light mode", "log out"];
+function HeaderIcon({ children, label, onClick }: { children: React.ReactNode; label: string; onClick?: () => void }) {
+  return <button type="button" className="header-icon-button" aria-label={label} onClick={onClick}>{children}</button>;
+}
 
-function Header() {
+export default function Header() {
   const user = useAppSelector(selectUserProfile);
   const pathname = usePathname();
-  const [activeMode, setActiveMode] = useState<boolean>(false);
-  const [showOptions, setShowOptions] = useToggle();
-  const [ModalNotification, setModalNotification] = useState(false);
-  const [title, setTitle] = useState("")
-  const dispatch = useAppDispatch();
   const router = useRouter();
-  const isChannel = user ? user?.profile.role === "channel" : false;
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const segment = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
+  const title = routeLabels[segment] ?? segment.replaceAll("-", " ");
+  const isChannel = user?.profile.role === "channel";
 
+  useEffect(() => {
+    function closeMenu(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, []);
 
-  function handleOption(query: string) {
-    if (query === "account") {
-      // dispatch(setShowAcc(true));
-      router.push("/account");
-      setShowOptions();
-    }
-    if (query === "reports") {
-      // dispatch(setShowAcc(true));
-      router.push("/report");
-      setShowOptions();
-    }
-    // console.log(query);
+  if (pathname === "/") return null;
 
-    if (query === "log out") {
-      localStorage.removeItem(user?.profile.role === 'superadmin' ? "superadmin_token" : "auth_token");
-      destroyCookie(null, user?.profile.role === 'superadmin' ? "superadmin_token" : "auth_token", {
-        path: "/",
-      });
-      router.push("/");
-      setShowOptions();
-    }
+  function logout() {
+    const tokenKey = user?.profile.role === "superadmin" ? "superadmin_token" : "auth_token";
+    localStorage.removeItem(tokenKey);
+    destroyCookie(null, tokenKey, { path: "/" });
+    router.push("/");
   }
 
   return (
     <>
-      {pathname !== "/" && (
-        <header className="relative pt-7 pb-4 h-[80px]">
-          <div className="flex items-center justify-end gap-x-6 pr-6">
-            {!isChannel && (
-              <button onClick={() => setModalNotification(true)}>
-                <Image src="/broadcast.svg" alt="" width={20} height={20} />
-              </button>
-            )}
-            <button>
-              <Image src="/notification.svg" alt="" width={24} height={24} />
-            </button>
-            <button onClick={() =>  router.push("/account")}>
-              <Image 
-              src={(user && user.photo_url && typeof user.photo_url === 'string' && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"} 
-              alt="" width={27} height={27} className="w-[27px] h-[27px] rounded-full" />
-            </button>
+      <header className="app-header">
+        <div className="min-w-0 pl-12 lg:pl-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Reeplay admin</p>
+          <h1 className="truncate text-lg font-semibold capitalize tracking-tight text-white sm:text-xl">{title}</h1>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {!isChannel ? <HeaderIcon label="Create broadcast" onClick={() => setBroadcastOpen(true)}><Image src="/broadcast.svg" alt="" width={19} height={19} /></HeaderIcon> : null}
+          <HeaderIcon label="Notifications"><span className="relative"><Image src="/notification.svg" alt="" width={20} height={20} /><span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-red-500 ring-2 ring-[#10131a]" /></span></HeaderIcon>
 
-            <div className="flex items-center">
-              <span
-                className={`${roboto_400.className} font-normal text-lg text-white mr-2`}
-              >
-                {user?.profile.first_name.charAt(0).toUpperCase()}
-                {user?.profile.last_name.charAt(0).toUpperCase()}
-              </span>
-              <button onClick={setShowOptions}>
-                <Image
-                  src="/down.png"
-                  width={17}
-                  height={12}
-                  alt=""
-                  className={`transition-all duration-500 ease-in-out ${showOptions ? "rotate-180" : ""
-                    }`}
-                />
-              </button>
-            </div>
+          <div className="relative ml-1" ref={menuRef}>
+            <button type="button" className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70" onClick={() => setMenuOpen((value) => !value)} aria-label="Open account menu" aria-expanded={menuOpen}>
+              <Image src={user?.photo_url?.startsWith("https") ? user.photo_url : "/user.png"} alt="" width={34} height={34} className="h-[34px] w-[34px] rounded-xl object-cover ring-1 ring-white/10" />
+              <div className="hidden text-left sm:block"><p className="max-w-28 truncate text-sm font-medium text-slate-100">{user?.profile.first_name || "Account"}</p><p className="text-[11px] capitalize text-slate-500">{user?.profile.role}</p></div>
+              <svg className={`hidden h-4 w-4 text-slate-500 transition sm:block ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
+            </button>
+            {menuOpen ? <div className="account-menu"><button onClick={() => router.push("/account")}>Account settings</button><button onClick={() => router.push("/report")}>Reports</button><div className="my-1 h-px bg-white/[0.07]" /><button className="text-red-400 hover:!bg-red-500/10" onClick={logout}>Log out</button></div> : null}
           </div>
-
-          {/* {showOptions && ( */}
-          <motion.div
-            initial={{ translateX: 250, display: 'none' }}
-            animate={{ display: showOptions ? 'block' : 'none', translateX: showOptions ? 15 : 250 }}
-            transition={{ duration: .5 }}
-
-            className="w-[215px] h-[230px] rounded bg-white pt-8 pl-4 space-y-4 absolute right-7 mt-2 z-50">
-            {userOptions.map((options, index) => {
-              return (
-                <div
-                  onClick={() => handleOption(options)}
-                  key={index}
-                  className="flex items-center gap-x-[18px] cursor-pointer"
-                >
-                  {options !== "light mode" ? (
-                    <Image
-                      src={`/${options}.svg`}
-                      alt=""
-                      width={22}
-                      height={22}
-                    />
-                  ) : (
-                    <div
-                      onClick={() => setActiveMode(!activeMode)}
-                      className="w-[25px] h-[13px] bg-black3 rounded-[24px]"
-                    >
-                      <div
-                        className={`w-[8px] h-[8px] mt-[2.5px] ml-[3px] transition-all duration-500 ease-in-out rounded-full bg-white ${activeMode ? "translate-x-3" : "translate-x-0"
-                          }`}
-                      />
-                    </div>
-                  )}
-                  <span
-                    className={`${roboto_400.className}  capitalize font-normal text-lg text-black3`}
-                  >
-                    {options}
-                  </span>
-                </div>
-              );
-            })}
-          </motion.div>
-          {/* )} */}
-
-          {/* Create Modal Notification */}
-          {ModalNotification && < ModalNotificationBox onBack={() => setModalNotification(false)}/> }
-        </header>
-      )}
+        </div>
+      </header>
+      {broadcastOpen ? <ModalNotificationBox onBack={() => setBroadcastOpen(false)} /> : null}
     </>
   );
 }
-
-export default Header;

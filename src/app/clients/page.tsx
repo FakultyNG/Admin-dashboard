@@ -6,6 +6,7 @@ import { roboto_400, roboto_500, roboto_700 } from "@/config/fonts";
 import { IClientsData, IClientsDepositData, IClientsResponse, IPhoto } from "@/types/api/clients.types";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -158,6 +159,7 @@ export default function page() {
               <table className={`${roboto_400.className} w-full min-w-[810px] lg:ml-5`}>
                 <thead className="mb-3">
                   <tr>
+                    <th className="w-12"><SelectAllCheckbox group={`clients-${tab}`} /></th>
                     {(tab === 'deposits' ? DEPOSITS : tab === 'withdrawals' ? WITHDRAWALS : CLIENT_TH).map((t, i) => {
                       return (
                         <th
@@ -175,6 +177,7 @@ export default function page() {
                     return (
 
                       <tr key={indx} className={`${roboto_400.className} text-white h-[110px]`}>
+                        <td className="w-12"><RowCheckbox group={`clients-${tab}`} value={String("_id" in tx ? tx._id : indx)} /></td>
                         {("fullname" in tx) && <> <td
                           className=" text-white py-2 w-[200px]"
                           key={indx}

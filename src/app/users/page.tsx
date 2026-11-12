@@ -21,6 +21,7 @@ import { TableComp } from "@/screens/AccScreen";
 import { IUser, IUserExample, IUsersResponse } from "@/types/api/users.types";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -262,6 +263,7 @@ export default function page() {
                 <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                   <thead className="">
                     <tr>
+                      <th className="w-12"><SelectAllCheckbox group="users" /></th>
                       {U_TableHeads.map((t, i) => {
                         return (
                           <th
@@ -278,6 +280,7 @@ export default function page() {
                     {usersListFiltered.map((tx, indx) => {
                       return (
                         <tr key={indx} className="text-white">
+                          <td className="w-12"><RowCheckbox group="users" value={tx._id} label={`Select ${tx.fullname}`} /></td>
                           <td className="text-white py-2 min-w-[180px] pl-5">
                             <div className="flex items-center justify-start pl-2 py-1 rounded">
                               <Image

@@ -17,7 +17,7 @@ export const CustomInput = ({
     <input
       {...props}
       className={twMerge(
-        `${roboto_400.className} font-normal text-base text-input_grey w-full py-[14px] px-5 bg-transparent border border-input_grey rounded outline-none`,
+        `${roboto_400.className} w-full rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-normal text-slate-100 outline-none placeholder:text-slate-600 transition focus:border-red-500/50 focus:ring-4 focus:ring-red-500/[0.07]`,
         className
       )}
     />
@@ -40,15 +40,15 @@ export const InputWithIcon = ({
   ...props
 }: InputProps) => {
   return (
-    <div className="flex items-center border border-input_grey rounded w-full py-[14px] px-5 ">
+    <div className="flex w-full items-center rounded-xl border border-white/10 bg-white/[0.025] px-4 transition focus-within:border-red-500/50 focus-within:ring-4 focus-within:ring-red-500/[0.07]">
       <input
         {...props}
         className={twMerge(
-          `${roboto_400.className} font-normal text-base text-input_grey flex-1  bg-transparent  outline-none`,
+          `${roboto_400.className} min-w-0 flex-1 bg-transparent py-3 text-sm font-normal text-slate-100 outline-none placeholder:text-slate-600`,
           className
         )}
       />
-      <button onClick={onPress}>
+      <button type="button" onClick={onPress} className="grid h-8 w-8 place-items-center rounded-lg opacity-70 hover:bg-white/5 hover:opacity-100" aria-label="Toggle input visibility">
         <Image src={src} width={width} height={height} alt="" />
       </button>
     </div>
@@ -75,7 +75,7 @@ export const SelectInput = ({
   const [showSelect, setShowSelect] = useToggle();
   return (
     <div className="relative">
-      <div className="flex items-center border border-input_grey rounded w-full py-[14px] px-5 ">
+      <div className="flex w-full items-center rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3">
         {categoryListing ? categoryListing : <p
           className={`${textStyles ? textStyles : "text-input_grey"} ${roboto_400.className
             } flex-1 font-normal text-base`}
@@ -83,7 +83,7 @@ export const SelectInput = ({
           {placeholder}
         </p>}
 
-        <button onClick={() => setShowSelect(!showSelect)}>
+        <button type="button" onClick={() => setShowSelect(!showSelect)} aria-label="Open options" aria-expanded={showSelect}>
           <Image
             src="/down.png"
             width={17}
@@ -95,14 +95,13 @@ export const SelectInput = ({
       </div>
 
       {showSelect && (
-        <ul className="absolute bg-black1 w-full py-2 space-y-2">
+        <ul className="absolute z-50 mt-2 max-h-64 w-full space-y-1 overflow-auto rounded-xl border border-white/10 bg-[#171b24] p-1.5 shadow-2xl">
           {selectData.map((x, index) => {
             const active = placeholder === x;
             return (
               <li
                 onClick={() => [setType(x), setShowSelect(!showSelect)]}
-                className={`${roboto_400.className} ${active && "bg-black/50"
-                  } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
+                className={`${roboto_400.className} ${active ? "bg-red-500/10 text-red-300" : "text-slate-300"} cursor-pointer rounded-lg px-3 py-2 text-sm font-normal hover:bg-white/5`}
                 key={index}
               >
                 {x}
@@ -139,7 +138,7 @@ export const SelectInputForm = ({
           {placeholder}
         </p>}
 
-        <button onClick={() => setShowSelect(!showSelect)}>
+        <button type="button" onClick={() => setShowSelect(!showSelect)} aria-label="Open options" aria-expanded={showSelect}>
           <Image
             src="/down.png"
             width={10}
@@ -151,14 +150,13 @@ export const SelectInputForm = ({
       </div>
 
       {showSelect && (
-        <ul className="absolute bg-black1 w-full z-[99999] py-2 space-y-2">
+        <ul className="absolute z-[99999] mt-2 max-h-64 w-full space-y-1 overflow-auto rounded-xl border border-white/10 bg-[#171b24] p-1.5 shadow-2xl">
           {selectData.map((x, index) => {
             const active = placeholder === x;
             return (
               <li
                 onClick={() => [setType(x), setShowSelect(!showSelect)]}
-                className={`${roboto_400.className} ${active && "bg-black/50"
-                  } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
+                className={`${roboto_400.className} ${active ? "bg-red-500/10 text-red-300" : "text-slate-300"} cursor-pointer rounded-lg px-3 py-2 text-sm font-normal hover:bg-white/5`}
                 key={index}
               >
                 {x}
@@ -222,7 +220,7 @@ export const AppButton = ({
         `${disabled || isLoading
           ? "bg-gray-500 cursor-not-allowed"
           : bgColor || "bg-red"
-        } flex flex-row items-center justify-center rounded py-[12px] font-normal text-lg text-white min-w-[140px] transition-all ${manrope_400}`,
+        } flex min-h-11 min-w-[140px] flex-row items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all ${manrope_400.className}`,
         className
       )}
     >

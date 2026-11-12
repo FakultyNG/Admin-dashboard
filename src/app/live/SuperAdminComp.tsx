@@ -15,6 +15,7 @@ import {
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
@@ -428,6 +429,7 @@ function SuperAdminComp() {
               >
                 <thead className="mb-3">
                   <tr>
+                    <th className="w-12"><SelectAllCheckbox group={`live-${tab}`} /></th>
                     {LIVE_TH.map((t, i) => {
                       return (
                         <th
@@ -447,6 +449,7 @@ function SuperAdminComp() {
                         key={indx}
                         className={`${roboto_400.className} text-white h-[110px]`}
                       >
+                        <td className="w-12"><RowCheckbox group={`live-${tab}`} value={tx._id} label={`Select ${tx.title}`} /></td>
                         <td className=" text-white py-2 w-[250px]" key={indx}>
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
                             <Image

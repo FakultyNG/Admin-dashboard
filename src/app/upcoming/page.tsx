@@ -18,6 +18,7 @@ import {
 } from "@/types/api/upcoming.types";
 import { formatAmount } from "@/utilities/formatAmount";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { ImageProps } from "../plans/ClientComponent";
 import { truncateText } from "@/utilities/textUtils";
@@ -265,6 +266,7 @@ export default function page() {
                 >
                   <thead className="">
                     <tr>
+                      <th className="w-12"><SelectAllCheckbox group="upcoming" /></th>
                       {UP_TableHeads.map((t, i) => {
                         return (
                           <th
@@ -281,6 +283,7 @@ export default function page() {
                     {upcomingEventsFiltered.map((tx, indx) => {
                       return (
                         <tr key={indx} className="text-white h-24">
+                          <td className="w-12"><RowCheckbox group="upcoming" value={tx._id} label={`Select ${tx.title}`} /></td>
                           <td
                             className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
                             key={indx}

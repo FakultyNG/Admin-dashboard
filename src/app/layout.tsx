@@ -1,22 +1,20 @@
 
 
 import type { Metadata } from "next";
-import { Inter, Manrope, Roboto } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { Sidebar, Header } from "@/components";
-import { usePathname } from "next/navigation";
 import ProviderContainer from "@/components/Provider";
-import { Bounce, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import 'video.js/dist/video-js.css';
 
 
 
-const inter = Roboto({
+const appFont = Manrope({
   subsets: ["latin"],
-  style: "normal",
-  weight: "400",
-  variable: "--font-RB400",
+  variable: "--font-app",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,24 +28,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="min-w-[425px]">
-      <body
-        style={{ height: "100vh" }}
-        className={`${inter.className} overflow-hidden flex z-50`}
-      >
+    <html lang="en">
+      <body className={`${appFont.className} app-body`}>
         <ProviderContainer>
-          {/* SideBar */}
           <Sidebar />
-          <div className="bg-black2 overflow-y-auto relative flex-1">
-            {/* header */}
+          <div className="app-main">
             <Header />
-            <div className="h-[calc(100%-80px)]">{children}</div>
+            <main className="app-content">{children}</main>
           </div>
           <ToastContainer
             autoClose={5000}
             position="bottom-right"
             theme="dark"
             hideProgressBar
+            toastClassName="!rounded-xl !border !border-white/10 !bg-[#171b24] !text-sm"
           />
         </ProviderContainer>
       </body>

@@ -6,6 +6,7 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import { IAdsData, IAdsResponse } from "@/types/api/ads.types";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -153,6 +154,7 @@ const page = () => {
           <table className={`${roboto_400.className} w-full min-w-[810px] mt-10`}>
             <thead className="">
               <tr>
+                <th className="w-12"><SelectAllCheckbox group="ads" /></th>
                 {ADs_TH.map((t, i) => {
                   return (
                     <th
@@ -169,6 +171,7 @@ const page = () => {
               {ADSFilteredList.map((tx, indx) => {
                 return (
                   <tr key={indx} className="text-white h-[100px]">
+                    <td className="w-12"><RowCheckbox group="ads" value={tx._id} label={`Select ${tx.title}`} /></td>
 
                     <>
                       <td className="text-center font-normal text-[15px] capitalize">

@@ -23,6 +23,7 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import useToggle from "@/hooks/useToggle";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -178,6 +179,7 @@ export default function page() {
               <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                 <thead className="">
                   <tr>
+                    <th className="w-12"><SelectAllCheckbox group="featured" /></th>
                     {F_TableHeads.map((t, i) => {
                       return (
                         <th
@@ -195,6 +197,7 @@ export default function page() {
                     const image = "coverPhoto" in tx ? tx.coverPhoto : tx.portraitPhoto
                     return (
                       <tr key={indx} className="text-white">
+                        <td className="w-12"><RowCheckbox group="featured" value={String("_id" in tx ? tx._id : indx)} label={`Select ${tx.title}`} /></td>
                         <td
                           className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
                           key={indx}

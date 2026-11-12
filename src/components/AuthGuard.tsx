@@ -82,7 +82,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 
           if (useSuperAdmin) {
             const superAdminPatch: IProfile = {
-              profile: userData as IProfile["profile"],
+              profile: userData as unknown as IProfile["profile"],
               photo_url: "",
             };
             dispatch(setCredentials(superAdminPatch));

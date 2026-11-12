@@ -16,6 +16,7 @@ import { IMediaData, IMediaResponse } from "@/types/api/media.types";
 import { isExpired } from "@/utilities/dateUtilities";
 import Lottie from "lottie-react";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
@@ -203,6 +204,7 @@ function MainComponent({ slug }: Props) {
                 >
                   <thead className="h-[50px]">
                     <tr className="">
+                      <th className="w-12"><SelectAllCheckbox group={`uploads-${slug}`} /></th>
                       {TABLE_TH.map((t, i) => {
                         return (
                           <th
@@ -219,6 +221,7 @@ function MainComponent({ slug }: Props) {
                     {mediaFilteredList.map((tx, indx) => {
                       return (
                         <tr key={indx} className="text-white h-[110px]">
+                          <td className="w-12"><RowCheckbox group={`uploads-${slug}`} value={tx._id} label={`Select ${tx.title}`} /></td>
                           <td
                             className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
                             key={indx}

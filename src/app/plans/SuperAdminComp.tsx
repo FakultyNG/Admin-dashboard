@@ -9,6 +9,7 @@ import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from 'react-toastify';
 import { formatAmount, wordsToNumbers } from '@/utilities/formatAmount';
 import { AppButton, CustomInput, SelectInputForm } from '@/components/AppLayout';
+import { RowCheckbox, SelectAllCheckbox } from '@/components/BulkSelect';
 
 
 const TABS = ['Plans', 'Subscription']
@@ -216,6 +217,7 @@ function SuperAdminComp() {
                         <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                             <thead className="">
                                 <tr>
+                                    <th className="w-12"><SelectAllCheckbox group={`plans-${tab}`} /></th>
                                     {(tab === 'plans' ? PLANS_TH : SUBS_TH).map((t, i) => {
                                         return (
                                             <th
@@ -232,6 +234,7 @@ function SuperAdminComp() {
                                 {filteredList.map((tx, indx) => {
                                     return (
                                         <tr key={indx} className="text-white h-[100px]">
+                                            <td className="w-12"><RowCheckbox group={`plans-${tab}`} value={tx.id} label={`Select ${tx.title ?? "item"}`} /></td>
                                             {tab === 'plans' ?
 
                                                 <>

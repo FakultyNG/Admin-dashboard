@@ -9,7 +9,6 @@ import {
   InputWithIcon,
 } from "../components/AppLayout";
 import { useRouter, useSearchParams } from "next/navigation";
-import Size from "@/utilities/useResponsiveSize";
 import { useLoginMutation, useSuperadminClientRedirectMutation } from "@/api/userSlice.api";
 import { useAppDispatch } from "@/hooks/reduxHook";
 import { setCredentials } from "@/store/slices/usersSlice";
@@ -32,7 +31,6 @@ function LoginContent() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const mTop = Size.calcHeight(2);
   
   // Initial loading state to show skeleton
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true); 
@@ -185,79 +183,41 @@ function LoginContent() {
 
   // OTHERWISE, RENDER THE LOGIN FORM
   return (
-    <div className="flex items-center justify-center h-full w-full">
-      <div
-        className={`${manrope_400.className} w-full sm:w-[390px] pt-6 items-center flex-col flex bg-grey_1 mx-auto`}
-      >
-        <Image
-          src="/Logo.png"
-          width={300}
-          height={150}
-          alt="Logo"
-          style={{ marginTop: mTop }}
-        />
+    <div className="relative grid min-h-dvh w-full place-items-center overflow-hidden bg-[#090b10] px-5 py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(239,68,68,.12),transparent_30rem),radial-gradient(circle_at_90%_90%,rgba(59,130,246,.06),transparent_28rem)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.4)_1px,transparent_1px)] [background-size:48px_48px]" />
 
-        <div className="mt-3">
-          <h5
-            className={`${manrope_600.className} font-semibold text-xl text-center text-white`}
-          >
-            Admin Login
-          </h5>
-          <p className="font-normal text-base text-white">
-            Access your control dashboard
-          </p>
+      <div className={`${manrope_400.className} relative w-full max-w-[420px] rounded-[24px] border border-white/[0.08] bg-[#12151d]/95 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-9`}>
+        <Image src="/Logo.png" width={148} height={54} alt="Reeplay" className="mb-10 h-auto w-[148px]" priority />
+
+        <div className="mb-8">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-red-400">Admin portal</p>
+          <h1 className={`${manrope_600.className} text-2xl font-semibold tracking-tight text-white`}>Welcome back</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Sign in to manage your Reeplay workspace.</p>
         </div>
 
-        <div className="w-full px-5 mt-10 space-y-6">
-          <CustomInput
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="text-[#BCC1CA]"
-          />
+        <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); submitHandler(); }}>
+          <label className="block">
+            <span className="mb-2 block text-xs font-medium text-slate-400">Email address</span>
+            <CustomInput type="email" autoComplete="email" placeholder="you@company.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-xs font-medium text-slate-400">Password</span>
+            <InputWithIcon value={password} onChange={(event) => setPassword(event.target.value)} type={inputType} width={17} height={12} placeholder="Enter your password" autoComplete="current-password" onPress={() => setInputType(inputType === "text" ? "password" : "text")} src="/eye.png" />
+          </label>
 
-          <InputWithIcon
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type={inputType}
-            width={17}
-            height={12}
-            placeholder="Password"
-            onPress={() =>
-              setInputType(inputType === "text" ? "password" : "text")
-            }
-            className="text-[#BCC1CA]"
-            src="/eye.png"
-          />
-        </div>
-
-        <div className="px-5 mt-14 w-full mb-8">
           <AppButton
-            // 🟩 Ensure button reflects superadmin loading state too if they somehow click it
+            type="submit"
             isLoading={isLoginLoading || loading || isSuperadminClientRedirectLoading}
-            disabled={
-              email !== "" && password !== "" && regex.test(email)
-                ? false
-                : true
-            }
-            title="Login"
-            className="w-full"
-            onClick={submitHandler}
+            disabled={!queryEmail && !(email && password && regex.test(email))}
+            title="Sign in"
+            className="mt-2 w-full bg-red-500 hover:bg-red-600"
           />
+        </form>
 
-          <div className="mt-12 text-center">
-            <span className="font-normal text-base text-[#BCC1CA]">
-              Forgot your password?
-            </span>{" "}
-            <span
-              onClick={() => console.log("route to contact screen")}
-              className="font-normal text-base text-blue_200 cursor-pointer"
-            >
-              Contact us
-            </span>
-          </div>
-        </div>
+        <p className="mt-8 text-center text-xs text-slate-500">
+          Need help accessing your account? <button type="button" className="font-medium text-slate-300 hover:text-white">Contact support</button>
+        </p>
       </div>
     </div>
   );

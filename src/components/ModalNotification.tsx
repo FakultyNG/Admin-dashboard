@@ -35,16 +35,21 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="bg-black4 p-6 z-[9999] rounded shadow-lg w-full max-w-[600px]">
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="broadcast-title"
+            className="z-[9999] max-h-[90dvh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-white/10 bg-[#171b24] p-5 shadow-2xl sm:p-7">
                 <button
+                type="button"
                 onClick={onBack}
-                className="bg-red-500 text-black px-4 py-2 rounded hover:bg-red-600 ml-auto flex"
+                className="ml-auto grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
                 >
-                <Image src={'/closeicon.svg'} alt="close" width={25} height={25}/> 
+                <Image src={'/closeIcon.svg'} alt="close" width={18} height={18}/>
                 </button>
 
-                <div className="mx-auto w-[372px] max-w-[500px]">
-                <label className={`${roboto_500.className} text-white text-base ml-2.5`}>
+                <div className="mx-auto w-full">
+                <h2 id="broadcast-title" className="mb-6 text-xl font-semibold text-white">Create broadcast</h2>
+                <label htmlFor="title" className={`${roboto_500.className} mb-2 block text-xs font-medium text-slate-400`}>
                     TITLE *
                 </label>
                 <CustomInput
@@ -57,7 +62,7 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
                     className="w-full text-sm py-2 mt-2 border border-border_grey rounded-sm"
                 />
 
-                <div className="mt-4 w-[318px]">
+                <div className="mt-4 w-full">
                     <label className="text-grey_800 pl-2">Upload Landscape Image</label>
                     <div className="flex items-center border border-border_grey px-2 py-2 mt-2 gap-2">
                         <span className="text-sm bg-grey_3 font-[500] px-3 py-1 rounded-sm whitespace-nowrap">
@@ -71,7 +76,7 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
                             className="border-none outline-none cursor-pointer w-[101px]"
                             />
                         </label>
-                        <button className="bg-red text-white px-3 py-2 font-semibold text-sm rounded hover:bg-red-600">
+                        <button type="button" className="rounded-lg bg-red px-3 py-2 text-xs font-semibold text-white hover:bg-red-600">
                             UPLOAD
                         </button>
                     </div>
@@ -89,15 +94,17 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
                     <label className="text-white pl-2">
                     Message <span className="text-grey_800">(300 characters only) *</span>
                     </label>
-                    <textarea 
+                    <textarea
+                    maxLength={300}
+                    value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full h-[134px] bg-transparent border border-border_grey outline-none p-3 mt-2"
                     ></textarea>
                 </div>
 
-                <div className="bg-red w-full h-[52px] mt-4 flex justify-center items-center text-white text-lg font-medium cursor-pointer">
+                <button type="button" disabled={!title.trim() || !message.trim()} className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-red text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400">
                     Send
-                </div>
+                </button>
                 </div>
             </motion.div>
         </div>

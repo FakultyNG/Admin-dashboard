@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
+import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import { G_Table, G_TableHeads } from "@/config/data/gift.data";
 import { AppButton, CustomInput } from "@/components/AppLayout";
 import { getGiftCards, useGetGiftCardsQuery } from "@/api/giftCardSlice";
@@ -177,6 +178,7 @@ export default function page() {
           <table className={`${roboto_400.className} w-full min-w-[810px] lg:-ml-5`}>
             <thead className="mb-3">
               <tr>
+                <th className="w-12"><SelectAllCheckbox group={`giftcards-${tab}`} /></th>
                 {G_TableHeads.map((t, i) => (
                   <th
                     key={i}
@@ -194,6 +196,7 @@ export default function page() {
                     key={indx}
                     className={`${roboto_400.className} text-white h-[110px]`}
                   >
+                    <td className="w-12"><RowCheckbox group={`giftcards-${tab}`} value={tx._id} label={`Select gift card ${tx.code}`} /></td>
                     <td className="text-center py-2 pr-4 uppercase" key={indx}>
                       {tx.code}
                     </td>
