@@ -1,8 +1,9 @@
 import { SuperUserResponse, UserResponse } from "@/types/api/profile.types";
 import { ApiResponse, create } from "apisauce";
+import { MAIN_API_BASE_URL } from "@/config/api";
 
 export const createAuth = create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  baseURL: MAIN_API_BASE_URL,
   timeout: 12000,
   timeoutErrorMessage: "Request timed out",
 });
@@ -10,7 +11,7 @@ export const createAuth = create({
 export const createAdminAuthWrapper = async (isClient?:boolean) => {
   const token = localStorage.getItem(isClient ? "auth_token": "superadmin_token");
   return create({
-    baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+    baseURL: MAIN_API_BASE_URL,
     headers: {
       [isClient ? "clients-auth" :"superadmin-auth"]: token,
     },

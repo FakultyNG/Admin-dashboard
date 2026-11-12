@@ -40,7 +40,7 @@ export const InputWithIcon = ({
   ...props
 }: InputProps) => {
   return (
-    <div className="flex w-full items-center rounded-xl border border-white/10 bg-white/[0.025] px-4 transition focus-within:border-red-500/50 focus-within:ring-4 focus-within:ring-red-500/[0.07]">
+    <div className="app-input-with-icon flex w-full items-center rounded-xl border border-white/10 bg-white/[0.025] px-4 transition focus-within:border-red-500/50 focus-within:ring-4 focus-within:ring-red-500/[0.07]">
       <input
         {...props}
         className={twMerge(

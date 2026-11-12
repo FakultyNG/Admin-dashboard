@@ -21,6 +21,18 @@ import DashboardSkeleton from "@/components/DashboardSkeleton";
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const SUCESS_CODES = [201, 200];
 
+function getLoginErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") return "Unable to sign in. Please try again.";
+
+  const apiError = error as {
+    data?: { message?: string } | string;
+    error?: string;
+  };
+
+  if (typeof apiError.data === "string") return apiError.data;
+  return apiError.data?.message || apiError.error || "Unable to sign in. Please try again.";
+}
+
 // Extracted inner component so we can wrap useSearchParams in Suspense
 function LoginContent() {
   const router = useRouter();
@@ -107,8 +119,8 @@ function LoginContent() {
         }
       }
     } catch (error) {
-      console.log("Login error:", error);
-      toast(`Something went wrong`, {
+      console.error("Login error:", error);
+      toast(getLoginErrorMessage(error), {
         type: "error",
       });
     } finally {

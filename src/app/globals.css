@@ -257,6 +257,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .app-content input:not([type="checkbox"]):not([type="radio"]), .app-content textarea, .app-content select { min-height: 44px; border-color: var(--border-strong) !important; border-radius: 10px !important; background-color: rgba(255,255,255,.025) !important; color: #e7e9ee !important; }
 .app-content input::placeholder, .app-content textarea::placeholder { color: #60697a !important; }
 .app-content input:focus, .app-content textarea:focus, .app-content select:focus { border-color: rgba(239,68,68,.5) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.08); }
+.app-content .app-input-with-icon input:not([type="checkbox"]):not([type="radio"]) {
+  min-height: 0;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.app-content .app-input-with-icon:has(input:-webkit-autofill) { background: #181818; }
+.app-content .app-input-with-icon input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #181818 inset !important;
+}
 .app-content button[class*="bg-red"], .app-content div[class*="bg-red_500"][class*="cursor-pointer"] { border-radius: 10px !important; background: var(--accent) !important; box-shadow: 0 8px 22px rgba(239,68,68,.14); }
 .app-content button[class*="bg-red"]:hover, .app-content div[class*="bg-red_500"][class*="cursor-pointer"]:hover { background: var(--accent-hover) !important; transform: translateY(-1px); }
 .app-content [class*="absolute"][class*="bg-black2"][class*="bottom"], .app-content [class*="absolute"][class*="bg-black2"][class*="-bottom"] { position: sticky !important; bottom: .5rem !important; margin: 1rem auto 0 !important; width: fit-content; border-radius: 12px; background: rgba(17,20,27,.94) !important; backdrop-filter: blur(14px); }
