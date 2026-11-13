@@ -24,7 +24,7 @@ export default function Header() {
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const segment = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
   const title = routeLabels[segment] ?? segment.replaceAll("-", " ");
-  const isChannel = user?.profile.role === "channel";
+  const isChannel = user?.profile?.role === "channel";
 
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
@@ -37,7 +37,7 @@ export default function Header() {
   if (pathname === "/") return null;
 
   function logout() {
-    const tokenKey = user?.profile.role === "superadmin" ? "superadmin_token" : "auth_token";
+    const tokenKey = user?.profile?.role === "superadmin" ? "superadmin_token" : "auth_token";
     localStorage.removeItem(tokenKey);
     destroyCookie(null, tokenKey, { path: "/" });
     router.push("/");
@@ -57,7 +57,7 @@ export default function Header() {
           <div className="relative ml-1" ref={menuRef}>
             <button type="button" className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70" onClick={() => setMenuOpen((value) => !value)} aria-label="Open account menu" aria-expanded={menuOpen}>
               <SafeImage src={user?.photo_url} alt="" width={34} height={34} className="h-[34px] w-[34px] rounded-xl object-cover ring-1 ring-white/10" />
-              <div className="hidden text-left sm:block"><p className="max-w-28 truncate text-sm font-medium text-slate-100">{user?.profile.first_name || "Account"}</p><p className="text-[11px] capitalize text-slate-500">{user?.profile.role}</p></div>
+              <div className="hidden text-left sm:block"><p className="max-w-28 truncate text-sm font-medium text-slate-100">{user?.profile?.first_name || "Account"}</p><p className="text-[11px] capitalize text-slate-500">{user?.profile?.role}</p></div>
               <svg className={`hidden h-4 w-4 text-slate-500 transition sm:block ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
             </button>
             {menuOpen ? <div className="account-menu"><button onClick={() => router.push("/account")}>Account settings</button><button onClick={() => router.push("/report")}>Reports</button><div className="my-1 h-px bg-white/[0.07]" /><button className="text-red-400 hover:!bg-red-500/10" onClick={logout}>Log out</button></div> : null}

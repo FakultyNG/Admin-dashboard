@@ -1,27 +1,30 @@
 import { IDashboardTOTAL, IDashboardUsers } from "@/types/api/dashboard.types";
 
+const displayValue = (value: unknown) =>
+  value === null || value === undefined || value === "" ? "0" : String(value);
+
 export const RP_Overview = (data: IDashboardTOTAL | undefined) => {
   if (!data) return [];
   return [
     {
       name: "Total Movies/Series",
-      value: data.totalMovieSeries.toString() ?? "0",
+      value: displayValue(data.totalMovieSeries),
     },
     {
       name: "Total Documentaries",
-      value: data.totalContents.toString() ?? "0",
+      value: displayValue(data.totalContents),
     },
     {
       name: "Total Skits",
-      value: data.totalSkits.toString() ?? "0",
+      value: displayValue(data.totalSkits),
     },
     {
       name: "Total Music Videos",
-      value: data.totalMusicVideos.toString() ?? "0",
+      value: displayValue(data.totalMusicVideos),
     },
     {
       name: "Total Events",
-      value: data.totalActiveEvents.toString() ?? "0",
+      value: displayValue(data.totalActiveEvents),
     },
     {
       name: "Total Channels",
@@ -35,19 +38,19 @@ export const RP_Overview_2 = (data: IDashboardUsers | undefined) => {
   return [
     {
       name: "Total Balance",
-      value: data.totalBalance.total_balance.toString() ?? "0",
+      value: displayValue(data.totalBalance?.total_balance),
     },
     {
       name: "Total Users",
-      value: data.totUsers.toString() ?? "0",
+      value: displayValue(data.totUsers),
     },
     {
       name: "Active Subscriptions",
-      value: data.activeSubscriptions.toString() ?? "0",
+      value: displayValue(data.activeSubscriptions),
     },
     {
       name: "Free Users",
-      value: data.freeUsers.toString() ?? "0",
+      value: displayValue(data.freeUsers),
     },
   ];
 };
