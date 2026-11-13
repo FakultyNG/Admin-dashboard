@@ -6,15 +6,18 @@ import {
   SuperUserResponse,
   UserResponse,
 } from "@/types/api/profile.types";
+import { MAIN_API_BASE_URL } from "@/config/api";
 
 const CLIENT_URL = "clients";
 const SUPERADMIN_URL = "superadmin";
+const mainApiUrl = (path: string) =>
+  `${MAIN_API_BASE_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 
 export const userApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (data) => ({
-        url: `/superadmin/auth/login`,
+        url: mainApiUrl("/superadmin/auth/login"),
         method: "POST",
         body: data,
       }),
@@ -36,7 +39,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("superadmin_token");
         return {
-        url: `/superadmin/client-redirect/login`,
+        url: mainApiUrl("/superadmin/client-redirect/login"),
         method: "POST",
          headers: {
             "superadmin-auth": `${authToken}`,
@@ -61,7 +64,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: () => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `${CLIENT_URL}/profile/fetch`,
+          url: mainApiUrl(`${CLIENT_URL}/profile/fetch`),
           method: "GET",
           headers: {
             "clients-auth": `${authToken}`,
@@ -74,7 +77,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: () => {
         const authToken = localStorage.getItem("superadmin_token");
         return {
-          url: `${SUPERADMIN_URL}/dashboard/profile/fetch`,
+          url: mainApiUrl(`${SUPERADMIN_URL}/dashboard/profile/fetch`),
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -85,7 +88,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
 
     editProfile: builder.mutation<IGeneric, IEditUser>({
       query: (data) => ({
-        url: `/superadmin/dashboard/profile/edit`,
+        url: mainApiUrl("/superadmin/dashboard/profile/edit"),
         method: "PUT",
         body: data,
       }),
