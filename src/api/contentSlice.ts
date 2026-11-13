@@ -20,6 +20,14 @@ export const editContent = async (data: FormData, id: string) =>
     })
   );
 
+export const editContentTaxonomy = async (
+  id: string,
+  data: { category: string[]; genre: string[] },
+) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.put<IGeneric>(`/superadmin/uploads/edit/${id}`, data),
+  );
+
 export const addSeason = async (seriesId: string) =>
   await apiCall<ISeasonResponse>((baseApi) =>
     baseApi.post<ISeasonResponse>(`/superadmin/uploads/seasons/add/${seriesId}`, {

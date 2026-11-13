@@ -36,6 +36,7 @@ import {
   createContent,
   deleteSubtitles,
   editContent,
+  editContentTaxonomy,
   getSeasons,
   getSubtitles,
   seriesButtonValidity,
@@ -686,6 +687,19 @@ export const AddComponent = ({
           );
       if (res.ok && res.data) {
         if (selectedMedia) {
+          const taxonomyUpdate = await editContentTaxonomy(selectedMedia._id, {
+            category,
+            genre,
+          });
+
+          if (!taxonomyUpdate.ok) {
+            toast.error(
+              taxonomyUpdate.data?.message ??
+                "The content was updated, but its categories and genres could not be saved. The editor has stayed open.",
+            );
+            return;
+          }
+
           const taxonomyPersisted = await verifySavedTaxonomy(
             selectedMedia._id,
             content.data.title,
