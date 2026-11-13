@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { roboto_400, roboto_500, roboto_700 } from "@/config/fonts";
-import { deleteSuggestion, getSuggestions, markAsRead, useGetSuggestionsQuery } from "@/api/suggestionSlice";
+import { getSuggestions, markAsRead, useGetSuggestionsQuery } from "@/api/suggestionSlice";
 import { ISuggestionData } from "@/types/api/suggestion.types";
 import { toast } from "react-toastify";
 import Lottie from "lottie-react";
 import LoadingSpinner from "@/config/lottie/loading.json";
+import { bulkDeleteRecords } from "@/api/bulkDelete.api";
 
 interface IsViewMsgProps {
   data: ISuggestionData;
@@ -77,17 +78,32 @@ export default function page() {
   async function handleTopBTN(queryType: string, data?: string[]) {
     try {
       setLoading(true);
+      const ids = data ? data : selectedIds;
 
-      (data ? data : selectedIds).forEach(async (id) => {
-        const res = queryType === 'DELETE' ? await deleteSuggestion(id) : await markAsRead(id)
-        if (res.ok && res.data) {
-          await handleGetSuggestions();
-          toast(`Successfull completed ${queryType} operation`, { type: "success" });
-          setIsViewMsg(null)
-        } else {
-          toast(`Opps! couldn't complete the ${queryType} operation`, { type: "error" });
+      if (queryType === 'DELETE') {
+        const res = await bulkDeleteRecords('suggestions', ids);
+        if (!res.ok || !res.data?.data) {
+          toast(res.data?.message || "Couldn't delete suggestions", {type: 'error'});
+          return;
         }
-      })
+        toast(`${res.data.data.deleted} suggestion(s) deleted`, {type: 'success'});
+        setSelectedIds([]);
+        setIsViewMsg(null);
+        await handleGetSuggestions();
+        return;
+      }
+
+      await Promise.all(ids.map(async (id) => {
+        const res = await markAsRead(id)
+        if (res.ok && res.data) {
+          return;
+        } else {
+          throw new Error(`Couldn't complete the ${queryType} operation`);
+        }
+      }));
+      await handleGetSuggestions();
+      toast(`Successfully completed ${queryType} operation`, { type: "success" });
+      setIsViewMsg(null)
       setSelectedIds([]);
     } catch (error) {
       toast(`Opps! couldn't complete the ${queryType} operation`, { type: "error" });

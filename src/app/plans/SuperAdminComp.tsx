@@ -218,7 +218,7 @@ function SuperAdminComp() {
                         <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                             <thead className="">
                                 <tr>
-                                    <th className="w-12"><SelectAllCheckbox group={`plans-${tab}`} /></th>
+                                    {tab === 'plans' && <th className="w-12"><SelectAllCheckbox group="plans-plans" /></th>}
                                     {(tab === 'plans' ? PLANS_TH : SUBS_TH).map((t, i) => {
                                         return (
                                             <th
@@ -235,7 +235,7 @@ function SuperAdminComp() {
                                 {filteredList.map((tx, indx) => {
                                     return (
                                         <tr key={indx} className="text-white h-[100px]">
-                                            <td className="w-12"><RowCheckbox group={`plans-${tab}`} value={tx.id} label={`Select ${tx.title ?? "item"}`} /></td>
+                                            {tab === 'plans' && <td className="w-12"><RowCheckbox group="plans-plans" value={tx.id} label={`Select ${tx.title ?? "item"}`} /></td>}
                                             {tab === 'plans' ?
 
                                                 <>
