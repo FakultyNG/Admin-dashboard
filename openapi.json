@@ -521,7 +521,7 @@
         "requestBody": {
           "required": false,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CustomerCreate"
               }
@@ -11652,6 +11652,29 @@
       "CustomerCreate": {
         "type": "object",
         "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Preferred name (what should we call you?)",
+            "maxLength": 80
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "AdminCreate": {
+        "type": "object",
+        "required": [
           "first_name",
           "last_name",
           "email",
@@ -11709,13 +11732,10 @@
           }
         }
       },
-      "AdminCreate": {
-        "$ref": "#/components/schemas/CustomerCreate"
-      },
       "ClientCreate": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/CustomerCreate"
+            "$ref": "#/components/schemas/AdminCreate"
           },
           {
             "type": "object",
