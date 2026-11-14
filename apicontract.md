@@ -39,6 +39,7 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | GET | `/health` | Public | Liveness check |
 | GET | `/ready` | Public | Database readiness check |
 | POST | `/api/v1/on_publish` | Public | RTMP on-publish callback |
+| GET | `/api/v1/version` | Public | Fetch deployed backend package version |
 | POST | `/api/v1/webhooks/paystack` | Public | Paystack webhook |
 | POST | `/api/v1/webhooks/flutterwave/v3` | Public | Flutterwave v3 webhook |
 | POST | `/api/v1/webhooks/wave` | Public | Wave webhook |

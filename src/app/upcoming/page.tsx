@@ -35,6 +35,7 @@ import {
   ADMIN_LIST_PAGE_SIZE,
   ListPagination,
 } from "@/components/ListPagination";
+import PosterUploadGuide from "@/components/PosterUploadGuide";
 
 export const runtime = "edge";
 
@@ -583,6 +584,7 @@ export default function page() {
                   >
                     Upload Landscape Image *
                   </p>
+                  <PosterUploadGuide orientation="landscape" />
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-2 relative">
                       <span
@@ -641,8 +643,9 @@ export default function page() {
                   <p
                     className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
                   >
-                    Upload Portait Image *
+                    Upload Portrait Image *
                   </p>
+                  <PosterUploadGuide orientation="portrait" />
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-2 relative">
                       <span

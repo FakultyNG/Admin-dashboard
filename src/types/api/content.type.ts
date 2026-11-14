@@ -18,7 +18,7 @@ export interface ContentData {
   trailerLink?: string;
   artistName?: string;
   currency?: string;
-  amount?:number
+  amount?: number;
 }
 
 export interface ContentFormData {
@@ -29,14 +29,13 @@ export interface ContentFormData {
   data: ContentData;
 }
 
-
 export interface ISeasonResponse extends IGeneric {
-  data: ISeasonData[]
+  data: ISeasonData[];
 }
 
 export interface ISeasonData {
   _id: string;
-  admin: string
+  admin: string;
   video: string;
   serial_number: number;
   episodes: IEpisodeData[];
@@ -45,7 +44,7 @@ export interface ISeasonData {
 
 export interface IEpisodeData {
   _id: string;
-  admin: string
+  admin: string;
   season: string;
   episodeNumber: number;
   title: string;
@@ -55,11 +54,17 @@ export interface IEpisodeData {
 }
 
 export interface ISubtitleResponse extends IGeneric {
-  data: ISubtitleData[]
+  data: ISubtitleData[];
 }
 
-export interface ISubtitleData{
-  language:string;
-  src:string;
-  _id:string
+export interface IContentMutationResponse extends IGeneric {
+  data: {
+    _id: string;
+  };
+}
+
+export interface ISubtitleData {
+  language: string;
+  src: string;
+  _id: string;
 }

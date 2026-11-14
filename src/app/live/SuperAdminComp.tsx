@@ -16,6 +16,7 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import Lottie from "lottie-react";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
+import PosterUploadGuide from "@/components/PosterUploadGuide";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
@@ -698,6 +699,7 @@ function SuperAdminComp() {
                         >
                           Upload Cover Image *
                         </p>
+                        <PosterUploadGuide orientation="landscape" />
                         <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                           <div className="flex items-center ml-5 py-2 relative">
                             <div
@@ -715,7 +717,7 @@ function SuperAdminComp() {
                             <input
                               type="file"
                               id="file"
-                              accept="image/png, image/jpeg, image/jpg"
+                              accept="image/jpeg,image/png,image/webp"
                               onChange={(e) => handleInput(e, "cover")}
                               className="absolute z-20 opacity-0"
                             />
@@ -1059,6 +1061,7 @@ function SuperAdminComp() {
                     >
                       Upload Cover Image *
                     </p>
+                    <PosterUploadGuide orientation="landscape" />
                     <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                       <div className="flex items-center ml-5 py-2 relative">
                         <div
@@ -1076,6 +1079,7 @@ function SuperAdminComp() {
                         <input
                           type="file"
                           id="file"
+                          accept="image/jpeg,image/png,image/webp"
                           onChange={(e) => handleInput(e, "cover")}
                           className="absolute z-20 opacity-0"
                         />

@@ -10,6 +10,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AddComponent from "./AddComponentAD";
 import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
+import HomeAdsSection from "./HomeAdsSection";
 
 
 export const runtime = "edge";
@@ -22,6 +23,7 @@ const page = () => {
   const [isAdd, setShowModal] = useState<boolean>();
   const [loading, setLoading] = useState<boolean>(false)
   const [pg, setPg] = useState<number>(1)
+  const [adSection, setAdSection] = useState<"standard" | "home">("standard")
   const {
     data: ADSs,
     refetch,
@@ -111,6 +113,22 @@ const page = () => {
       <p className="font-normal text-lg text-grey_700">Home / Ad Manager</p>
     </div>
 
+    <div className="mt-6 flex gap-2 pr-5">
+      <button
+        type="button"
+        onClick={() => setAdSection("standard")}
+        className={`rounded-xl px-5 py-2.5 text-sm font-semibold ${adSection === "standard" ? "bg-red text-white" : "bg-white/[0.06] text-slate-400"}`}>
+        Standard Ads
+      </button>
+      <button
+        type="button"
+        onClick={() => setAdSection("home")}
+        className={`rounded-xl px-5 py-2.5 text-sm font-semibold ${adSection === "home" ? "bg-red text-white" : "bg-white/[0.06] text-slate-400"}`}>
+        Home-Ads
+      </button>
+    </div>
+
+    {adSection === "home" ? <HomeAdsSection /> : <>
     <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
       <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
         <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
@@ -235,6 +253,7 @@ const page = () => {
       :
       <AddComponent handleRefech={() => {handleRefreshADSs(1), setShowModal(!isAdd)}} />
     }
+    </>}
 
   </section>
 };

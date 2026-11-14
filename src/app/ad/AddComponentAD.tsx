@@ -11,6 +11,7 @@ import useToggle from "@/hooks/useToggle";
 import { ImageProps } from "../plans/ClientComponent";
 import { toast } from "react-toastify";
 import { createAds } from "@/api/adsSlice";
+import PosterUploadGuide from "@/components/PosterUploadGuide";
 
 const TABS = ['General', 'Movie Ad', 'Web', 'Mobile']
 
@@ -434,6 +435,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                 Upload Landscape Image *{" "}
                                 <span className={`${roboto_400_italic.className} text-[14px] text-grey_800`}>(Preview screens)</span>
                             </p>
+                            <PosterUploadGuide orientation="landscape" className="ml-10 max-w-[303px]" />
                             <div className="ml-10 flex justify-between w-[303px] border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                                 <div className="flex items-center ml-5 py-2 relative">
                                     <div
@@ -449,6 +451,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                     <input
                                         type="file"
                                         id="file"
+                                        accept="image/jpeg,image/png,image/webp"
                                         onChange={(e) => handleInput(e, "landscapePREVIEW_W")}
                                         className="absolute z-20 opacity-0"
                                     />
@@ -493,8 +496,9 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                 className={`${roboto_500.className} ml-10 font-medium text-sm text-[#909090] mb-2`}
                             >
                                 Upload Landscape Image *{" "}
-                                <span className={`${roboto_400_italic.className} text-[14px] text-grey_800`}>(Live screen) png only</span>
+                                <span className={`${roboto_400_italic.className} text-[14px] text-grey_800`}>(Live screen)</span>
                             </p>
+                            <PosterUploadGuide orientation="landscape" className="ml-10 max-w-[303px]" />
                             <div className="ml-10 flex justify-between w-[303px] border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                                 <div className="flex items-center ml-5 py-2 relative">
                                     <div
@@ -510,7 +514,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                     <input
                                         type="file"
                                         id="file"
-                                        accept="png"
+                                        accept="image/jpeg,image/png,image/webp"
                                         onChange={(e) => handleInput(e, "cover")}
                                         className="absolute z-20 opacity-0"
                                     />
@@ -559,6 +563,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                     Upload Portrait Image *{" "}
                                     <span className={`${roboto_400_italic.className} text-[14px] text-grey_800`}>(Watchlist screen)</span>
                                 </p>
+                                <PosterUploadGuide orientation="portrait" className="mx-auto max-w-[303px]" />
                                 <div className="mx-auto flex justify-between w-[303px] border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                                     <div className="flex items-center ml-5 py-2 relative">
                                         <div
@@ -574,7 +579,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                         <input
                                             type="file"
                                             id="file"
-                                            accept="png"
+                                            accept="image/jpeg,image/png,image/webp"
                                             onChange={(e) => handleInput(e, "portrait_W")}
                                             className="absolute z-20 opacity-0"
                                         />
@@ -747,6 +752,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                         Upload Landscape Image*{" "}
                                     </p>
                                     <p className={`${roboto_400_italic.className} text-[14px] text-[#C4C4C4]`}>Search, suggestions and download screens</p>
+                                    <PosterUploadGuide orientation="landscape" />
                                 </div>
                                 <div className="mx-auto flex justify-between w-[303px] border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                                     <div className="flex items-center ml-5 py-2 relative">
@@ -764,7 +770,7 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                         key={landscapeImage_M ? landscapeImage_M.name :'empty_landscapeImage_M'}
                                             type="file"
                                             id="file"
-                                            accept="png/*"
+                                            accept="image/jpeg,image/png,image/webp"
                                             onChange={(e) => handleInput(e, "landscape_m")}
                                             className="absolute z-20 opacity-0"
                                         />

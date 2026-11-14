@@ -11,8 +11,8 @@ export const RP_Overview = (data: IDashboardTOTAL | undefined) => {
       value: displayValue(data.totalMovieSeries),
     },
     {
-      name: "Total Documentaries",
-      value: displayValue(data.totalContents),
+      name: "Total Channels",
+      value: "0",
     },
     {
       name: "Total Skits",
@@ -27,8 +27,8 @@ export const RP_Overview = (data: IDashboardTOTAL | undefined) => {
       value: displayValue(data.totalActiveEvents),
     },
     {
-      name: "Total Channels",
-      value: "0",
+      name: "Total VOD Contents",
+      value: displayValue(data.totalContents),
     },
   ];
 };

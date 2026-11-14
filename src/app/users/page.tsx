@@ -271,7 +271,7 @@ export default function page() {
                             <div className="flex items-center justify-start pl-2 py-1 rounded">
                               <SafeImage
                                 src={tx.photo}
-                                fallbackSrc="/user.png"
+                                fallbackSrc="/default-user-profile.webp"
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -392,7 +392,7 @@ export default function page() {
                   />
                 ) : (
                   <Image
-                    src="/accDummy.svg"
+                    src="/default-user-profile.webp"
                     width={105}
                     height={106}
                     alt=""

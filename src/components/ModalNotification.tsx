@@ -3,6 +3,9 @@ import Image from "next/image";
 import { CustomInput } from "./AppLayout";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { broadcastNotification } from "@/api/notification.api";
+import { toast } from "react-toastify";
+import PosterUploadGuide from "./PosterUploadGuide";
 
 type BackProps = {
     onBack : () => void
@@ -12,19 +15,50 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [isSending, setIsSending] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file && file.type.startsWith('image/')) {
+      setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     } else {
+      setImageFile(null)
       setImagePreview(null)
     }
   }
+
+    const handleSend = async () => {
+      if (!title.trim() || !message.trim() || isSending) return;
+
+      try {
+        setIsSending(true);
+        const response = await broadcastNotification({
+          title: title.trim(),
+          body: message.trim(),
+          photo: imageFile,
+        });
+
+        if (!response.ok) {
+          toast(response.data?.message || "Could not send notification", { type: "error" });
+          return;
+        }
+
+        toast(response.data?.message || "Notification broadcast sent", { type: "success" });
+        onBack();
+      } catch (error) {
+        toast(error instanceof Error ? error.message : "Could not send notification", {
+          type: "error",
+        });
+      } finally {
+        setIsSending(false);
+      }
+    };
 
     return (
         <>
@@ -64,6 +98,7 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
 
                 <div className="mt-4 w-full">
                     <label className="text-grey_800 pl-2">Upload Landscape Image</label>
+                    <PosterUploadGuide orientation="landscape" className="pl-2" />
                     <div className="flex items-center border border-border_grey px-2 py-2 mt-2 gap-2">
                         <span className="text-sm bg-grey_3 font-[500] px-3 py-1 rounded-sm whitespace-nowrap">
                             Choose file
@@ -76,9 +111,9 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
                             className="border-none outline-none cursor-pointer w-[101px]"
                             />
                         </label>
-                        <button type="button" className="rounded-lg bg-red px-3 py-2 text-xs font-semibold text-white hover:bg-red-600">
-                            UPLOAD
-                        </button>
+                        <span className="min-w-0 flex-1 truncate text-xs text-slate-400">
+                            {imageFile?.name || "Optional image"}
+                        </span>
                     </div>
                 </div>
 
@@ -102,8 +137,8 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
                     ></textarea>
                 </div>
 
-                <button type="button" disabled={!title.trim() || !message.trim()} className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-red text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400">
-                    Send
+                <button type="button" onClick={handleSend} disabled={!title.trim() || !message.trim() || isSending} className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-red text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400">
+                    {isSending ? "Sending…" : "Send"}
                 </button>
                 </div>
             </motion.div>

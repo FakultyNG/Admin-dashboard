@@ -15,7 +15,7 @@ import {
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import { ICastResponse, ICategoryResponse } from "@/types/api/category.types";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Table } from "./page";
 import SafeImage from "@/components/SafeImage";
@@ -35,7 +35,7 @@ export const ModalComponent = ({
 }: ModalProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(editValue ? editValue.title: tab === "cast" ? "Select" : "");
-  const [names, setNames] = useState<string>("");
+  const [names, setNames] = useState<string>(editValue?.names ?? "");
   const [location, setLocation] = useState<string>(editValue ? editValue.location??'' :"Select");
   const [position, setPosition] = useState<string>((editValue && editValue.position) ? editValue.position : "Select");
   const [userPic, setUserPic] = useState<File | null>(null);
@@ -43,7 +43,24 @@ export const ModalComponent = ({
   const [buttonType, setButtonType] = useState((editValue && editValue.selectButtonType) ? editValue.selectButtonType.replace('-', ' ').toUpperCase() : "Select button");
   const [details, setDetails] = useState((editValue && editValue.description) ? editValue.description : "");
   const maxLength = 200;
-  const isDisable = link === "" || names === "" || details === "" || !userPic || buttonType === 'Select button';
+  const hasLink = link.trim() !== "";
+  const hasButtonType = buttonType !== "Select button";
+  const isCastDisabled =
+    names.trim() === "" ||
+    details.trim() === "" ||
+    title === "Select" ||
+    (!editValue && !userPic) ||
+    hasLink !== hasButtonType;
+  const photoPreview = useMemo(
+    () => (userPic ? URL.createObjectURL(userPic) : undefined),
+    [userPic]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (userPic && photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview, userPic]);
 
   function reset() {
     setPosition("Select");
@@ -51,6 +68,7 @@ export const ModalComponent = ({
     setTitle(tab === "cast" ? "Select" : "");
     setNames("");
     setLink("");
+    setDetails("");
     setUserPic(null);
     setButtonType('Select button');
     handleClose();
@@ -76,9 +94,11 @@ export const ModalComponent = ({
         if(userPic) formdata.append('photo', userPic);
           formdata.append('name', names);
           formdata.append('title', title);
-          formdata.append('link', link);
+          if (hasLink) formdata.append('link', link.trim());
           formdata.append('description', details);
-          formdata.append('selectButtonType', buttonType.toLowerCase().replace(' ', '-'));
+          if (hasButtonType) {
+            formdata.append('selectButtonType', buttonType.toLowerCase().replace(' ', '-'));
+          }
       }
       const data =
           {
@@ -88,7 +108,7 @@ export const ModalComponent = ({
   
       const res = editValue ? await editCategoryEnums(tab === 'cast' ? formdata : data, tab, editValue._id) : await addCategoryEnums(tab === 'cast' ? formdata : data, tab);
       if (res.ok && res.data) {
-        toast(`Successfully added ${tab}`, {
+        toast(`Successfully ${editValue ? "updated" : "added"} ${tab}`, {
           type: "success",
         });
         reset();
@@ -135,8 +155,8 @@ export const ModalComponent = ({
           {/* ADD IMAGE FROM CTA MODAL ONLY WHEN TAB === CAST */}
           {tab === 'cast' && <div className="mb-4 mt-1 relative">
                                   {/* Here */}
-                                      {userPic ? <Image
-                                          src={URL.createObjectURL(userPic)}
+                                      {userPic && photoPreview ? <Image
+                                          src={photoPreview}
                                           width={111}
                                           height={111}
                                           alt=""
@@ -156,7 +176,7 @@ export const ModalComponent = ({
                                           <Image src="/editProfile.svg" alt="" width={20} height={20} />
                                           <input
                                               type="file"
-                                              accept=".png, .jpeg, .jpg"
+                                              accept="image/png,image/jpeg"
                                               className="absolute top-0 -left-3 opacity-0"
                                               onChange={(e) => handleInput(e)}
                                           />
@@ -297,6 +317,7 @@ export const ModalComponent = ({
                     <textarea
                       name="details"
                       maxLength={maxLength}
+                      value={details}
                       onChange={handleTextChange}
                       className={`${roboto_400.className} textarea w-full h-[90px] p-1 pl-2 outline-none bg-transparent text-sm text-white`}
                     />
@@ -313,7 +334,7 @@ export const ModalComponent = ({
           <AppButton
             isLoading={loading}
             disabled={
-              (tab === "cast" && isDisable) ||
+              (tab === "cast" && isCastDisabled) ||
               title === "" ||
               ((tab === "genre" || tab === "category") &&
                 position === "Select") ||

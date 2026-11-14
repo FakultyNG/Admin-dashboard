@@ -19,3 +19,18 @@ export interface IAdsData {
     createdAt: string;
     updatedAt: string
 }
+
+export interface IHomeAdData {
+    _id: string;
+    title: string;
+    type: "home_ad";
+    link: string;
+    active: boolean;
+    photoUrl: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface IHomeAdsResponse extends IGeneric {
+    data: IHomeAdData[];
+}

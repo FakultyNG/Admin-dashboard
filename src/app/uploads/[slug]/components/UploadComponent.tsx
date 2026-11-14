@@ -11,7 +11,6 @@ import {
   useGetGenreQuery,
 } from "@/api/categorySlice";
 import { ICast, ICategory } from "@/types/api/category.types";
-import { formatAmount } from "@/utilities/formatAmount";
 import ReactPlayer from "react-player";
 import { truncateText } from "@/utilities/textUtils";
 import {
@@ -45,10 +44,10 @@ import {
   dateInputToLagosISOString,
   formatDateInputInLagos,
 } from "@/utilities/dateUtilities";
-import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
+import { HexAlphaColorPicker } from "react-colorful";
 import { useProgress } from "@bprogress/next";
-import LoadingSpinner from "@/config/lottie/loading.json";
-import Lottie from "lottie-react";
+import SubtitleManager from "./SubtitleManager";
+import PosterUploadGuide from "@/components/PosterUploadGuide";
 
 interface ModalProps {
   handleClose: () => void;
@@ -56,6 +55,17 @@ interface ModalProps {
   slug: string;
   selectedMedia: IMediaData | null;
 }
+
+const formatVideoDuration = (durationSeconds: number) => {
+  const totalSeconds = Math.max(0, Math.round(durationSeconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
+};
 
 export interface ISeason {
   index: number;
@@ -88,7 +98,6 @@ export const AddComponent = ({
   const { start, stop } = useProgress();
   const [loading, setLoading] = useState<boolean>(false);
   const [loading_C, setLoading_C] = useState<boolean>(false);
-  const [isGenre, setIsGenre] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(
     selectedMedia
       ? slug.includes("videos") && selectedMedia.artistName
@@ -96,11 +105,11 @@ export const AddComponent = ({
         : selectedMedia.title
       : "",
   );
-  const [subtitle, setSubTitle] = useState<string>("");
+  const [subtitle, setSubTitle] = useState<string>(
+    selectedMedia && slug.includes("videos") ? selectedMedia.title : "",
+  );
   const [releaseDate, setReleaseDate] = useState<string>(
-    selectedMedia
-      ? formatDateInputInLagos(selectedMedia.releaseDate)
-      : "",
+    selectedMedia ? formatDateInputInLagos(selectedMedia.releaseDate) : "",
   );
   const [expiryDate, setExpiryDate] = useState<string>(
     selectedMedia
@@ -148,8 +157,6 @@ export const AddComponent = ({
   const [rating, setRating] = useState<string>(
     selectedMedia ? selectedMedia.averageRating.toString() : "Select",
   );
-  const [views, setViews] = useState<string>("Select");
-  const [options, setOptions] = useState<string>("Select");
   const [subtitle_, setSUBTITLE] = useState<string>("Select Language");
 
   const [genriesList, setGenriesList] = useState<ICategory[]>([]);
@@ -212,9 +219,10 @@ export const AddComponent = ({
   }, [showPicker]);
 
   const isDisabled =
-    title === "" ||
-    class_ === "" ||
-    PG === "" ||
+    title.trim() === "" ||
+    (slug.includes("videos") && subtitle.trim() === "") ||
+    class_ === "Select" ||
+    PG === "Select" ||
     releaseDate === "" ||
     expiryDate === "" ||
     selectedGenries.length !== 3 ||
@@ -222,54 +230,10 @@ export const AddComponent = ({
     (links || videoTrailer) === null ||
     details === "" ||
     time === "" ||
-    rating === "" ||
+    rating === "Select" ||
     portrait === null ||
-    portrait_L === null;
-
-  function handleValidInput(query: string) {
-    const inputValue = query;
-    if (/^\d*$/.test(inputValue)) {
-      setAmount(inputValue);
-    }
-  }
-
-  const handleInputFormatForTime = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value.replace(/[^0-9]/g, "");
-
-    if (inputValue.length > 7) {
-      return;
-    }
-
-    let seconds = "00";
-    let minutes = "00";
-    let hours = "00";
-
-    if (inputValue.length > 0) {
-      seconds = inputValue.slice(-2).padStart(2, "0");
-    }
-
-    if (inputValue.length > 2) {
-      minutes = inputValue.slice(-4, -2).padStart(2, "0");
-    }
-
-    if (inputValue.length > 4) {
-      hours = inputValue.slice(0, -4).padStart(2, "0");
-    }
-
-    const sec = Math.min(parseInt(seconds, 10), 59);
-    const min = Math.min(parseInt(minutes, 10), 59);
-    const hr = Math.min(Math.max(parseInt(hours, 10), 0), 99); // Limit hours, e.g., 0 to 99
-
-    if (hr === 59 && min === 59 && sec === 59) {
-      return;
-    }
-
-    const formattedTime = `${String(hr).padStart(2, "0")}:${String(
-      min,
-    ).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-
-    setTime(formattedTime);
-  };
+    portrait_L === null ||
+    Boolean(subtitleFile && subtitle_.toLowerCase().includes("select"));
 
   const handleTextChange = (newText: string) => {
     if (newText.length <= maxLength) {
@@ -313,8 +277,14 @@ export const AddComponent = ({
           });
         }
         const video = document.createElement("video");
+        video.preload = "metadata";
         video.src = videoObjectUrl;
-        video.currentTime = 2;
+        video.onloadedmetadata = () => {
+          if (type === "video" && Number.isFinite(video.duration) && video.duration > 0) {
+            setTime(formatVideoDuration(video.duration));
+          }
+          video.currentTime = Math.min(2, Math.max(video.duration / 2, 0));
+        };
         video.onloadeddata = () => {
           const canvas = document.createElement("canvas");
           canvas.width = video.videoWidth / 2;
@@ -331,9 +301,20 @@ export const AddComponent = ({
           }
         };
       } else if (type === "subtitle") {
+        const extension = files[0].name.split(".").pop()?.toLowerCase();
+        if (!extension || !["srt", "vtt"].includes(extension)) {
+          toast("Choose a valid SRT or VTT subtitle file.", { type: "error" });
+          e.target.value = "";
+          return;
+        }
+        if (files[0].size > 5 * 1024 * 1024) {
+          toast("Subtitle files must be 5 MB or smaller.", { type: "error" });
+          e.target.value = "";
+          return;
+        }
         setSubtitleFile({
           name: files[0].name,
-          url: URL.createObjectURL(files[0]),
+          url: "",
           file: files[0],
         });
       } else if (type === "portrait") {
@@ -376,14 +357,21 @@ export const AddComponent = ({
   const handleInputChange = (value: string, type?: string) => {
     if (value === "") return;
     // if (type === "cast")
-    if (value.includes(",")) {
-    } else if (!selectedGenries.includes(value)) {
+    if (!value.includes(",")) {
       if (type === "cast") {
         return;
       } else if (type === "categories") {
-        setSelectedCategories([value, ...selectedCategories]);
+        setSelectedCategories((current) =>
+          current.includes(value) || current.length >= 3
+            ? current
+            : [value, ...current],
+        );
       } else {
-        setSelectedGenries([value, ...selectedGenries]);
+        setSelectedGenries((current) =>
+          current.includes(value) || current.length >= 3
+            ? current
+            : [value, ...current],
+        );
       }
     }
   };
@@ -464,43 +452,40 @@ export const AddComponent = ({
     }
   }
 
-  async function handleAddSubtitle() {
-    if (!selectedMedia || !subtitleFile || !subtitleFile.file) return;
+  async function uploadSubtitle(parentId: string) {
+    if (!subtitleFile?.file || subtitle_.toLowerCase().includes("select")) {
+      return false;
+    }
     try {
-      setSrtLoading(true);
       const formdata = new FormData();
-      formdata.append("parentId", selectedMedia._id);
-      formdata.append(
-        "parentType",
-        slug.includes("series") ? "episode" : "vod",
-      );
+      formdata.append("parentId", parentId);
+      formdata.append("parentType", "vod");
       formdata.append("language", subtitle_);
       formdata.append("subtitle", subtitleFile.file);
       const res = await addSubtitle(formdata);
 
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
-        setSRTArray((prev) => [
-          {
-            language: subtitle_,
-            srtFile: {
-              name: subtitleFile?.name ?? "",
-              url: subtitleFile?.url ?? "",
-            },
-          },
-          ...prev,
-        ]);
-        handleFetchSubtitle();
-      } else {
-        toast(res.data?.message, { type: "error" });
+        return true;
       }
+      toast(res.data?.message ?? "Subtitle upload failed.", { type: "error" });
+      return false;
     } catch (error) {
       toast(`${error}`, { type: "error" });
-    } finally {
-      setSrtLoading(false);
+      return false;
+    }
+  }
+
+  async function handleAddSubtitle() {
+    if (!selectedMedia) return;
+    setSrtLoading(true);
+    const uploaded = await uploadSubtitle(selectedMedia._id);
+    if (uploaded) {
       setSUBTITLE("Select Language");
       setSubtitleFile(null);
+      await handleFetchSubtitle();
     }
+    setSrtLoading(false);
   }
 
   async function handleFetchSeasons() {
@@ -650,6 +635,17 @@ export const AddComponent = ({
           );
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
+        if (!selectedMedia && subtitleFile?.file) {
+          setSrtLoading(true);
+          const subtitleUploaded = await uploadSubtitle(res.data.data._id);
+          setSrtLoading(false);
+          if (!subtitleUploaded) {
+            toast(
+              "The content was saved, but its subtitle was not. Reopen the content to retry the subtitle upload.",
+              { type: "warning" },
+            );
+          }
+        }
         // Reset form after successful upload
         setTitle("");
         setSubTitle("");
@@ -709,30 +705,23 @@ export const AddComponent = ({
   }, [slug, selectedMedia]);
 
   return (
-    <div className="mt-5 h-full flex flex-col">
-      {/* {slug === "movies" && (
-        <div className="flex-1 mt-10 ml-16 flex items-center gap-x-6">
-          <p
-            className={`${roboto_500.className} capitalize font-medium text-white text-base ml-2.5`}
-          >
-            Show on Genre
+    <div className="mx-auto mt-6 flex h-full w-full max-w-[1500px] flex-col px-3 sm:px-6">
+      <div className="mt-4 flex-1 rounded-2xl border border-white/[0.08] bg-black3 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:py-8">
+        <div className="mb-8 px-4 sm:px-6 lg:px-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-400">
+            Content library
           </p>
-          <div
-            className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${isGenre ? `bg-[#FF131373]` : "bg-[#BCBDBD73]"
-              }`}
-          >
-            <div
-              onClick={() => setIsGenre(!isGenre)}
-              className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${isGenre ? `translate-x-5 bg-red` : "-translate-x-0 bg-[#BCBDBD]"
-                } `}
-            />
-          </div>
+          <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+            {selectedMedia ? "Edit content" : "Add content"}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-grey_500">
+            Complete the essentials first, then add media, artwork, and optional
+            accessibility tracks.
+          </p>
         </div>
-      )} */}
-      <div className="mt-6 bg-black3 py-10 flex-1">
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* First level */}
-          <div className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-start gap-x-10 lg:gap-x-[10%] xl:gap-x-[20%]">
+          <div className="mx-4 grid gap-8 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10 xl:grid-cols-2">
             <div className="flex-1 space-y-6">
               {/* TITLE */}
               <div>
@@ -895,23 +884,24 @@ export const AddComponent = ({
             </div>
 
             <div className="mt-6 md:mt-0 flex-1 space-y-6">
-              {/* SUB TITLE */}
-              <div>
-                <label
-                  htmlFor="subtitle"
-                  className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                >
-                  {slug.includes("videos") ? "MUSIC" : "SUB"} TITLE *
-                </label>
-                <CustomInput
-                  type="text"
-                  id="subtitle"
-                  className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                  value={subtitle}
-                  onChange={(e) => setSubTitle(e.target.value)}
-                  maxLength={20}
-                />
-              </div>
+              {slug.includes("videos") && (
+                <div>
+                  <label
+                    htmlFor="subtitle"
+                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                  >
+                    TRACK TITLE *
+                  </label>
+                  <CustomInput
+                    type="text"
+                    id="subtitle"
+                    className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                    value={subtitle}
+                    onChange={(e) => setSubTitle(e.target.value)}
+                    maxLength={20}
+                  />
+                </div>
+              )}
 
               {/* RELEASE & EXPIRY DATE */}
               <div className="flex flex-wrap gap-y-5 items-start gap-x-5 lg:gap-x-10">
@@ -1028,7 +1018,12 @@ export const AddComponent = ({
                         return (
                           <div
                             onClick={() => [
-                              setSelectedCasts((prev) => [content, ...prev]),
+                              setSelectedCasts((prev) =>
+                                prev.some((cast) => cast._id === content._id) ||
+                                prev.length >= 10
+                                  ? prev
+                                  : [content, ...prev],
+                              ),
                               setCastTxt(""),
                               setCastContentList([]),
                             ]}
@@ -1047,11 +1042,12 @@ export const AddComponent = ({
           </div>
 
           {/* second level */}
-          <div className="px-10 lg:px-16 flex-1">
+          <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
             <p
               className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
             >
-              CATEGORY *
+              CATEGORY <span className="text-sm text-grey_800">(Up to 3)</span>{" "}
+              *
             </p>
             <SelectInputForm
               placeholder=""
@@ -1094,7 +1090,7 @@ export const AddComponent = ({
           </div>
 
           {/* third level */}
-          <div className="px-10 lg:px-16 flex flex-col flex-wrap lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
+          <div className="mx-4 grid gap-8 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10 xl:grid-cols-2">
             {/* right */}
             <div
               className="flex flex-col flex-1"
@@ -1370,7 +1366,7 @@ export const AddComponent = ({
 
           {/* fourth level */}
           <>
-            <div className="px-10 lg:px-16">
+            <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
               <p
                 className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
               >
@@ -1402,25 +1398,8 @@ export const AddComponent = ({
               )}
             </div>
 
-            {/* time and ratings */}
-            <div className="flex flex-col px-10 lg:px-16 lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
-              <div className="flex-1">
-                <label
-                  htmlFor="time"
-                  className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                >
-                  RUNTIME{" "}
-                  <span className="text-grey_800 text-sm">(HH:MM:SS)</span> *
-                </label>
-                <CustomInput
-                  type="text"
-                  id="time"
-                  className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                  value={time}
-                  onChange={handleInputFormatForTime}
-                />
-              </div>
-
+            {/* ratings */}
+            <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
               <div className="flex-1">
                 <p
                   className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
@@ -1438,7 +1417,7 @@ export const AddComponent = ({
 
             {/* movie file */}
             {class_ !== "AD" && slug !== "series" && (
-              <div className="px-10 lg:px-16 flex flex-col flex-wrap lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
+              <div className="mx-4 grid gap-8 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10 xl:grid-cols-2">
                 {/* right */}
                 <div
                   className="flex flex-col flex-1"
@@ -1516,9 +1495,12 @@ export const AddComponent = ({
                             </div>
                           </div>
 
-                          <button
-                            className="hover:scale-110 transition-all duration-200"
-                            onClick={() => setLinks_2(null)}
+                           <button
+                             className="hover:scale-110 transition-all duration-200"
+                            onClick={() => {
+                              setLinks_2(null);
+                              setTime("");
+                            }}
                           >
                             <Image
                               src="/delete.svg"
@@ -1528,7 +1510,26 @@ export const AddComponent = ({
                             />
                           </button>
                         </>
-                      </div>
+                       </div>
+
+                      {links_2.url && (
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0"
+                        >
+                          <ReactPlayer
+                            url={links_2.url}
+                            playing={false}
+                            width={1}
+                            height={1}
+                            onDuration={(duration) => {
+                              if (Number.isFinite(duration) && duration > 0) {
+                                setTime(formatVideoDuration(duration));
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
 
                       {/* preview */}
                       {isPreview_2 && links_2 && (
@@ -1625,6 +1626,26 @@ export const AddComponent = ({
                       >
                         UPLOAD
                       </div>
+                     </div>
+
+                    <div className="mt-5">
+                      <label
+                        htmlFor="runtime"
+                        className={`${roboto_500.className} font-medium text-white text-base`}
+                      >
+                        RUNTIME{" "}
+                        <span className="text-grey_800 text-sm">
+                          (Automatically detected)
+                        </span>
+                      </label>
+                      <CustomInput
+                        type="text"
+                        id="runtime"
+                        placeholder="Select or link the main content to calculate runtime"
+                        className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                        value={time}
+                        readOnly
+                      />
                     </div>
 
                     <>
@@ -1669,7 +1690,10 @@ export const AddComponent = ({
 
                             <button
                               className="hover:scale-110 transition-all duration-200"
-                              onClick={() => setVideoTrailer_2(null)}
+                              onClick={() => {
+                                setVideoTrailer_2(null);
+                                setTime("");
+                              }}
                             >
                               <Image
                                 src="/delete.svg"
@@ -1733,7 +1757,7 @@ export const AddComponent = ({
             )}
 
             {slug === "series" && (
-              <div className="px-10 lg:px-16">
+              <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
                 <p
                   className={`${roboto_400.className} text-grey_500 font-normal text-base ml-3`}
                 >
@@ -1756,178 +1780,28 @@ export const AddComponent = ({
               </div>
             )}
 
-            {/* subtitle */}
             {class_ !== "AD" && !slug.includes("series") && (
-              <div className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
-                <div className="flex flex-col flex-1">
-                  <label
-                    htmlFor="trailer"
-                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                  >
-                    SUBTITLE *
-                  </label>
-                  <SelectInputForm
-                    placeholder={subtitle_}
-                    setType={setSUBTITLE}
-                    selectData={[
-                      "English",
-                      "Igbo",
-                      "Yoruba",
-                      "Hausa",
-                      "French",
-                      "Spanish",
-                    ]}
-                    className="border-border_grey mt-2 text-grey_500 rounded-sm flex-1"
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <div className="w-full md:w-[350px] md:ml-auto">
-                    <p
-                      className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
-                    >
-                      Upload Subtitle{" "}
-                      <span className={`${roboto_400_italic.className}`}>
-                        (SRT)
-                      </span>{" "}
-                      *
-                    </p>
-                    <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
-                      <div className="flex items-center ml-5 py-2 relative">
-                        <div
-                          className={`${roboto_500.className} mr-3 min-w-fit bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
-                        >
-                          Choose File
-                        </div>
-                        <span
-                          className={`${roboto_400.className} text-xs truncate text-grey_500`}
-                        >
-                          {subtitleFile
-                            ? truncateText(20, subtitleFile.name)
-                            : "No File selected"}
-                        </span>
-                        <input
-                          key={subtitleFile ? subtitleFile.name : "empty-sub"}
-                          type="file"
-                          id="file"
-                          accept="srt/*"
-                          onChange={(e) => handleInput(e, "subtitle")}
-                          className="absolute z-20 opacity-0"
-                        />
-                      </div>
-                      <div
-                        className={`${
-                          roboto_500.className
-                        } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"} h-[42px] px-4 flex items-center justify-center`}
-                      >
-                        UPLOAD
-                      </div>
-                    </div>
-                  </div>
-
-                  <AppButton
-                    title="Add Subtitle"
-                    bgColor={selectedMedia ? "bg-green_400" : "bg-grey_500"}
-                    disabled={!selectedMedia}
-                    isLoading={srtLoading}
-                    className="ml-auto mt-6 px-6 py-3"
-                    onClick={() =>
-                      subtitleFile &&
-                      !subtitle_.toLowerCase().includes("select")
-                        ? handleAddSubtitle()
-                        : toast("select srt file & select subtitle language", {
-                            type: "info",
-                          })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* list of subtitle */}
-            {class_ !== "AD" && (
-              <div className="px-10 lg:px-16 flex flex-wrap gap-x-12 pl-10 gap-y-14 items-start py-6">
-                {srtArray.map((x, i) => {
-                  return (
-                    <div key={i} className="flex items-center gap-x-12">
-                      <div className="ml-4">
-                        <p
-                          className={`${roboto_500.className} capitalize font-medium text-[#fff] text-[15px]`}
-                        >
-                          {truncateText(20, x.srtFile.name)}{" "}
-                        </p>
-                        <div
-                          className={`${roboto_400.className} font-normal text-[13px] text-grey_500 `}
-                        >
-                          {x.language}
-                        </div>
-                      </div>
-
-                      <button
-                        className="hover:scale-110 transition-all duration-200"
-                        onClick={() => handleDeleteSubtitle(x.srtFile.name)}
-                      >
-                        {x.srtFile.name === subtitleProcessingId ? (
-                          <Lottie
-                            animationData={LoadingSpinner}
-                            loop
-                            style={{ width: 35, height: 35, marginRight: 5 }}
-                          />
-                        ) : (
-                          <Image
-                            src="/delete.svg"
-                            width={16}
-                            height={16}
-                            alt="delete icon"
-                          />
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* options and views */}
-            {/* <div style={slug === 'series' ? { marginTop: -30 } : {}} className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-end gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
-              <div className="flex-1">
-                <label
-                  className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
-                >
-                  OPTIONS *
-                  <p
-                    className={`${roboto_400.className} text-grey_500 font-normal text-base ml-3`}
-                  >
-                    Status
-                  </p>
-                </label>
-                <SelectInputForm
-                  placeholder={options}
-                  setType={setOptions}
-                  selectData={["Active", "Inactive"]}
-                  className="border-border_grey mt-2 text-grey_500 rounded-sm flex-1"
+              <div className="px-4 sm:px-6 lg:px-10">
+                <SubtitleManager
+                  language={subtitle_}
+                  setLanguage={setSUBTITLE}
+                  file={subtitleFile}
+                  onFileChange={(event) => handleInput(event, "subtitle")}
+                  onClearFile={() => setSubtitleFile(null)}
+                  onAdd={handleAddSubtitle}
+                  canUploadImmediately={Boolean(selectedMedia)}
+                  isUploading={srtLoading}
+                  subtitles={srtArray}
+                  deletingId={subtitleProcessingId}
+                  onDelete={handleDeleteSubtitle}
                 />
               </div>
-
-              <div className="flex-1">
-                <p
-                  className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
-                >
-                  Show Views *
-                </p>
-                <SelectInputForm
-                  placeholder={views}
-                  setType={setViews}
-                  selectData={["Yes", "No"]}
-                  className="border-border_grey text-grey_500 rounded-sm flex-1"
-                />
-              </div>
-            </div> */}
+            )}
 
             {/* Adding seasons */}
             {slug === "series" && selectedMedia && (
               <div className="-pt-10">
-                <div className="px-10 lg:px-16 flex items-center gap-x-4 mb-5">
+                <div className="mx-4 mb-5 flex items-center gap-x-4 sm:mx-6 lg:mx-10">
                   <AppButton
                     title="Add Season"
                     bgColor="bg-[#EE2726]"
@@ -1982,17 +1856,15 @@ export const AddComponent = ({
 
           {/* fifth level */}
           <>
-            <div className="px-10 lg:px-16 flex items-start gap-x-3 gap-y-10 flex-wrap">
+            <div className="mx-4 grid gap-8 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10 xl:grid-cols-2">
               <div className="flex-1">
                 <div className="w-full md:w-[350px] md:mr-auto mt-10">
                   <p
                     className={`${roboto_500.className} font-medium text-sm text-white mb-2`}
                   >
                     PORTRAIT POSTER{" "}
-                    <span className="text-grey_800 text-sm">
-                      (390 x 454 jpeg, jpg)
-                    </span>
                   </p>
+                  <PosterUploadGuide orientation="portrait" />
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-2 relative">
                       <div
@@ -2011,7 +1883,7 @@ export const AddComponent = ({
                         key={portrait ? portrait.name : "empty-portrait"}
                         type="file"
                         id="file"
-                        accept="image/png, image/jpeg, image/jpg"
+                        accept="image/jpeg,image/png,image/webp"
                         onChange={(e) => handleInput(e, "portrait")}
                         className="absolute z-20 opacity-0"
                       />
@@ -2046,10 +1918,8 @@ export const AddComponent = ({
                     className={`${roboto_500.className} font-medium text-sm text-white mb-2`}
                   >
                     LANDSCAPE POSTER{" "}
-                    <span className="text-grey_800 text-sm">
-                      (1920 x 1080 jpeg, jpg)
-                    </span>
                   </p>
+                  <PosterUploadGuide orientation="landscape" />
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-2 relative">
                       <div
@@ -2068,7 +1938,7 @@ export const AddComponent = ({
                         key={portrait_L ? portrait_L.name : "empty-portrait_L"}
                         type="file"
                         id="file"
-                        accept="image/png, image/jpeg, image/jpg"
+                        accept="image/jpeg,image/png,image/webp"
                         onChange={(e) => handleInput(e, "landscape")}
                         className="absolute z-20 opacity-0"
                       />
@@ -2100,7 +1970,7 @@ export const AddComponent = ({
           </>
         </div>
 
-        <div className="px-10 lg:px-16 my-10 relative">
+        <div className="relative mx-4 my-8 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
           <div className="flex items-center gap-4">
             <p
               className={`${roboto_500.className} text-xl text-white flex items-center gap-3 cursor-pointer`}
@@ -2167,7 +2037,7 @@ export const AddComponent = ({
           )}
         </div>
 
-        <div className="px-10 lg:px-16 mt-4">
+        <div className="sticky bottom-0 z-40 mt-8 flex justify-end border-t border-white/[0.08] bg-black3/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-10">
           <AppButton
             title={selectedMedia ? "UPDATE" : "UPLOAD"}
             disabled={
@@ -2179,55 +2049,11 @@ export const AddComponent = ({
             showPercentage
             isLoading={loading}
             bgColor="bg-[#EE2726]"
-            className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"
+            className="w-full rounded-lg px-8 py-3.5 sm:w-auto sm:min-w-[180px]"
             onClick={handleCreateContent}
           />
         </div>
       </div>
-    </div>
-  );
-};
-
-// Add upload progress bar functionality
-
-const UploadComponent = ({
-  slug,
-  selectedMedia,
-  handleClose,
-}: {
-  slug: string;
-  selectedMedia: any;
-  handleClose: () => void;
-}) => {
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleUpload = async (file: File) => {
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    // Simulate upload process
-    const uploadTask = async () => {
-      for (let i = 0; i <= 100; i += 10) {
-        setUploadProgress(i);
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate time delay
-      }
-      setIsUploading(false);
-      toast.success("Upload complete!");
-    };
-
-    await uploadTask();
-  };
-
-  return (
-    <div>
-      <input
-        type="file"
-        onChange={(e) => e.target.files && handleUpload(e.target.files[0])}
-      />
-      <button disabled={isUploading || uploadProgress < 100}>Publish</button>
-      {isUploading && <div>Upload Progress: {uploadProgress}%</div>}
     </div>
   );
 };

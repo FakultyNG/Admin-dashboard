@@ -6,6 +6,7 @@ import ReactPlayer from 'react-player'
 import { ImageProps } from '../ClientComponent'
 import { useAppSelector } from '@/hooks/reduxHook'
 import { selectUserProfile } from '@/store/slices/usersSlice'
+import PosterUploadGuide from '@/components/PosterUploadGuide'
 
 interface Props {
     coverImage: ImageProps | null;
@@ -32,6 +33,7 @@ function MediaComp({ coverImage, handleInput, setCoverImage, image, videoTrailer
                 >
                     Upload Cover Image *
                 </p>
+                <PosterUploadGuide orientation="landscape" />
                 <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-1 relative">
                         <div
@@ -48,6 +50,7 @@ function MediaComp({ coverImage, handleInput, setCoverImage, image, videoTrailer
                             key={coverImage ? coverImage.name : 'empty-coverImage'}
                             type="file"
                             id="file"
+                            accept="image/jpeg,image/png,image/webp"
                             onChange={(e) => handleInput(e, "cover")}
                             className="absolute z-20 opacity-0"
                         />
