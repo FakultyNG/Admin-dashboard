@@ -207,8 +207,8 @@ function SuperAdminComp() {
                     />
                 </div>
 
-                <div className="relative w-full md:h-[80%] h-[100%] pb-10 pr-5">
-                    <div className="absolute w-full py-5 pb-6 pl-0 sm:ml-0 sm:pl-3 overflow-x-auto">
+                <div className="w-full pr-5">
+                    <div className="w-full overflow-x-auto py-5 pb-6 pl-0 sm:ml-0 sm:pl-3">
                         <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                             <thead className="">
                                 <tr>
@@ -304,7 +304,7 @@ function SuperAdminComp() {
 
 
 
-                <div className="absolute inset-x-0 bottom-10 z-50 px-4">
+                <div className="mt-4 px-4 pb-8">
                     <ListPagination
                         page={tab === 'plans' ? page : subPage}
                         itemCount={visibleList.length}

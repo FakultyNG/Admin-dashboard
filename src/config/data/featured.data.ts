@@ -14,6 +14,7 @@ export const F_TableHeads = [
   "ratings",
   "class",
   "type",
+  "source",
   "expires",
   "options",
 ];

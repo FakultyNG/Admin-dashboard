@@ -213,8 +213,8 @@ export default function page() {
             </div>
           </div>
 
-          <div className="relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
-            <div className="absolute w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
+          <div className="mt-8 w-full pr-5">
+            <div className="w-full overflow-x-auto py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10">
               <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                 <thead className="">
                   <tr>
@@ -280,6 +280,15 @@ export default function page() {
                         </td>
                         <td className="text-center font-normal text-xs capitalize">
                           {tx.type}
+                        </td>
+                        <td className="text-center font-normal text-xs capitalize">
+                          <span className={`rounded-full px-2.5 py-1 ${
+                            tx.featuredSource === "automatic"
+                              ? "bg-sky-500/10 text-sky-300"
+                              : "bg-red-500/10 text-red-300"
+                          }`}>
+                            {tx.featuredSource === "automatic" ? "Automatic" : "Manual"}
+                          </span>
                         </td>
                         <td className="text-center font-normal text-xs capitalize">
                           {"expiryDate" in tx ? formatDateToDDMMYYYY(tx.expiryDate) : formatDateToDDMMYYYY(tx.expiry)}

@@ -17,6 +17,7 @@ export interface IEventData {
     sponsored: boolean;
     popular: boolean;
     featured: boolean;
+    featuredSource?: "manual" | "automatic";
     coverPhoto: string;
     createdAt: string;
     updatedAt: string;

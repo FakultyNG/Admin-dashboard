@@ -46,7 +46,7 @@ export function ListPagination({
   };
 
   return (
-    <div className="flex flex-col gap-3 border-t border-white/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <div className="relative z-10 flex shrink-0 flex-col gap-3 border-t border-white/[0.08] bg-[#0c0f15] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
       <p className="text-xs text-slate-600">
         Page {page}{totalPages ? ` of ${totalPages}` : ""} · Up to {pageSize} items
       </p>

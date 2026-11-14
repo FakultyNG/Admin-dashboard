@@ -35,6 +35,7 @@ export interface IMediaData {
     defaultRating: number;
     averageRating: number;
     featured: boolean;
+    featuredSource?: "manual" | "automatic";
     active: boolean;
     showViews: boolean;
     upcoming: boolean;
