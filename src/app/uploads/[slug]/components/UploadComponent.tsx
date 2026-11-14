@@ -36,7 +36,6 @@ import {
   createContent,
   deleteSubtitles,
   editContent,
-  editContentTaxonomy,
   getSeasons,
   getSubtitles,
   seriesButtonValidity,
@@ -50,7 +49,6 @@ import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
 import { useProgress } from "@bprogress/next";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import Lottie from "lottie-react";
-import { searchFeaturedContent } from "@/api/featureSlice";
 
 interface ModalProps {
   handleClose: () => void;
@@ -569,41 +567,6 @@ export const AddComponent = ({
     }
   };
 
-  const sameIds = (actual: Array<{ _id: string }>, expected: string[]) => {
-    const actualIds = actual.map((item) => item._id).sort();
-    const expectedIds = [...expected].sort();
-    return (
-      actualIds.length === expectedIds.length &&
-      actualIds.every((id, index) => id === expectedIds[index])
-    );
-  };
-
-  async function verifySavedTaxonomy(
-    mediaId: string,
-    mediaTitle: string,
-    categoryIds: string[],
-    genreIds: string[],
-  ): Promise<boolean | null> {
-    try {
-      const verification = await searchFeaturedContent(
-        encodeURIComponent(mediaTitle.trim()),
-      );
-      if (!verification.ok || !verification.data) return null;
-
-      const savedMedia = verification.data.data.vods.find(
-        (item) => item._id === mediaId,
-      );
-      if (!savedMedia) return null;
-
-      return (
-        sameIds(savedMedia.category, categoryIds) &&
-        sameIds(savedMedia.genre, genreIds)
-      );
-    } catch {
-      return null;
-    }
-  }
-
   async function handleCreateContent() {
     if (!portrait_L || !portrait) return;
     try {
@@ -686,44 +649,7 @@ export const AddComponent = ({
                   : slug,
           );
       if (res.ok && res.data) {
-        if (selectedMedia) {
-          const taxonomyUpdate = await editContentTaxonomy(selectedMedia._id, {
-            category,
-            genre,
-          });
-
-          if (!taxonomyUpdate.ok) {
-            toast.error(
-              taxonomyUpdate.data?.message ??
-                "The content was updated, but its categories and genres could not be saved. The editor has stayed open.",
-            );
-            return;
-          }
-
-          const taxonomyPersisted = await verifySavedTaxonomy(
-            selectedMedia._id,
-            content.data.title,
-            category,
-            genre,
-          );
-
-          if (taxonomyPersisted === false) {
-            toast.error(
-              "The update endpoint did not persist the selected categories and genres. The editor has stayed open so your selections are not lost.",
-            );
-            return;
-          }
-
-          if (taxonomyPersisted === null) {
-            toast.warning(
-              "Update accepted, but category and genre persistence could not be verified. Refresh and confirm before leaving this content.",
-            );
-          } else {
-            toast(res.data.message, { type: "success" });
-          }
-        } else {
-          toast(res.data.message, { type: "success" });
-        }
+        toast(res.data.message, { type: "success" });
         // Reset form after successful upload
         setTitle("");
         setSubTitle("");
