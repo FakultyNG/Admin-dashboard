@@ -70,6 +70,6 @@ export const dashboardApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetDashboardContentListQuery,
   useGetDashboardTotalUserQuery,
-  useGetLivestreamDetailsQuery
-  ,useGetAnalyticsOverviewQuery
+  useGetLivestreamDetailsQuery,
+  useGetAnalyticsOverviewQuery,
 } = dashboardApiSlice;

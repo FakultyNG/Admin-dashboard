@@ -143,7 +143,7 @@ function page() {
             <SelectInputForm
               placeholder={duration}
               setType={setDuration}
-              selectData={["One week", "30 days", "6 month", "1 year"]}
+              selectData={["One week", "30 days", "90 days"]}
               className="font-normal h-[36px] text-sm px-3 py-2 border border-border_grey rounded flex items-center gap-x-2"
               textStyles={`${roboto_500.className} font-medium text-sm text-white`}
             />
@@ -275,8 +275,7 @@ function page() {
             </div>
           </div>
 
-          <div className="relative w-full mt-8">
-            <div className="custom-scrollbar absolute w-full bg-black3 py-5 pb-6 px-10 overflow-x-auto">
+          <div className="custom-scrollbar mt-8 w-full overflow-x-auto rounded-2xl border border-white/[0.08] bg-black3 px-6 py-6 sm:px-8">
               <div className="mb-5">
                 <p className="text-xs font-medium uppercase tracking-[0.18em] text-red-400">Top content</p>
                 <h3 className="mt-1 text-xl font-semibold text-white">What viewers engage with most</h3>
@@ -314,7 +313,6 @@ function page() {
                   )}
                 </tbody>
               </table>
-            </div>
           </div>
         </>
       )}

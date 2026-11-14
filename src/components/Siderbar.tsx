@@ -42,6 +42,11 @@ function NavItem({ name, hasLive, onNavigate }: NavItemProps) {
   const isActive = pathname.split("/")[1] === name;
   const isUploads = name === "uploads";
   const displayName = name === "plans" && hasLive ? "Edit live" : labels[name] ?? name;
+  const iconSource = isActive
+    ? name === "upcoming"
+      ? "/upcoming-active.svg"
+      : `/${name}WH.svg`
+    : `/${name}.svg`;
 
   useEffect(() => {
     if (!pathname.startsWith("/uploads")) setExpanded(false);
@@ -50,7 +55,7 @@ function NavItem({ name, hasLive, onNavigate }: NavItemProps) {
   const content = (
     <>
       <span className="sidebar-icon">
-        <Image src={isActive ? `/${name}WH.svg` : `/${name}.svg`} width={20} height={20} alt="" />
+        <Image src={iconSource} width={20} height={20} alt="" />
       </span>
       <span className="flex-1 truncate capitalize">{displayName}</span>
       {isUploads ? (
