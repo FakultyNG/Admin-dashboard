@@ -2121,7 +2121,7 @@ export const AddComponent = ({
                   >
                     LANDSCAPE POSTER{" "}
                     <span className="text-grey_800 text-sm">
-                      (1080 x 1290 jpeg, jpg)
+                      (1920 x 1080 jpeg, jpg)
                     </span>
                   </p>
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">

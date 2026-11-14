@@ -9,6 +9,36 @@ export interface IDashboardTOTAL_Users extends IGeneric {
   data: IDashboardUsers;
 }
 
+export interface IAnalyticsOverviewResponse extends IGeneric {
+  data: {
+    days: number;
+    summary: {
+      uniqueViewers: number;
+      watchHours: number;
+      completions: number;
+      shares: number;
+      completionRate: number;
+    };
+    trend: Array<{
+      day: string;
+      uniqueViewers: number;
+      watchHours: number;
+      completions: number;
+      shares: number;
+    }>;
+    topContent: Array<{
+      id: string;
+      type: "vod" | "live";
+      title: string;
+      uniqueViewers: number;
+      watchHours: number;
+      completions: number;
+      shares: number;
+      completionRate: number;
+    }>;
+  };
+}
+
 export interface IDashboardTOTAL {
   totalContents: number;
   totalMovieSeries: number;

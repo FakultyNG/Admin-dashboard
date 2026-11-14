@@ -33,6 +33,7 @@ import {
   useGetDashboardContentListQuery,
   useGetDashboardTotalUserQuery,
   useGetLivestreamDetailsQuery,
+  useGetAnalyticsOverviewQuery,
 } from "@/api/dashboard";
 
 const LiveStreamPlayer = dynamic(() => import('@/components/LiveStreamPlayer'), {
@@ -98,6 +99,10 @@ function page() {
     useGetDashboardTotalUserQuery(undefined, {
       skip: !isSuperAdmin,
     });
+  const analyticsDays = duration === "One week" ? 7 : duration === "30 days" ? 30 : 90;
+  const { data: analyticsData, isLoading: analyticsLoading } =
+    useGetAnalyticsOverviewQuery(analyticsDays, { skip: !isSuperAdmin });
+  const analytics = analyticsData?.data;
 
   function  handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault();
@@ -238,12 +243,48 @@ function page() {
             </div>
           </div>
 
+          <div className="mt-8 rounded-2xl border border-white/[0.08] bg-black3 p-6 sm:p-8">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-red-400">
+                  Audience insights
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">
+                  Content performance
+                </h2>
+                <p className="mt-1 text-sm text-grey_700">
+                  Privacy-safe aggregated playback and sharing activity for the selected period.
+                </p>
+              </div>
+              {analyticsLoading && <span className="text-xs text-grey_700">Updating…</span>}
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+              {[
+                ["Unique viewers", analytics?.summary.uniqueViewers ?? 0],
+                ["Watch hours", analytics?.summary.watchHours ?? 0],
+                ["Completed plays", analytics?.summary.completions ?? 0],
+                ["Completion rate", `${analytics?.summary.completionRate ?? 0}%`],
+                ["Shares", analytics?.summary.shares ?? 0],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl border border-white/[0.07] bg-black2 p-4">
+                  <p className="text-xs text-grey_700">{label}</p>
+                  <p className="mt-2 text-xl font-semibold text-white">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="relative w-full mt-8">
             <div className="custom-scrollbar absolute w-full bg-black3 py-5 pb-6 px-10 overflow-x-auto">
+              <div className="mb-5">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-red-400">Top content</p>
+                <h3 className="mt-1 text-xl font-semibold text-white">What viewers engage with most</h3>
+              </div>
               <table className="w-full table">
                 <thead className="">
                   <tr>
-                    {TableHeads_Dashboard.map((t, i) => {
+                    {["Content", "Type", "Viewers", "Watch hours", "Completion", "Shares"].map((t, i) => {
                       return (
                         <th
                           key={i}
@@ -256,54 +297,21 @@ function page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[].map((t, i) => {
-                    //VERTICAL
+                  {(analytics?.topContent ?? []).map((content) => {
                     return (
-                      <tr key={i}>
-                        {RP_Overview3.map((tx, indx) => {
-                          //HORIZONTAL
-                          return (
-                            // <tr>
-                            <td
-                              className="whitespace-nowrap text-white py-2 pr-4"
-                              key={indx}
-                            >
-                              <div className="flex items-center pl-2 py-1 pr-8 border border-border_dark rounded w-fit min-w-[160px]">
-                                <Image
-                                  src={`/tablepic/${tx.image}.png`}
-                                  width={42}
-                                  height={42}
-                                  alt="profiles"
-                                  className="object-contain rounded-full"
-                                />
-                                <div className="ml-2">
-                                  <p
-                                    className={`${roboto_500.className} font-medium text-[#fff] text-[15px]`}
-                                  >
-                                    {tx.name}
-                                  </p>
-                                  <div className="flex items-center -mt-[2px]">
-                                    <Image
-                                      src="/views.svg"
-                                      width={12.5}
-                                      height={10}
-                                      alt="views"
-                                    />
-                                    <p
-                                      className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
-                                    >
-                                      {formatAmount(tx.views)}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            // </tr>
-                          );
-                        })}
+                      <tr key={`${content.type}-${content.id}`} className="border-t border-white/[0.06]">
+                        <td className="py-4 pr-4 text-sm font-medium text-white">{content.title}</td>
+                        <td className="py-4 pr-4 text-sm capitalize text-grey_700">{content.type}</td>
+                        <td className="py-4 pr-4 text-sm text-white">{formatAmount(String(content.uniqueViewers))}</td>
+                        <td className="py-4 pr-4 text-sm text-white">{content.watchHours}</td>
+                        <td className="py-4 pr-4 text-sm text-white">{content.completionRate}%</td>
+                        <td className="py-4 pr-4 text-sm text-white">{formatAmount(String(content.shares))}</td>
                       </tr>
                     );
                   })}
+                  {!analyticsLoading && (analytics?.topContent.length ?? 0) === 0 && (
+                    <tr><td colSpan={6} className="py-10 text-center text-sm text-grey_700">Insights will appear as viewers use the updated app.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
