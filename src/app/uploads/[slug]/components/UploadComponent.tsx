@@ -670,8 +670,8 @@ export const AddComponent = ({
       }
 
       formdata.append("data", JSON.stringify(content.data));
-      if (portrait.file) formdata.append("landscapePoster", portrait.file);
-      if (portrait_L.file) formdata.append("portraitPoster", portrait_L.file);
+      if (portrait_L.file) formdata.append("landscapePoster", portrait_L.file);
+      if (portrait.file) formdata.append("portraitPoster", portrait.file);
 
       const res = selectedMedia
         ? await editContent(formdata, selectedMedia._id)

@@ -2,14 +2,13 @@ import { addPlan, deletePlans, getAllPlans, getAllSubs, updatePlan, useGetPlanSu
 import { PLANS_TH, SUBS_TH } from '@/config/data/plans';
 import { roboto_400, roboto_500 } from '@/config/fonts'
 import { IAddPlans, IPlanSubsData, IPlanSubsResponse, ISubscription, ISubscriptionResponse } from '@/types/api/sub.types';
-import Lottie from 'lottie-react';
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
-import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from 'react-toastify';
 import { formatAmount, wordsToNumbers } from '@/utilities/formatAmount';
 import { AppButton, CustomInput, SelectInputForm } from '@/components/AppLayout';
 import { RowCheckbox, SelectAllCheckbox } from '@/components/BulkSelect';
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from '@/components/ListPagination';
 
 
 const TABS = ['Plans', 'Subscription']
@@ -44,9 +43,7 @@ function SuperAdminComp() {
     const [plansList, setPlansList] = useState<List[]>([])
     const [filteredList, setFilteredList] = useState<List[]>([])
     const [searchParams, setSearchParams] = useState<string>("");
-    const [paginationList, setPaginationList] = useState([...Array(8)].map((_, i) => i + 1));
     const [selectedPlan, setSelectedPlan] = useState<SelectedPlanProps | null>(null)
-    const paginationStep = 8;
     const {
         data: plans,
         refetch,
@@ -56,20 +53,13 @@ function SuperAdminComp() {
     } = useGetPlanSubsQuery(undefined, {});
     const {
         data: subscriptions,
-    } = useGetSubscriptionsQuery({ limit: 4, page }, {});
-
-    const handleNext = () => {
-        setPaginationList((prevList) => prevList.map((num) => num + paginationStep));
-    };
-
-    const handlePrevious = () => {
-        if (paginationList[0] === 1) return;
-        setPaginationList((prevList) => prevList.map((num) => Math.max(1, num - paginationStep)));
-    };
+    } = useGetSubscriptionsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: subPage }, {});
 
 
     function handleSearchfilter(query: string) {
         setSearchParams(query);
+        if (tab === 'plans') setPage(1);
+        else setSubPage(1);
         const normalizedQuery = query.trim().toLowerCase();
         setFilteredList(
             normalizedQuery
@@ -138,7 +128,7 @@ function SuperAdminComp() {
     async function handleGetPlanORSubs(query?: number) {
         try {
             setLoading(true);
-            const res = tab === 'plans' ? await getAllPlans() : await getAllSubs({ limit: 5, page: query ?? subPage })
+            const res = tab === 'plans' ? await getAllPlans() : await getAllSubs({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? subPage })
             if (res.ok && res.data) {
                 handleGetLists(res.data)
             } else {
@@ -155,7 +145,11 @@ function SuperAdminComp() {
     useEffect(() => {
         if (tab === 'plans') handleGetLists(plans)
         if (tab === 'subscription') handleGetLists(subscriptions)
-    }, [tab, isSuccess]);
+    }, [tab, isSuccess, plans, subscriptions]);
+
+    const visibleList = tab === 'plans'
+        ? filteredList.slice((page - 1) * ADMIN_LIST_PAGE_SIZE, page * ADMIN_LIST_PAGE_SIZE)
+        : filteredList;
 
 
 
@@ -183,7 +177,7 @@ function SuperAdminComp() {
                 {TABS.map((x, i) => {
                     const active = x.toLowerCase() === tab
                     return (
-                        <button type="button" role="tab" aria-selected={active} key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} admin-tab ${active ? 'admin-tab-active' : ''}`}>
+                        <button type="button" role="tab" aria-selected={active} key={i} onClick={() => [setTab(x.toLowerCase()), setPage(1), setSubPage(1)]} className={`${roboto_500.className} admin-tab ${active ? 'admin-tab-active' : ''}`}>
                             {x}
                         </button>
                     )
@@ -232,7 +226,7 @@ function SuperAdminComp() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredList.map((tx, indx) => {
+                                {visibleList.map((tx, indx) => {
                                     return (
                                         <tr key={indx} className="text-white h-[100px]">
                                             {tab === 'plans' && <td className="w-12"><RowCheckbox group="plans-plans" value={tx.id} label={`Select ${tx.title ?? "item"}`} /></td>}
@@ -310,41 +304,14 @@ function SuperAdminComp() {
 
 
 
-                <div className="mt-auto bg-black2 absolute bottom-10 z-50 flex flex-row items-center">
-                    <div
-                        className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-                    >
-                        <button
-                            onClick={handlePrevious}
-                            className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-                        >
-                            <span className="text-grey_800 mr-2">{`<<`}</span>
-                            Previous
-                        </button>
-                        <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-                            {paginationList.map((num, index) => {
-                                const active = (tab === 'plans' ? page : subPage) === num
-
-                                return (
-
-                                    <p key={index} onClick={() => [tab === 'plans' ? setPage(num) : setSubPage(num), handleGetPlanORSubs(num)]} className={`${active ? 'text-red' : 'text-white'} cursor-pointer`}>{num}</p>
-                                )
-                            })}
-                            {"   "} ...
-                        </div>
-                        <button
-                            onClick={() => handleNext()}
-                            className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-                        >
-                            Next <span className="text-grey_800 ml-2">{`>>`}</span>
-                        </button>
-                    </div>
-
-                    {loading && <Lottie
-                        animationData={LoadingSpinner}
-                        loop
-                        style={{ width: 35, height: 35, marginLeft: 15 }}
-                    />}
+                <div className="absolute inset-x-0 bottom-10 z-50 px-4">
+                    <ListPagination
+                        page={tab === 'plans' ? page : subPage}
+                        itemCount={visibleList.length}
+                        totalItems={tab === 'plans' ? filteredList.length : undefined}
+                        onPageChange={tab === 'plans' ? setPage : setSubPage}
+                        isLoading={isLoading || loading}
+                    />
                 </div>
             </div>
 

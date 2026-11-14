@@ -754,6 +754,40 @@
         }
       }
     },
+    "/api/v1/customers/general/guest-access": {
+      "get": {
+        "tags": [
+          "Customer app — public"
+        ],
+        "summary": "Fetch guest-access feature setting",
+        "operationId": "get__api_v1_customers_general_guest_access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
     "/api/v1/customers/pass-reset/get-token": {
       "post": {
         "tags": [
@@ -6957,6 +6991,92 @@
         }
       }
     },
+    "/api/v1/superadmin/platform-settings/guest-access": {
+      "get": {
+        "tags": [
+          "Superadmin"
+        ],
+        "summary": "Fetch guest-access feature setting",
+        "operationId": "get__api_v1_superadmin_platform_settings_guest_access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "superadminAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Superadmin"
+        ],
+        "summary": "Enable or disable guest access",
+        "operationId": "put__api_v1_superadmin_platform_settings_guest_access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "superadminAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuestAccessSetting"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/superadmin/shared/lives/create": {
       "post": {
         "tags": [
@@ -11646,6 +11766,18 @@
           "password": {
             "type": "string",
             "format": "password"
+          }
+        }
+      },
+      "GuestAccessSetting": {
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "When true, unauthenticated users may browse free content with the configured guest token."
           }
         }
       },

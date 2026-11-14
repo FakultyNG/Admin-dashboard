@@ -31,6 +31,10 @@ import { editContent } from "@/api/contentSlice";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { IEventData } from "@/types/api/live.types";
 import { deleteLive } from "@/api/liveSlice";
+import {
+  ADMIN_LIST_PAGE_SIZE,
+  ListPagination,
+} from "@/components/ListPagination";
 
 export const runtime = "edge";
 
@@ -61,24 +65,7 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetUpcomingQuery({ limit: 10, page: 1 }, {});
-  const [paginationList, setPaginationList] = useState(
-    [...Array(8)].map((_, i) => i + 1),
-  );
-  const paginationStep = 8;
-
-  const handleNext = () => {
-    setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep),
-    );
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep)),
-    );
-  };
+  } = useGetUpcomingQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
 
   function getSelectedReleaseDate() {
     if (!selectedUpcoming) return null;
@@ -218,7 +205,10 @@ export default function page() {
   async function handleRefreshMedia(query?: number) {
     try {
       setLoading(true);
-      const res = await getUpcomingEvent({ limit: 5, page: query ?? pg });
+      const res = await getUpcomingEvent({
+        limit: ADMIN_LIST_PAGE_SIZE,
+        page: query ?? pg,
+      });
       if (res.ok && res.data) {
         handleUpcomingList(res.data);
       } else {
@@ -233,7 +223,7 @@ export default function page() {
 
   useEffect(() => {
     handleUpcomingList(upcomingData);
-  }, [isSuccess]);
+  }, [upcomingData]);
 
   useEffect(() => {
     refetch();
@@ -391,53 +381,13 @@ export default function page() {
                   </tbody>
                 </table>
 
-                <div className="absolute ml-5 md:ml-10 lg:ml-16 bg-black2  bottom-10 z-50 flex flex-row items-center">
-                  <div
-                    className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-                  >
-                    <button
-                      onClick={handlePrevious}
-                      className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-                    >
-                      <span className="text-white mr-2">{`<<`}</span>
-                      Previous
-                    </button>
-                    <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-                      {paginationList.map((num, index) => {
-                        const active = pg === num;
-
-                        return (
-                          <p
-                            key={index}
-                            onClick={() => [
-                              setPg(num),
-                              handleRefreshMedia(num),
-                            ]}
-                            className={`${
-                              active ? "text-red" : "text-[#C4C4C4]"
-                            } cursor-pointer`}
-                          >
-                            {num}
-                          </p>
-                        );
-                      })}
-                      {"   "} ...
-                    </div>
-                    <button
-                      onClick={() => handleNext()}
-                      className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-                    >
-                      Next <span className="text-white ml-2">{`>>`}</span>
-                    </button>
-                  </div>
-
-                  {loading && (
-                    <Lottie
-                      animationData={LoadingSpinner}
-                      loop
-                      style={{ width: 35, height: 35, marginLeft: 15 }}
-                    />
-                  )}
+                <div className="absolute inset-x-0 bottom-10 z-50 px-4">
+                  <ListPagination
+                    page={pg}
+                    itemCount={upcomingEvents.length}
+                    onPageChange={setPg}
+                    isLoading={isLoading || loading}
+                  />
                 </div>
               </div>
             </div>

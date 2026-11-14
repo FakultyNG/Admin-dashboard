@@ -19,13 +19,12 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import useToggle from "@/hooks/useToggle";
 import { TableComp } from "@/screens/AccScreen";
 import { IUser, IUserExample, IUsersResponse } from "@/types/api/users.types";
-import Lottie from "lottie-react";
 import Image from "next/image";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import LoadingSpinner from "@/config/lottie/loading.json";
 import SafeImage from "@/components/SafeImage";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 
 const Roles = ["Regular", "Client", "Admin", "Super Admin"];
@@ -62,24 +61,7 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetUsersQuery({ limit: 8, page: 1 }, {});
-  const [paginationList, setPaginationList] = useState(
-    [...Array(8)].map((_, i) => i + 1)
-  );
-  const paginationStep = 8;
-
-  const handleNext = () => {
-    setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep)
-    );
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep))
-    );
-  };
+  } = useGetUsersQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
 
   const transformUserData = (usersRP: IUser[]) => {
     // if(usersRP.len) return [];
@@ -121,7 +103,7 @@ export default function page() {
   async function handleRefreshMedia(query?: number) {
     try {
       setLoading(true);
-      const res = await getAllUsers({ limit: 8, page: query ?? pg })
+      const res = await getAllUsers({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
       if (res.ok && res.data) {
         handleUsersList(res.data);
       } else {
@@ -151,7 +133,7 @@ export default function page() {
 
       const res = await updateUsers(formdata, selectedUser._id);
       if (res.ok && res.data) {
-        const resU = await getAllUsers({ limit: 8, page: pg });
+        const resU = await getAllUsers({ limit: ADMIN_LIST_PAGE_SIZE, page: pg });
         if (resU.ok && resU.data) {
           handleUsersList(resU.data);
           setSelectedUser(Empty_UserRP);
@@ -194,13 +176,13 @@ export default function page() {
       res.data.message.includes("deleted successfully")
     ) {
       toast("user deleted successfully", { type: "info" });
-      const resU = await getAllUsers({ limit: 8, page: pg });
+      const resU = await getAllUsers({ limit: ADMIN_LIST_PAGE_SIZE, page: pg });
       if (resU.ok && resU.data) {
         handleUsersList(resU.data);
       }
     } else {
       toast("Opps! couldn't delete user", { type: "info" });
-      const resU = await getAllUsers({ limit: 8, page: pg });
+      const resU = await getAllUsers({ limit: ADMIN_LIST_PAGE_SIZE, page: pg });
       if (resU.ok && resU.data) {
         handleUsersList(resU.data);
       }
@@ -218,7 +200,7 @@ export default function page() {
 
   useEffect(() => {
     handleUsersList(usersRP);
-  }, [isSuccess]);
+  }, [usersRP]);
 
   useEffect(() => {
     getUserbyID(selectedUser._id);
@@ -371,53 +353,12 @@ export default function page() {
                 </table>
             </div>
 
-                <div className="mt-5 flex max-w-full flex-wrap items-center gap-3">
-                  <div
-                    className={`${roboto_500.className} flex max-w-full items-center overflow-x-auto rounded-xl border border-[#C4C4C438] px-3 py-2 sm:px-5`}
-                  >
-                    <button
-                      onClick={handlePrevious}
-                      className={`${roboto_400.className} mr-3 shrink-0 text-sm font-normal text-grey_800 sm:text-base`}
-                    >
-                      <span className="text-white mr-2">{`<<`}</span>
-                      Previous
-                    </button>
-                    <div className="mr-1 flex shrink-0 flex-row space-x-1.5 text-sm font-medium text-grey_800 sm:text-base">
-                      {paginationList.map((num, index) => {
-                        const active = pg === num;
-
-                        return (
-                          <p
-                            key={index}
-                            onClick={() => [
-                              setPg(num),
-                              handleRefreshMedia(num),
-                            ]}
-                            className={`${active ? "text-red" : "text-[#C4C4C4]"
-                              } cursor-pointer`}
-                          >
-                            {num}
-                          </p>
-                        );
-                      })}
-                      {"   "} ...
-                    </div>
-                    <button
-                      onClick={() => handleNext()}
-                      className={`${roboto_400.className} ml-2 shrink-0 text-sm font-normal text-grey_800 sm:text-base`}
-                    >
-                      Next <span className="text-white ml-2">{`>>`}</span>
-                    </button>
-                  </div>
-
-                  {loading && (
-                    <Lottie
-                      animationData={LoadingSpinner}
-                      loop
-                      style={{ width: 35, height: 35, marginLeft: 15 }}
-                    />
-                  )}
-                </div>
+                <ListPagination
+                  page={pg}
+                  itemCount={usersList.length}
+                  isLoading={loading || isLoading}
+                  onPageChange={setPg}
+                />
           </div>
 
           {/* PAGINATION..................... */}

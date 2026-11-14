@@ -9,12 +9,11 @@ import { AppButton, CustomInput } from "@/components/AppLayout";
 import { getGiftCards, useGetGiftCardsQuery } from "@/api/giftCardSlice";
 import { IGiftCardData, IGiftCardResponse } from "@/types/api/giftCard.types";
 import { formatAmount } from "@/utilities/formatAmount";
-import Lottie from "lottie-react";
-import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
 import { ModalComponent } from "./ModalComp";
 import { deleteGiftCard } from "@/api/giftCardSlice";
 import getSymbolFromCurrency from "currency-symbol-map";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 export const runtime = "edge";
 
@@ -28,8 +27,6 @@ export default function page() {
   const [isAdd, setShowModal] = useState<boolean>();
   const [loading, setLoading] = useState<boolean>(false);
   const [pg, setPg] = useState<number>(1);
-  const [paginationList, setPaginationList] = useState([...Array(8)].map((_, i) => i + 1));
-  const paginationStep = 8;
   
   const {
     data: giftCards,
@@ -37,22 +34,13 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetGiftCardsQuery({pagination:{ limit: 4, page: pg }, type:tab.toLowerCase() === 'admins' ? 'RP' :'MERCHANT'}, {});
+  } = useGetGiftCardsQuery({pagination:{ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, type:tab.toLowerCase() === 'admins' ? 'RP' :'MERCHANT'}, {});
 
   const transformEventData = (data: IGiftCardData[]) => {
     return data.map((GC) => ({
       ...GC,
       createdAt: new Date(GC.createdAt).toLocaleDateString(),
     }));
-  };
-
-  const handleNext = () => {
-    setPaginationList((prevList) => prevList.map((num) => num + paginationStep));
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) => prevList.map((num) => Math.max(1, num - paginationStep)));
   };
 
   function handleSearchfilter(query: string) {
@@ -77,7 +65,7 @@ export default function page() {
   async function handleRefreshGiftCards(query?: number) {
     try {
       setLoading(true);
-      const res = await getGiftCards({pagination:{ limit: 4, page: query ?? pg }, type:tab.toLowerCase() === 'admins' ? 'RP' :'MERCHANT'});
+      const res = await getGiftCards({pagination:{ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg }, type:tab.toLowerCase() === 'admins' ? 'RP' :'MERCHANT'});
       if (res.ok && res.data) {
         handleGetGiftCards(res.data);
       } else {
@@ -110,7 +98,7 @@ export default function page() {
 
   useEffect(() => {
     handleGetGiftCards(giftCards);
-  }, [isSuccess]);
+  }, [giftCards]);
 
   useEffect(() =>{
     setPg(1);
@@ -229,55 +217,12 @@ export default function page() {
         </div>
       </div>
 
-      {/* CHANGE 4: Pagination is no longer absolute. It is a static flex item at the bottom. */}
-      <div className="w-full shrink-0 bg-black2 z-50 flex flex-row items-center py-4 pr-5">
-        <div
-          className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-        >
-          <button
-            onClick={handlePrevious}
-            className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-          >
-            <span className="text-white mr-2">{`<<`}</span>
-            Previous
-          </button>
-          <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-            {paginationList.map((num, index) => {
-              const active = pg === num;
-
-              return (
-                <p
-                  key={index}
-                  onClick={() => {
-                    setPg(num);
-                    handleRefreshGiftCards(num);
-                  }}
-                  className={`${
-                    active ? "text-red" : "text-[#C4C4C4]"
-                  } cursor-pointer`}
-                >
-                  {num}
-                </p>
-              );
-            })}
-            {"   "} ...
-          </div>
-          <button
-            onClick={() => handleNext()}
-            className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-          >
-            Next <span className="text-white ml-2">{`>>`}</span>
-          </button>
-        </div>
-
-        {loading && (
-          <Lottie
-            animationData={LoadingSpinner}
-            loop
-            style={{ width: 35, height: 35, marginLeft: 15 }}
-          />
-        )}
-      </div>
+      <ListPagination
+        page={pg}
+        itemCount={giftCardList.length}
+        isLoading={loading || isLoading}
+        onPageChange={setPg}
+      />
     </section>
   );
 }

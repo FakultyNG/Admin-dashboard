@@ -4,13 +4,12 @@ import { deleteAds, getAllAds, useGetADsQuery } from "@/api/adsSlice";
 import { ADs_TH } from "@/config/data/plans";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import { IAdsData, IAdsResponse } from "@/types/api/ads.types";
-import Lottie from "lottie-react";
 import Image from "next/image";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import LoadingSpinner from "@/config/lottie/loading.json";
 import AddComponent from "./AddComponentAD";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 
 export const runtime = "edge";
@@ -23,15 +22,13 @@ const page = () => {
   const [isAdd, setShowModal] = useState<boolean>();
   const [loading, setLoading] = useState<boolean>(false)
   const [pg, setPg] = useState<number>(1)
-  const [paginationList, setPaginationList] = useState([...Array(8)].map((_, i) => i + 1));
-  const paginationStep = 8;
   const {
     data: ADSs,
     refetch,
     error,
     isSuccess,
     isLoading,
-  } = useGetADsQuery({ limit: 7, page: pg }, {});
+  } = useGetADsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
 
 
   const transformEventData = (data: IAdsData[]) => {
@@ -40,15 +37,6 @@ const page = () => {
       ...ADS,
       expiry: new Date(ADS.expiry).toLocaleDateString(),
     }));
-  };
-
-  const handleNext = () => {
-    setPaginationList((prevList) => prevList.map((num) => num + paginationStep));
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) => prevList.map((num) => Math.max(1, num - paginationStep)));
   };
 
   function handleSearchfilter(query: string) {
@@ -75,7 +63,7 @@ const page = () => {
   async function handleRefreshADSs(query?: number) {
     try {
       setLoading(true);
-      const res = await getAllAds({ limit: 5, page: query ?? pg })
+      const res = await getAllAds({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
       if (res.ok && res.data) {
         handleGetADSs(res.data)
       } else {
@@ -110,7 +98,7 @@ const page = () => {
 
   useEffect(() => {
     handleGetADSs(ADSs);
-  }, [isSuccess]);
+  }, [ADSs]);
 
   useEffect(() =>{
     handleRefreshADSs(1)
@@ -237,42 +225,12 @@ const page = () => {
       </div>
 
 
-      <div className="mt-auto ml-5 md:ml-10 lg:ml-16 bg-black2 absolute bottom-10 z-50 flex flex-row items-center">
-        <div
-          className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-        >
-          <button
-            onClick={handlePrevious}
-            className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-          >
-            <span className="text-white mr-2">{`<<`}</span>
-            Previous
-          </button>
-          <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-            {paginationList.map((num, index) => {
-              const active = pg === num
-
-              return (
-
-                <p key={index} onClick={() => [setPg(num), handleRefreshADSs(num)]} className={`${active ? 'text-red' : 'text-[#C4C4C4]'} cursor-pointer`}>{num}</p>
-              )
-            })}
-            {"   "} ...
-          </div>
-          <button
-            onClick={() => handleNext()}
-            className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-          >
-            Next <span className="text-white ml-2">{`>>`}</span>
-          </button>
-        </div>
-
-        {loading && <Lottie
-          animationData={LoadingSpinner}
-          loop
-          style={{ width: 35, height: 35, marginLeft: 15 }}
-        />}
-      </div>
+      <ListPagination
+        page={pg}
+        itemCount={ADsList.length}
+        isLoading={loading || isLoading}
+        onPageChange={setPg}
+      />
     </>
       :
       <AddComponent handleRefech={() => {handleRefreshADSs(1), setShowModal(!isAdd)}} />

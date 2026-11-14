@@ -57,6 +57,7 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | GET | `/api/v1/customers/general/validate-token` | Public | Validate access token |
 | GET | `/api/v1/customers/general/validate-reftoken` | Public | Validate refresh token |
 | GET | `/api/v1/customers/general/renew-accesstoken` | Public | Renew access token |
+| GET | `/api/v1/customers/general/guest-access` | Public | Fetch guest-access feature setting |
 | POST | `/api/v1/customers/pass-reset/get-token` | Public | Request password-reset token |
 | POST | `/api/v1/customers/pass-reset/change-pass` | Public | Change forgotten password |
 | GET | `/api/v1/customers/pin-reset/:email` | Public | Reset customer PIN |
@@ -212,6 +213,8 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | POST | `/api/v1/superadmin/client-redirect/login` | `superadminAuth` | Force sign in as client |
+| GET | `/api/v1/superadmin/platform-settings/guest-access` | `superadminAuth` | Fetch guest-access feature setting |
+| PUT | `/api/v1/superadmin/platform-settings/guest-access` | `superadminAuth` | Enable or disable guest access |
 | POST | `/api/v1/superadmin/shared/lives/create` | `superadminAuth` | Create live event |
 | PUT | `/api/v1/superadmin/shared/lives/update-media/:liveId` | `superadminAuth` | Update live-event media |
 | PUT | `/api/v1/superadmin/shared/lives/update-active/:liveId` | `superadminAuth` | Update live-event active status |

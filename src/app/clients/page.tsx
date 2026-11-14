@@ -4,16 +4,15 @@ import { createCLientAcc, getAllClients, useGetAllClientsQuery, useGetClientsDep
 import { CLIENT_TH, DEPOSITS, WITHDRAWALS } from "@/config/data/live";
 import { roboto_400, roboto_500, roboto_700 } from "@/config/fonts";
 import { IClientsData, IClientsDepositData, IClientsResponse, IPhoto } from "@/types/api/clients.types";
-import Lottie from "lottie-react";
 import Image from "next/image";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import SafeImage from "@/components/SafeImage";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import LoadingSpinner from "@/config/lottie/loading.json";
 import { AddCleintComp } from "./AddClientComp";
 import { formatAmount } from "@/utilities/formatAmount";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 
 
@@ -41,7 +40,7 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetAllClientsQuery({ limit: 5, page }, {});
+  } = useGetAllClientsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page }, {});
 
   const {
     data: clientDepositData,
@@ -73,7 +72,7 @@ export default function page() {
   async function handleGetRefreshList(query?: number) {
     try {
       setLoading(true);
-      const res = await getAllClients({ limit: 5, page: query ?? page })
+      const res = await getAllClients({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? page })
       if (res.ok && res.data) {
         handleGetLists(res.data)
       } else {
@@ -307,34 +306,14 @@ export default function page() {
 
 
 
-        {tab === 'clients' && <div className="mt-8 mb-10 shrink-0 bg-black3 flex flex-row items-center">
-          <div
-            className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-          >
-            <button
-              onClick={() => [setPage(page == 1 ? page : page - 1), handleGetRefreshList(page == 1 ? page : page - 1)]}
-              className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800 flex items-center`}
-            >
-              <span className="text-grey_800 mr-2">{`<<`}</span>
-              Previous
-            </button>
-            <div className="text-grey_800 text-[17px] mr-4 font-medium">
-              <span className="text-red font-bold">{page}</span>
-            </div>
-            <button
-              onClick={() => [setPage(clientList.length > 0 ? page + 1 : page), handleGetRefreshList(clientList.length > 0 ? page + 1 : page)]}
-              className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800 flex items-center`}
-            >
-              Next <span className="text-grey_800 ml-2">{`>>`}</span>
-            </button>
-          </div>
-
-          {loading && <Lottie
-            animationData={LoadingSpinner}
-            loop
-            style={{ width: 35, height: 35, marginLeft: 15 }}
-          />}
-        </div>}
+        {tab === 'clients' && (
+          <ListPagination
+            page={page}
+            itemCount={clientList.length}
+            isLoading={loading || isLoading}
+            onPageChange={setPage}
+          />
+        )}
       </div>
 
     </div> :

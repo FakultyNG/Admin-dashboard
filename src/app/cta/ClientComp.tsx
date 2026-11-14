@@ -9,6 +9,7 @@ import ViewVote from "./ViewVotes";
 import { AnimatePresence, motion } from "framer-motion";
 import { IContestantData } from "@/types/api/votes.types";
 import { deleteContestant, getVotePollForLive } from "@/api/voteSlice";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 
 
@@ -20,6 +21,11 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [contestantsFilteredList, setContestantFilter] = useState<IContestantData[]>([])
     const [mode, setMode] = useState ("default");
      const [isShowModal, setShowModal] = useState<boolean>(false);
+    const [page, setPage] = useState(1);
+    const visibleContestants = contestantList.slice(
+      (page - 1) * ADMIN_LIST_PAGE_SIZE,
+      page * ADMIN_LIST_PAGE_SIZE,
+    );
 
     async function handleSave(newContestant: IContestantData) {
   try {
@@ -111,7 +117,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {contestantList.map((tx, indx) => {
+                            {visibleContestants.map((tx, indx) => {
                                 return (
                                     <tr key={indx} className="text-white h-[85px]">
                                         <td
@@ -174,31 +180,12 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                 </div>
             </div>
 
-            <div className=" relative z-50">
-                <div
-                    className={`${roboto_500.className}  py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-                >
-                    <button
-                        className={`${roboto_400.className} mr-3 text-[17px] text-grey_500`}
-                    >
-                        <span className="text-white mr-2">{`<<`}</span>
-                        Previous
-                    </button>
-                    <div className="text-grey_500 text-[17px] font-medium space-x-1.5">
-                        <span className="text-red">1</span>
-                        <span>2</span>
-                        <span>3</span>
-                        <span>4</span>
-                        <span>5</span>
-                        <span className="ml-2 -mr-2">.....</span>
-                    </div>
-                    <button
-                        className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_500`}
-                    >
-                        Next <span className="text-white mr-2">{`>>`}</span>
-                    </button>
-                </div>
-            </div>
+            <ListPagination
+              page={page}
+              itemCount={visibleContestants.length}
+              totalItems={contestantList.length}
+              onPageChange={setPage}
+            />
         </motion.div>
         )}
         

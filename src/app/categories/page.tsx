@@ -22,8 +22,7 @@ import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ModalComponent } from "./ModalComp";
-import Lottie from "lottie-react";
-import LoadingSpinner from "@/config/lottie/loading.json";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 const TABS = ["Category", "Genre", "Cast"];
 
@@ -52,32 +51,15 @@ export default function page() {
     const [pg_g, setPg_g] = useState<number>(1);
     const [pg_C, setPg_C] = useState<number>(1);
       const [loading, setLoading] = useState<boolean>(false);
-   const [paginationList, setPaginationList] = useState(
-      [...Array(8)].map((_, i) => i + 1)
-    );
-    const paginationStep = 8;
   const {
     data: categories,
     refetch,
     error,
     isSuccess,
     isLoading,
-  } = useGetCategoryQuery({limit:4, page:pg_c}, {});
-  const { data: genries, refetch:gRefetch } = useGetGenreQuery({limit:4, page:pg_g}, {});
-  const { data: casts, refetch:cRefetch } = useGetCastQuery({limit:4, page:pg_C}, {});
-
-  const handleNext = () => {
-    setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep)
-    );
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep))
-    );
-  };
+  } = useGetCategoryQuery({limit:ADMIN_LIST_PAGE_SIZE, page:pg_c}, {});
+  const { data: genries, refetch:gRefetch } = useGetGenreQuery({limit:ADMIN_LIST_PAGE_SIZE, page:pg_g}, {});
+  const { data: casts, refetch:cRefetch } = useGetCastQuery({limit:ADMIN_LIST_PAGE_SIZE, page:pg_C}, {});
 
   const transformEventData = (data: ICategory[] | ICast[]) => {
     const sortedData = [...(data as (ICategory | ICast)[])].sort((a, b) => {
@@ -115,10 +97,10 @@ export default function page() {
       toast("Enums deleted successfully", { type: "info" });
       const resCAT =
         tab === "category"
-          ? await geetFetchCategories({ limit: 4, page: pg_c })
+          ? await geetFetchCategories({ limit: ADMIN_LIST_PAGE_SIZE, page: pg_c })
           : tab === "genre"
-            ? await geetFetchGenres({ limit: 4, page:  pg_g })
-            : await geetFetchCast({ limit: 4, page: pg_C });
+            ? await geetFetchGenres({ limit: ADMIN_LIST_PAGE_SIZE, page:  pg_g })
+            : await geetFetchCast({ limit: ADMIN_LIST_PAGE_SIZE, page: pg_C });
       if (resCAT.ok && resCAT.data) {
         handleCategoryList(resCAT.data);
       }
@@ -126,10 +108,10 @@ export default function page() {
       toast("Opps! couldn't delete user", { type: "info" });
       const resCAT =
         tab === "category"
-          ? await geetFetchCategories({ limit: 4, page: pg_c })
+          ? await geetFetchCategories({ limit: ADMIN_LIST_PAGE_SIZE, page: pg_c })
           : tab === "genre"
-            ? await geetFetchGenres({ limit: 4, page: pg_g })
-            : await geetFetchCast({ limit: 4, page: pg_C });
+            ? await geetFetchGenres({ limit: ADMIN_LIST_PAGE_SIZE, page: pg_g })
+            : await geetFetchCast({ limit: ADMIN_LIST_PAGE_SIZE, page: pg_C });
       if (resCAT.ok && resCAT.data) {
         handleCategoryList(resCAT.data);
       }
@@ -162,10 +144,10 @@ export default function page() {
         setLoading(true);
       const resCAT =
         tab === "category"
-          ? await geetFetchCategories({ limit: 4, page: query ?? pg_c })
+          ? await geetFetchCategories({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg_c })
           : tab === "genre"
-            ? await geetFetchGenres({ limit: 4, page: query ?? pg_g })
-            : await geetFetchCast({ limit: 4, page: query ?? pg_C });
+            ? await geetFetchGenres({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg_g })
+            : await geetFetchCast({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg_C });
       if (resCAT.ok && resCAT.data) {
           handleCategoryList(resCAT.data);
         } else {
@@ -179,13 +161,10 @@ export default function page() {
     }
 
   useEffect(() => {
-    refetch();
-    gRefetch();
-    cRefetch();
     if (tab === "cast") handleCategoryList(casts);
     if (tab === "genre") handleCategoryList(genries);
     if (tab === "category") handleCategoryList(categories);
-  }, [tab, isSuccess]);
+  }, [tab, categories, genries, casts]);
 
   const tableHeaders =
     tab === "category" ? CATEGORY_TH : tab === "genre" ? GENRE_TH : CAST_TH;
@@ -333,47 +312,16 @@ export default function page() {
             </table>
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-white/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <p className="text-xs text-slate-600">Page {activePage}</p>
-            <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-white/[0.08] bg-black/20 p-1">
-              <button
-                type="button"
-                onClick={handlePrevious}
-                className="shrink-0 rounded-lg px-3 py-2 text-xs text-slate-400 hover:bg-white/[0.05] hover:text-white"
-              >
-                Previous
-              </button>
-              {paginationList.map((num) => (
-                <button
-                  type="button"
-                  key={num}
-                  onClick={() => {
-                    if (tab === "cast") setPg_C(num);
-                    if (tab === "genre") setPg_g(num);
-                    if (tab === "category") setPg_c(num);
-                    handleRefreshMedia(num);
-                  }}
-                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs ${
-                    activePage === num
-                      ? "bg-red-500 text-white"
-                      : "text-slate-500 hover:bg-white/[0.05] hover:text-white"
-                  }`}
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={handleNext}
-                className="shrink-0 rounded-lg px-3 py-2 text-xs text-slate-400 hover:bg-white/[0.05] hover:text-white"
-              >
-                Next
-              </button>
-            </div>
-            {loading && (
-              <Lottie animationData={LoadingSpinner} loop style={{ width: 32, height: 32 }} />
-            )}
-          </div>
+          <ListPagination
+            page={activePage}
+            itemCount={categoryTable.length}
+            isLoading={loading || isLoading}
+            onPageChange={(nextPage) => {
+              if (tab === "cast") setPg_C(nextPage);
+              if (tab === "genre") setPg_g(nextPage);
+              if (tab === "category") setPg_c(nextPage);
+            }}
+          />
         </div>
       </div>
 

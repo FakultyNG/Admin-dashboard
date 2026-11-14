@@ -45,6 +45,10 @@ import { ICategory } from "@/types/api/category.types";
 import { useGetCategoryQuery } from "@/api/categorySlice";
 import { searchClient } from "@/api/clientSlice";
 import { IClientsData } from "@/types/api/clients.types";
+import {
+  ADMIN_LIST_PAGE_SIZE,
+  ListPagination,
+} from "@/components/ListPagination";
 
 const TABS = ["Channels", "Events", "Tv Shows", "Podcasts", "Sports"];
 
@@ -61,10 +65,6 @@ function SuperAdminComp() {
   const [loading_B, setLoading_B] = useState<boolean>(false);
   const [loading_C, setLoading_C] = useState<boolean>(false);
   const [pg, setPg] = useState<number>(1);
-  const [paginationList, setPaginationList] = useState(
-    [...Array(8)].map((_, i) => i + 1),
-  );
-  const paginationStep = 8;
   const isEVENT = tab.toLowerCase() === "events";
   const isTVSHOW = tab.toLowerCase() === "tv shows";
   const isChannel = tab.toLowerCase() === "channels";
@@ -114,11 +114,11 @@ function SuperAdminComp() {
     error,
     isSuccess,
     isLoading,
-  } = useGetEventsQuery({ limit: 5, page: pg }, {});
-  const { data: allChannels } = useGetChannelsQuery({ limit: 5, page: pg }, {});
-  const { data: allTVShows } = useGetTVShowsQuery({ limit: 5, page: pg }, {});
-  const { data: allPodcast } = useGetPodcastQuery({ limit: 5, page: pg }, {});
-  const { data: allSport } = useGetSportQuery({ limit: 5, page: pg }, {});
+  } = useGetEventsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
+  const { data: allChannels } = useGetChannelsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
+  const { data: allTVShows } = useGetTVShowsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
+  const { data: allPodcast } = useGetPodcastQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
+  const { data: allSport } = useGetSportQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
     {},
@@ -126,19 +126,6 @@ function SuperAdminComp() {
 
   const [handleEstimate, { isLoading: isEstimatedLoading }] =
     useEventEstimateMutation();
-
-  const handleNext = () => {
-    setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep),
-    );
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep)),
-    );
-  };
 
   function handleLiveList(data: IEventResponse | undefined) {
     if (!data) return;
@@ -190,14 +177,14 @@ function SuperAdminComp() {
       setLoading(true);
       const res =
         tab === "channels"
-          ? await getFetchChannels({ limit: 5, page: query ?? pg })
+          ? await getFetchChannels({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
           : tab === "events"
-            ? await getFetchEvents({ limit: 5, page: query ?? pg })
+            ? await getFetchEvents({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
             : tab === "podcasts"
-              ? await getFetchPodcast({ limit: 5, page: query ?? pg })
+              ? await getFetchPodcast({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
               : tab === "sports"
-                ? await getFetchSport({ limit: 5, page: query ?? pg })
-                : await getFetchTVShows({ limit: 5, page: query ?? pg });
+                ? await getFetchSport({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
+                : await getFetchTVShows({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg });
       if (res.ok && res.data) {
         handleLiveList(res.data);
       } else {
@@ -413,7 +400,7 @@ function SuperAdminComp() {
                       role="tab"
                       aria-selected={active}
                       key={i}
-                      onClick={() => setTab(x.toLowerCase())}
+                      onClick={() => [setTab(x.toLowerCase()), setPg(1)]}
                       className={`${roboto_500.className} admin-tab ${active ? "admin-tab-active" : ""}`}
                     >
                       {x}
@@ -553,48 +540,13 @@ function SuperAdminComp() {
             </div>
           </div>
 
-          <div className="mt-auto ml-5 md:ml-10 lg:ml-16 bg-black2 absolute bottom-10 z-50 flex flex-row items-center">
-            <div
-              className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-            >
-              <button
-                onClick={handlePrevious}
-                className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-              >
-                <span className="text-white mr-2">{`<<`}</span>
-                Previous
-              </button>
-              <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-                {paginationList.map((num, index) => {
-                  const active = pg === num;
-
-                  return (
-                    <p
-                      key={index}
-                      onClick={() => [setPg(num), handleRefreshLive(num)]}
-                      className={`${active ? "text-red" : "text-[#C4C4C4]"} cursor-pointer`}
-                    >
-                      {num}
-                    </p>
-                  );
-                })}
-                {"   "} ...
-              </div>
-              <button
-                onClick={() => handleNext()}
-                className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-              >
-                Next <span className="text-white ml-2">{`>>`}</span>
-              </button>
-            </div>
-
-            {loading && (
-              <Lottie
-                animationData={LoadingSpinner}
-                loop
-                style={{ width: 35, height: 35, marginLeft: 15 }}
-              />
-            )}
+          <div className="absolute inset-x-0 bottom-10 z-50 px-4">
+            <ListPagination
+              page={pg}
+              itemCount={liveTable.length}
+              onPageChange={setPg}
+              isLoading={isLoading || loading}
+            />
           </div>
         </div>
       );

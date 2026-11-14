@@ -13,6 +13,8 @@ import ReactPlayer from "react-player";
 import { ModalComponent } from "./ModalComp";
 import { CURRENCY_TH } from "@/config/data/setting";
 import { ImageProps } from "../plans/ClientComponent";
+import { getGuestAccessSetting, updateGuestAccessSetting } from '@/api/platformSettings.api'
+import { toast } from 'react-toastify'
 
 const TABS = ['General', 'App settings', 'Currency', 'Email', 'API']
 
@@ -69,6 +71,7 @@ export default function page() {
   const [videoTrailer, setVideoTrailer] = useState<ImageProps | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isModal, setIsModal] = useState<boolean>(false);
+  const [savingGuestAccess, setSavingGuestAccess] = useState(false)
 
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
@@ -97,6 +100,32 @@ export default function page() {
   useEffect(() => {
     if (tab !== 'currency' && tab !== 'email') setIsModal(false)
   }, [tab])
+
+  useEffect(() => {
+    getGuestAccessSetting().then(response => {
+      if (response.ok && response.data?.data) {
+        setF_Login(response.data.data.enabled ? 'Enable' : 'Disable')
+      }
+    })
+  }, [])
+
+  const saveSettings = async () => {
+    if (tab !== 'app settings') return
+    if (f_Login !== 'Enable' && f_Login !== 'Disable') {
+      toast('Select whether guest access should be enabled', { type: 'error' })
+      return
+    }
+
+    setSavingGuestAccess(true)
+    const response = await updateGuestAccessSetting(f_Login === 'Enable')
+    setSavingGuestAccess(false)
+
+    if (!response.ok) {
+      toast(response.data?.message || 'Could not update guest access', { type: 'error' })
+      return
+    }
+    toast('Guest access updated', { type: 'success' })
+  }
 
 
 
@@ -458,13 +487,13 @@ export default function page() {
                   <label
                     className={`${roboto_400.className} font-normal text-grey_3 text-base ml-2.5`}
                   >
-                    Force Login
+                    Skip registration
                   </label>
-                  <p className="ml-2.5 mb-2 w-[367px] text-[#747474] text-sm">If this option is ON, it will force users to Login the app or they cannot use it, by hiding the SKIP button.</p>
+                  <p className="ml-2.5 mb-2 w-[367px] text-[#747474] text-sm">Allow users to enter the app without an account. Guests can access free content only.</p>
                   <SelectInputForm
                     placeholder={f_Login}
                     setType={setF_Login}
-                    selectData={['ON', 'OFF']}
+                    selectData={['Enable', 'Disable']}
                     className="border-border_grey text-grey_500 py-1 w-[367px] rounded-sm flex-1"
                   />
                 </div>
@@ -1096,6 +1125,8 @@ export default function page() {
       <div className='px-10 lg:px-16 my-4 pb-10 pt-6'>
         <AppButton
           title='SAVE'
+          onClick={saveSettings}
+          isLoading={savingGuestAccess}
           bgColor='bg-[#EE2726]'
           className='text-[15px] px-8 py-2 my-5 hover:scale-105 transition-all duration-300'
         />

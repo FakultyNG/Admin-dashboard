@@ -33,6 +33,11 @@ import { formatDateToDDMMYYYY, getFutureDateInISO } from "@/utilities/dateUtilit
 import { IUpcomingData } from "@/types/api/upcoming.types";
 import { IEventData } from "@/types/api/live.types";
 import { formatAmount } from "@/utilities/formatAmount";
+import { bulkDeleteRecords } from "@/api/bulkDelete.api";
+import {
+  ADMIN_LIST_PAGE_SIZE,
+  ListPagination,
+} from "@/components/ListPagination";
 
 export const runtime = "edge";
 
@@ -56,13 +61,17 @@ export default function page() {
   const [featuredEventsFiltered, setFeaturedEventsFiltered] = useState<
     (IEventData | IUpcomingData)[]
   >([]);
+  const [pageNumber, setPageNumber] = useState(1);
   const {
     data: featuredData,
     refetch,
     error,
     isSuccess,
     isLoading,
-  } = useGetFeaturesQuery({ limit: 10, page: 1 }, {});
+  } = useGetFeaturesQuery(
+    { limit: ADMIN_LIST_PAGE_SIZE, page: pageNumber },
+    {},
+  );
 
   function handleContentList(data: IFeaturedContentResponse | undefined) {
     if (!data) return;
@@ -122,7 +131,10 @@ export default function page() {
         setAddFeatured(EmptyFeatured);
         setSelectedContent(null);
         setExpiryHours(0);
-        const res_f = await getFeaturedEvent();
+        const res_f = await getFeaturedEvent({
+          limit: ADMIN_LIST_PAGE_SIZE,
+          page: pageNumber,
+        });
         if(res_f.ok && res_f.data) handleContentList(res_f.data)
       }
     } catch (error) {
@@ -132,9 +144,34 @@ export default function page() {
     }
   }
 
+  async function handleRemoveFeatured(item: IUpcomingData | IEventData) {
+    if (!window.confirm(`Remove “${item.title}” from Featured?`)) return;
+    try {
+      setLoading(true);
+      const response = await bulkDeleteRecords("featured", [item._id]);
+      const result = response.data?.data;
+      if (!response.ok || !result || result.deleted < 1) {
+        toast(response.data?.message || "Couldn't remove featured content", {
+          type: "error",
+        });
+        return;
+      }
+      setFeaturedEvents((items) => items.filter(({ _id }) => _id !== item._id));
+      setFeaturedEventsFiltered((items) =>
+        items.filter(({ _id }) => _id !== item._id),
+      );
+      toast("Removed from Featured", { type: "success" });
+      await refetch();
+    } catch {
+      toast("Couldn't remove featured content", { type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     handleContentList(featuredData);
-  }, [isSuccess]);
+  }, [featuredData]);
 
   switch (stage) {
     case "main":
@@ -257,7 +294,7 @@ export default function page() {
                                 alt="edit"
                               />
                             </button>
-                            <button>
+                            <button onClick={() => handleRemoveFeatured(tx)}>
                               <Image
                                 src="/delete.svg"
                                 width={15}
@@ -272,6 +309,12 @@ export default function page() {
                   })}
                 </tbody>
               </table>
+              <ListPagination
+                page={pageNumber}
+                itemCount={featuredEvents.length}
+                onPageChange={setPageNumber}
+                isLoading={isLoading || loading}
+              />
             </div>
           </div>
 

@@ -19,7 +19,7 @@ export const featuredApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("superadmin_token");
         return {
-          url: `/superadmin/featured/contents/fetch`,
+          url: `/superadmin/featured/contents/fetch?page=${data.page}&limit=${data.limit}`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -44,9 +44,9 @@ export const addFeaturedContent = async (data: IAddFeatured) =>
     baseApi.post("/superadmin/featured/contents/add", data)
   );
 
-export const getFeaturedEvent = async () =>
+export const getFeaturedEvent = async (query: IUpcomingQuery = { page: 1, limit: 50 }) =>
   await apiCall<IFeaturedContentResponse>((baseApi) =>
     baseApi.get<IFeaturedContentResponse>(
-      `superadmin/featured/contents/fetch`
+      `/superadmin/featured/contents/fetch?page=${query.page}&limit=${query.limit}`
     )
   );

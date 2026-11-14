@@ -14,15 +14,17 @@ import { TABLE_TH } from "@/config/data/upload";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import { IMediaData, IMediaResponse } from "@/types/api/media.types";
 import { isExpired } from "@/utilities/dateUtilities";
-import Lottie from "lottie-react";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useRef, useState } from "react";
-import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
 import { AddComponent } from "./components/UploadComponent";
 import { deleteContent } from "@/api/contentSlice";
+import {
+  ADMIN_LIST_PAGE_SIZE,
+  ListPagination,
+} from "@/components/ListPagination";
 
 interface Props {
   slug: string;
@@ -37,42 +39,25 @@ function MainComponent({ slug }: Props) {
   const [pg, setPg] = useState<number>(1);
   const [searchParams, setSearchParams] = useState<string>("");
   const searchRequest = useRef(0);
-  const [paginationList, setPaginationList] = useState(
-    [...Array(8)].map((_, i) => i + 1),
-  );
-  const paginationStep = 8;
   const {
     data: moviesData,
     refetch,
     error,
     isSuccess,
     isLoading,
-  } = useGetAllMovieQuery({ limit: 5, page: pg }, {});
+  } = useGetAllMovieQuery({ limit: ADMIN_LIST_PAGE_SIZE, page: pg }, {});
   const { data: skitsData, refetch: refetchSkits } = useGetAllSkitsQuery(
-    { limit: 5, page: pg },
+    { limit: ADMIN_LIST_PAGE_SIZE, page: pg },
     {},
   );
   const { data: musicVideoData, refetch: refetchMusiVid } = useGetAllMusicQuery(
-    { limit: 5, page: pg },
+    { limit: ADMIN_LIST_PAGE_SIZE, page: pg },
     {},
   );
   const { data: seriesData, refetch: refetchSeries } = useGetAllSeriesQuery(
-    { limit: 5, page: pg },
+    { limit: ADMIN_LIST_PAGE_SIZE, page: pg },
     {},
   );
-
-  const handleNext = () => {
-    setPaginationList((prevList) =>
-      prevList.map((num) => num + paginationStep),
-    );
-  };
-
-  const handlePrevious = () => {
-    if (paginationList[0] === 1) return;
-    setPaginationList((prevList) =>
-      prevList.map((num) => Math.max(1, num - paginationStep)),
-    );
-  };
 
   async function handleDelete(id: string) {
     setMediaList(mediaList.filter((media) => media._id !== id));
@@ -154,12 +139,12 @@ function MainComponent({ slug }: Props) {
       setLoading(true);
       const res =
         slug === "movies"
-          ? await getFetchMovies({ limit: 5, page: query ?? pg })
+          ? await getFetchMovies({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
           : slug === "skits"
-            ? await getFetchSkit({ limit: 5, page: query ?? pg })
+            ? await getFetchSkit({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
             : slug === "series"
-              ? await getFetchSeries({ limit: 5, page: query ?? pg })
-              : await getFetchMusicVideo({ limit: 5, page: query ?? pg });
+              ? await getFetchSeries({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg })
+              : await getFetchMusicVideo({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? pg });
       if (res.ok && res.data) {
         handleMediaList(res.data);
       } else {
@@ -339,53 +324,13 @@ function MainComponent({ slug }: Props) {
                   </tbody>
                 </table>
 
-                <div className="absolute ml-5 md:ml-10 lg:ml-16 bg-black2  bottom-10 z-50 flex flex-row items-center">
-                  <div
-                    className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
-                  >
-                    <button
-                      onClick={handlePrevious}
-                      className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-                    >
-                      <span className="text-white mr-2">{`<<`}</span>
-                      Previous
-                    </button>
-                    <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
-                      {paginationList.map((num, index) => {
-                        const active = pg === num;
-
-                        return (
-                          <p
-                            key={index}
-                            onClick={() => [
-                              setPg(num),
-                              handleRefreshMedia(num),
-                            ]}
-                            className={`${
-                              active ? "text-red" : "text-[#C4C4C4]"
-                            } cursor-pointer`}
-                          >
-                            {num}
-                          </p>
-                        );
-                      })}
-                      {"   "} ...
-                    </div>
-                    <button
-                      onClick={() => handleNext()}
-                      className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-                    >
-                      Next <span className="text-white ml-2">{`>>`}</span>
-                    </button>
-                  </div>
-
-                  {loading && (
-                    <Lottie
-                      animationData={LoadingSpinner}
-                      loop
-                      style={{ width: 35, height: 35, marginLeft: 15 }}
-                    />
-                  )}
+                <div className="absolute inset-x-0 bottom-10 z-50 px-4">
+                  <ListPagination
+                    page={pg}
+                    itemCount={mediaList.length}
+                    onPageChange={setPg}
+                    isLoading={isLoading || loading}
+                  />
                 </div>
               </div>
             </div>

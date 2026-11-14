@@ -5,9 +5,8 @@ import { roboto_400, roboto_500, roboto_700 } from "@/config/fonts";
 import { getSuggestions, markAsRead, useGetSuggestionsQuery } from "@/api/suggestionSlice";
 import { ISuggestionData } from "@/types/api/suggestion.types";
 import { toast } from "react-toastify";
-import Lottie from "lottie-react";
-import LoadingSpinner from "@/config/lottie/loading.json";
 import { bulkDeleteRecords } from "@/api/bulkDelete.api";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 interface IsViewMsgProps {
   data: ISuggestionData;
@@ -31,7 +30,7 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetSuggestionsQuery({ limit: 5, page }, {});
+  } = useGetSuggestionsQuery({ limit: ADMIN_LIST_PAGE_SIZE, page }, {});
 
 
   const handleCheckboxChange = (suggestionId: string, isChecked: boolean) => {
@@ -45,7 +44,7 @@ export default function page() {
   async function handleGetSuggestions(query?: number) {
     try {
       setLoading(true);
-      const res = await getSuggestions({ limit: 5, page: query ?? page })
+      const res = await getSuggestions({ limit: ADMIN_LIST_PAGE_SIZE, page: query ?? page })
       if (res.ok && res.data) {
         setList(res.data.data);
         setFilteredList(res.data.data);
@@ -113,16 +112,11 @@ export default function page() {
   }
 
   useEffect(() => {
-    handleGetSuggestions();
-  }, [page])
-
-
-  useEffect(() => {
     if (suggestionData) {
       setList(suggestionData.data)
       setFilteredList(suggestionData.data);
     }
-  }, [isSuccess])
+  }, [suggestionData])
 
   return (
     <section
@@ -222,34 +216,12 @@ export default function page() {
           })}
         </div>
 
-        <div className="mt-auto bg-black2 absolute bottom-10 z-50 flex flex-row items-center">
-          <div
-            className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
-          >
-            <button
-              onClick={() => [setPage(page == 1 ? page : page - 1), handleGetSuggestions(page == 1 ? page : page - 1)]}
-              className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
-            >
-              <span className="text-grey_800 mr-2">{`<<`}</span>
-              Previous
-            </button>
-            <div className="text-grey_800 text-[17px] mr-1 font-medium space-x-1.5">
-              <span className="text-red">{page}</span>
-            </div>
-            <button
-              onClick={() => [setPage(suggestionList.length > 0 ? page + 1 : page), handleGetSuggestions(suggestionList.length > 0 ? page + 1 : page)]}
-              className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
-            >
-              Next <span className="text-grey_800 ml-2">{`>>`}</span>
-            </button>
-          </div>
-
-          {loading && <Lottie
-            animationData={LoadingSpinner}
-            loop
-            style={{ width: 35, height: 35, marginLeft: 15 }}
-          />}
-        </div>
+        <ListPagination
+          page={page}
+          itemCount={suggestionList.length}
+          isLoading={loading || isLoading}
+          onPageChange={(nextPage) => setPage(nextPage)}
+        />
       </>
         :
 

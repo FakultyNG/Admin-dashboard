@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import { motion } from "framer-motion";
 import { Contestants_Votes } from "@/config/data/contestants";
+import { ADMIN_LIST_PAGE_SIZE, ListPagination } from "@/components/ListPagination";
 
 type ViewVotesProps = {
   onBack: () => void;
@@ -10,8 +11,12 @@ type ViewVotesProps = {
 
 function ViewVote({ onBack }: ViewVotesProps) {
   const [progressPercent, setProgressPercent] = useState(0);
-  const [page, setPage] = useState(0);
-  const totalPages = Math.ceil(Contestants_Votes.length / 14); 
+  const [page, setPage] = useState(1);
+  const pageItems = Contestants_Votes.slice(
+    (page - 1) * ADMIN_LIST_PAGE_SIZE,
+    page * ADMIN_LIST_PAGE_SIZE,
+  );
+  const rowsPerPage = Math.ceil(pageItems.length / 2);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,29 +67,29 @@ function ViewVote({ onBack }: ViewVotesProps) {
       <div className="ml-8 my-6">
         <table>
           <tbody>
-            {Array.from({ length: 7 }).map((_, index) => {
-              const leftIndex = page * 14 + index;
-              const rightIndex = leftIndex + 7;
+            {Array.from({ length: rowsPerPage }).map((_, index) => {
+              const leftIndex = index;
+              const rightIndex = leftIndex + rowsPerPage;
 
               return (
                 <tr key={index}>
                   <td className="w-[496px] pr-8">
-                    {Contestants_Votes[leftIndex] && (
+                    {pageItems[leftIndex] && (
                       <div className="flex justify-between items-center pr-6">
                         <div className="flex items-center gap-x-2 py-4">
-                          <p className="text-textdim">{Contestants_Votes[leftIndex].id}</p>
+                          <p className="text-textdim">{pageItems[leftIndex].id}</p>
                           <Image
-                            src={Contestants_Votes[leftIndex].image}
-                            alt={Contestants_Votes[leftIndex].name}
+                            src={pageItems[leftIndex].image}
+                            alt={pageItems[leftIndex].name}
                             width={51.8}
                             height={53.2}
                             className="rounded-full"
                           />
-                          <p className="text-white text-sm">{Contestants_Votes[leftIndex].name}</p>
+                          <p className="text-white text-sm">{pageItems[leftIndex].name}</p>
                         </div>
                         <div className="flex items-center relative pl-6">
                           <p className={`${roboto_500.className} bg-blue_300 py-4 px-4 rounded-full font-semibold text-sm text-white`}>
-                            {Contestants_Votes[leftIndex].votes} votes
+                            {pageItems[leftIndex].votes} votes
                           </p>
                           <div>
                             <svg className="w-[100px] h-[100px]">
@@ -111,22 +116,22 @@ function ViewVote({ onBack }: ViewVotesProps) {
                   </td>
 
                   <td className="w-[496px] pl-10">
-                    {Contestants_Votes[rightIndex] && (
+                    {pageItems[rightIndex] && (
                       <div className="flex justify-between items-center pl-6">
                         <div className="flex items-center gap-x-2">
-                          <p className="text-textdim">{Contestants_Votes[rightIndex].id}</p>
+                          <p className="text-textdim">{pageItems[rightIndex].id}</p>
                           <Image
-                            src={Contestants_Votes[rightIndex].image}
-                            alt={Contestants_Votes[rightIndex].name}
+                            src={pageItems[rightIndex].image}
+                            alt={pageItems[rightIndex].name}
                             width={51.8}
                             height={53.2}
                             className="rounded-full"
                           />
-                          <p className="text-white text-sm">{Contestants_Votes[rightIndex].name}</p>
+                          <p className="text-white text-sm">{pageItems[rightIndex].name}</p>
                         </div>
                         <div className="flex items-center pl-6">
                           <p className={`${roboto_500.className} bg-blue_300 py-4 px-4 rounded-full font-semibold text-sm text-white text-center`}>
-                            {Contestants_Votes[rightIndex].votes} votes
+                            {pageItems[rightIndex].votes} votes
                           </p>
                           <div>
                             <svg className="w-[100px] h-[100px]">
@@ -157,17 +162,12 @@ function ViewVote({ onBack }: ViewVotesProps) {
           </tbody>
         </table>
 
-        <div className="flex justify-center mt-6">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i)}
-              className={`w-3 h-3 rounded-full mx-1 transition-all duration-200 ${
-                i === page ? 'bg-red' : 'bg-gray-500'
-              }`}
-            />
-          ))}
-        </div>
+        <ListPagination
+          page={page}
+          itemCount={pageItems.length}
+          totalItems={Contestants_Votes.length}
+          onPageChange={setPage}
+        />
       </div>
     </motion.div>
   );
