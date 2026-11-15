@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import SubtitleManager from "./SubtitleManager";
 import type { IFile, ISubtitle } from "./UploadComponent";
+import { validateSubtitleFile } from "@/utilities/subtitleUtils";
 
 type Props = {
   episode: IEpisodeData;
@@ -169,12 +170,12 @@ export default function EpisodeComponent({
     }
   };
 
-  const handleSubtitleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubtitleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const extension = file.name.split(".").pop()?.toLowerCase();
-    if (!extension || !["srt", "vtt"].includes(extension) || file.size > 5 * 1024 * 1024) {
-      toast("Choose an SRT or VTT subtitle no larger than 5 MB.", { type: "error" });
+    const validationError = await validateSubtitleFile(file);
+    if (validationError) {
+      toast(validationError, { type: "error" });
       event.target.value = "";
       return;
     }

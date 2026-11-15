@@ -94,6 +94,7 @@ export default function SubtitleManager({
 
         {canUploadImmediately ? (
           <AppButton
+            type="button"
             title="Add subtitle"
             bgColor={selectionReady ? "bg-[#EE2726]" : "bg-grey_500"}
             disabled={!selectionReady || isUploading}
@@ -107,6 +108,12 @@ export default function SubtitleManager({
             saved.
           </div>
         )}
+      </div>
+
+      <div className="mt-4 rounded-lg border border-white/[0.07] bg-black2 px-4 py-3 text-xs leading-5 text-grey_500">
+        <p className="font-semibold text-white">Accepted subtitle guide</p>
+        <p>Use plain-text UTF-8 SRT or WebVTT, up to 5 MB. Every cue must include start and end times followed by caption text.</p>
+        <p className="mt-1 font-mono text-[11px] text-grey_500">00:00:01,000 --&gt; 00:00:04,000</p>
       </div>
 
       {file ? (

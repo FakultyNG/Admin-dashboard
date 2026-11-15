@@ -48,6 +48,7 @@ import { HexAlphaColorPicker } from "react-colorful";
 import { useProgress } from "@bprogress/next";
 import SubtitleManager from "./SubtitleManager";
 import PosterUploadGuide from "@/components/PosterUploadGuide";
+import { validateSubtitleFile } from "@/utilities/subtitleUtils";
 
 interface ModalProps {
   handleClose: () => void;
@@ -264,9 +265,9 @@ export const AddComponent = ({
     }
   }
 
-  function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
+  async function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
     const files = e.target.files;
-    if (files) {
+    if (files?.[0]) {
       if (type === "cover") {
         // setCoverImage({
         //   name: files[0].name,
@@ -312,14 +313,9 @@ export const AddComponent = ({
           }
         };
       } else if (type === "subtitle") {
-        const extension = files[0].name.split(".").pop()?.toLowerCase();
-        if (!extension || !["srt", "vtt"].includes(extension)) {
-          toast("Choose a valid SRT or VTT subtitle file.", { type: "error" });
-          e.target.value = "";
-          return;
-        }
-        if (files[0].size > 5 * 1024 * 1024) {
-          toast("Subtitle files must be 5 MB or smaller.", { type: "error" });
+        const validationError = await validateSubtitleFile(files[0]);
+        if (validationError) {
+          toast(validationError, { type: "error" });
           e.target.value = "";
           return;
         }
