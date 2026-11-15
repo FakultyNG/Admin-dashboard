@@ -33,11 +33,16 @@ export interface ISeasonResponse extends IGeneric {
   data: ISeasonData[];
 }
 
+export interface ISeasonMutationResponse extends IGeneric {
+  data: ISeasonData;
+}
+
 export interface ISeasonData {
   _id: string;
   admin: string;
   video: string;
   serial_number: number;
+  description?: string | null;
   episodes: IEpisodeData[];
   viewsCount: number;
 }
@@ -48,9 +53,15 @@ export interface IEpisodeData {
   season: string;
   episodeNumber: number;
   title: string;
-  description: string;
-  video: string;
-  trailer: string;
+  description?: string;
+  video?: string | null;
+  trailer?: string | null;
+  isVideoReady?: boolean;
+  isTrailerReady?: boolean;
+}
+
+export interface IEpisodeMutationResponse extends IGeneric {
+  data: IEpisodeData;
 }
 
 export interface ISubtitleResponse extends IGeneric {

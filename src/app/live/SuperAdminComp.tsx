@@ -11,6 +11,7 @@ import {
   useGetPodcastQuery,
   useGetSportQuery,
   useGetTVShowsQuery,
+  updateLiveActive,
 } from "@/api/liveSlice";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import Lottie from "lottie-react";
@@ -38,6 +39,7 @@ import {
   calculateEventDurationHours,
   calculateRemainingEventHours,
   getDates,
+  trimIsoToMinutes,
 } from "@/utilities/dateUtilities";
 import { useEventEstimateMutation } from "@/api/extra.api";
 import { truncateText } from "@/utilities/textUtils";
@@ -69,7 +71,7 @@ function SuperAdminComp() {
   const isEVENT = tab.toLowerCase() === "events";
   const isTVSHOW = tab.toLowerCase() === "tv shows";
   const isChannel = tab.toLowerCase() === "channels";
-  const isPodcast = tab.toLowerCase() === "podcast";
+  const isPodcast = tab.toLowerCase() === "podcasts";
   const [isPaymentActive, setIsPaymentActive] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
@@ -106,7 +108,7 @@ function SuperAdminComp() {
   const [searchClientParams, setSearchClient] = useState<string>("");
   const [clientList, setClientList] = useState<IClientsData[]>([]);
   const [client, setClient] = useState<IClientsData | null>(null);
-  const startDate = new Date().toISOString();
+  const [startDate, setStartDate] = useState(() => trimIsoToMinutes(new Date().toISOString()));
 
   const maxLength = 200;
   const {
@@ -218,7 +220,7 @@ function SuperAdminComp() {
         subTitle: "subtitle",
         upcoming: addToUpcoming,
 
-        category: [tab.toLowerCase().slice(0, -1).trim().replace(" ", "")],
+        category: selectedCategories,
       };
 
       if (coverImage && coverImage.file)
@@ -231,6 +233,12 @@ function SuperAdminComp() {
       const res = await createLive(formdata);
       // console.log(res.data)
       if (res.ok && res.data) {
+        if (isActive) {
+          const activeResponse = await updateLiveActive(res.data.data.liveId, true);
+          if (!activeResponse.ok) {
+            throw new Error(activeResponse.data?.message || "Live created but could not be activated");
+          }
+        }
         toast(`${res.data.message}`, { type: "success" });
         setStage("main");
       } else {
@@ -983,11 +991,31 @@ function SuperAdminComp() {
                     )}
                   </div>
 
+                  <div className="mr-20 mt-2 flex min-w-[280px] flex-col gap-2">
+                    <label
+                      htmlFor="live-start"
+                      className={`${roboto_500.className} text-base text-white`}
+                    >
+                      SCHEDULED START *
+                    </label>
+                    <input
+                      id="live-start"
+                      type="datetime-local"
+                      value={startDate}
+                      min={trimIsoToMinutes(new Date().toISOString())}
+                      onChange={(event) => setStartDate(event.target.value)}
+                      className="rounded-sm border border-border_grey bg-transparent px-3 py-2 text-sm text-white"
+                    />
+                    <span className="text-xs text-grey_700">
+                      Time is entered in your local timezone and stored as UTC.
+                    </span>
+                  </div>
+
                   <div className="flex flex-row items-center gap-x-2 mr-20 mt-2">
                     <span
                       className={`${roboto_500.className} text-white ml-1 text-base`}
                     >
-                      Active
+                      Activate manually
                     </span>
                     <div
                       className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${
@@ -1255,10 +1283,12 @@ function SuperAdminComp() {
                   title === "" ||
                   pg_M === "" ||
                   _class === "" ||
+                  !startDate ||
+                  Number(eventHours) <= 0 ||
                   !client ||
                   loading_B ||
                   !coverImage ||
-                  (tab.toLowerCase() === "channel" ? !image : !videoTrailer)
+                  (tab.toLowerCase() === "channels" ? !image : !videoTrailer)
                 }
               />
             </div>

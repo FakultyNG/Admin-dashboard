@@ -2,6 +2,8 @@ import { IGeneric } from "@/types/api/auth.types";
 import { apiCall } from "./auth.api";
 import {
   IContentMutationResponse,
+  IEpisodeMutationResponse,
+  ISeasonMutationResponse,
   ISeasonResponse,
   ISubtitleResponse,
 } from "@/types/api/content.type";
@@ -40,15 +42,11 @@ export const editContentTaxonomy = async (
     baseApi.put<IGeneric>(`/superadmin/uploads/edit/${id}`, data),
   );
 
-export const addSeason = async (seriesId: string) =>
-  await apiCall<ISeasonResponse>((baseApi) =>
-    baseApi.post<ISeasonResponse>(
+export const addSeason = async (seriesId: string, description?: string) =>
+  await apiCall<ISeasonMutationResponse>((baseApi) =>
+    baseApi.post<ISeasonMutationResponse>(
       `/superadmin/uploads/seasons/add/${seriesId}`,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
+      description?.trim() ? { description: description.trim() } : {},
     ),
   );
 
@@ -67,8 +65,8 @@ export const addSubtitle = async (data: FormData) =>
   );
 
 export const addEpisodes = async (data: FormData, seasonId: string) =>
-  await apiCall<IGeneric>((baseApi) =>
-    baseApi.post<IGeneric>(
+  await apiCall<IEpisodeMutationResponse>((baseApi) =>
+    baseApi.post<IEpisodeMutationResponse>(
       `/superadmin/uploads/episodes/add/${seasonId}`,
       data,
       {
@@ -77,6 +75,25 @@ export const addEpisodes = async (data: FormData, seasonId: string) =>
         },
       },
     ),
+  );
+
+export const editEpisode = async (data: FormData, episodeId: string) =>
+  await apiCall<IEpisodeMutationResponse>((baseApi) =>
+    baseApi.put<IEpisodeMutationResponse>(
+      `/superadmin/uploads/episodes/edit/${episodeId}`,
+      data,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    ),
+  );
+
+export const deleteEpisode = async (episodeId: string) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.delete<IGeneric>(`/superadmin/uploads/episodes/remove/${episodeId}`),
+  );
+
+export const deleteSeason = async (seasonId: string) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.delete<IGeneric>(`/superadmin/uploads/seasons/remove/${seasonId}`),
   );
 
 export const deleteContent = async (data: { id: string; slug: string }) =>

@@ -123,12 +123,17 @@ export const getFetchSport = async (data: IPagination) =>
   );
 
 export const createLive = async (data: FormData) =>
-  await apiCall<IGeneric>((baseApi) =>
-    baseApi.post<IGeneric>(`/superadmin/shared/lives/create`, data, {
+  await apiCall<ICreateLiveContentResponse>((baseApi) =>
+    baseApi.post<ICreateLiveContentResponse>(`/superadmin/shared/lives/create`, data, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     }),
+  );
+
+export const updateLiveActive = async (liveId: string, active: boolean) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.put<IGeneric>(`/superadmin/shared/lives/update-active/${liveId}`, {active}),
   );
 
 export const clientCreateLive = async (data: FormData) =>

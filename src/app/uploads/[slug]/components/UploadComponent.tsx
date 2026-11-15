@@ -187,6 +187,8 @@ export const AddComponent = ({
   const [srtLoading, setSrtLoading] = useState<boolean>(false);
   const [subtitleProcessingId, setSubtitleProcessingId] = useState<string>("");
   const [seasonLoading, setSeasonLoading] = useState<boolean>(false);
+  const [createdSeriesId, setCreatedSeriesId] = useState<string>("");
+  const [seasonDescription, setSeasonDescription] = useState<string>("");
   const maxLength = 200;
   const [seasons, setSeasons] = useState<ISeasonData[]>([]);
   const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
@@ -218,6 +220,11 @@ export const AddComponent = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showPicker]);
 
+  const activeSeriesId = selectedMedia?._id ?? createdSeriesId;
+  const hasTrailer = Boolean(videoTrailer || links?.url || urlLink.trim());
+  const hasMainVideo =
+    slug.includes("series") ||
+    Boolean(videoTrailer_2 || links_2?.url || urlLink_2.trim());
   const isDisabled =
     title.trim() === "" ||
     (slug.includes("videos") && subtitle.trim() === "") ||
@@ -225,14 +232,18 @@ export const AddComponent = ({
     PG === "Select" ||
     releaseDate === "" ||
     expiryDate === "" ||
-    selectedGenries.length !== 3 ||
+    selectedGenries.length === 0 ||
+    selectedGenries.length > 3 ||
     selectedCategories.length === 0 ||
-    (links || videoTrailer) === null ||
-    details === "" ||
+    !hasTrailer ||
+    !hasMainVideo ||
+    details.trim() === "" ||
     time === "" ||
     rating === "Select" ||
     portrait === null ||
     portrait_L === null ||
+    (class_.toLowerCase() === "exclusive" &&
+      (amount.trim() === "" || currency.trim() === "")) ||
     Boolean(subtitleFile && subtitle_.toLowerCase().includes("select"));
 
   const handleTextChange = (newText: string) => {
@@ -408,12 +419,12 @@ export const AddComponent = ({
     }
   };
 
-  async function handleDisableButton() {
-    if (!selectedMedia) return;
+  async function handleDisableButton(seriesId = activeSeriesId) {
+    if (!seriesId) return;
     try {
       setSeasonLoading(true);
-      const res = await seriesButtonValidity(selectedMedia._id, "seasons");
-      if (res.ok && res.data) setDisabled(false);
+      const res = await seriesButtonValidity(seriesId, "seasons");
+      setDisabled(!res.ok);
     } catch (error) {
       toast(`${error}`, { type: "error" });
     } finally {
@@ -488,40 +499,30 @@ export const AddComponent = ({
     setSrtLoading(false);
   }
 
-  async function handleFetchSeasons() {
-    if (!selectedMedia) return;
+  async function handleFetchSeasons(seriesId = activeSeriesId) {
+    if (!seriesId) return;
     try {
       start();
-      const res = await getSeasons({ id: selectedMedia._id });
+      const res = await getSeasons({ id: seriesId });
       if (res.ok && res.data) {
         setSeasons(res.data.data);
       }
+      await handleDisableButton(seriesId);
     } finally {
       stop();
     }
   }
 
   async function handleCreateSeason() {
-    if (!selectedMedia || !slug.includes("series")) return;
+    if (!activeSeriesId || !slug.includes("series")) return;
     try {
       setSeasonLoading(true);
-      const res = await addSeason(selectedMedia._id);
+      const res = await addSeason(activeSeriesId, seasonDescription);
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
-        setSeasons((prev) => [
-          ...prev,
-          {
-            _id: "",
-            admin: "",
-            episodes: [],
-            landscapePhoto: null,
-            portraitPhoto: null,
-            serial_number: prev[prev.length - 1].serial_number + 1,
-            trailer: "",
-            video: "",
-            viewsCount: 0,
-          },
-        ]);
+        setSeasonDescription("");
+        setDisabled(true);
+        await handleFetchSeasons(activeSeriesId);
       } else {
         toast(res.data?.message, { type: "error" });
       }
@@ -621,8 +622,9 @@ export const AddComponent = ({
       if (portrait_L.file) formdata.append("landscapePoster", portrait_L.file);
       if (portrait.file) formdata.append("portraitPoster", portrait.file);
 
-      const res = selectedMedia
-        ? await editContent(formdata, selectedMedia._id)
+      const existingContentId = selectedMedia?._id ?? createdSeriesId;
+      const res = existingContentId
+        ? await editContent(formdata, existingContentId)
         : await createContent(
             formdata,
             slug.includes("movies")
@@ -646,7 +648,15 @@ export const AddComponent = ({
             );
           }
         }
-        // Reset form after successful upload
+        if (slug.includes("series")) {
+          const seriesId = existingContentId || res.data.data._id;
+          setCreatedSeriesId(seriesId);
+          setDisabled(false);
+          await handleFetchSeasons(seriesId);
+          return;
+        }
+
+        // Reset non-series forms after a successful upload.
         setTitle("");
         setSubTitle("");
         setReleaseDate("");
@@ -697,12 +707,11 @@ export const AddComponent = ({
   }, [genries, categories, isSuccess_C, isSuccess]);
 
   useEffect(() => {
-    if (slug.includes("series")) {
+    if (slug.includes("series") && activeSeriesId) {
       handleFetchSeasons();
-      handleDisableButton();
     }
     handleFetchSubtitle();
-  }, [slug, selectedMedia]);
+  }, [slug, selectedMedia, createdSeriesId]);
 
   return (
     <div className="mx-auto mt-6 flex h-full w-full max-w-[1500px] flex-col px-3 sm:px-6">
@@ -1761,7 +1770,7 @@ export const AddComponent = ({
                 <p
                   className={`${roboto_400.className} text-grey_500 font-normal text-base ml-3`}
                 >
-                  Season Details *
+                  Series description *
                 </p>
                 <div className="h-[90px] relative border border-[#D9D9D938] mt-2">
                   <textarea
@@ -1799,23 +1808,38 @@ export const AddComponent = ({
             )}
 
             {/* Adding seasons */}
-            {slug === "series" && selectedMedia && (
-              <div className="-pt-10">
-                <div className="mx-4 mb-5 flex items-center gap-x-4 sm:mx-6 lg:mx-10">
+            {slug === "series" && activeSeriesId && (
+              <section className="mx-4 rounded-2xl border border-white/[0.08] bg-[#0c0e13] p-4 sm:mx-6 sm:p-6 lg:mx-10">
+                <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="max-w-2xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-400">
+                      Series structure
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold text-white">Seasons & episodes</h3>
+                    <p className="mt-1 text-sm leading-6 text-grey_500">
+                      Add one season at a time. Each season must contain an episode before the next season can be created.
+                    </p>
+                  </div>
+                  <div className="flex w-full flex-col gap-3 sm:flex-row lg:max-w-xl">
+                    <CustomInput
+                      value={seasonDescription}
+                      onChange={(event) => setSeasonDescription(event.target.value)}
+                      placeholder="Optional season description"
+                      maxLength={240}
+                      className="min-h-[46px]"
+                    />
                   <AppButton
                     title="Add Season"
                     bgColor="bg-[#EE2726]"
-                    className="px-6 py-3 hover:scale-105 transition-all duration-300"
+                    className="min-h-[46px] shrink-0 rounded-lg px-6"
                     onClick={handleCreateSeason}
                     isLoading={seasonLoading}
-                    disabled={
-                      !selectedMedia || seasonLoading || isDisabled_Seasons
-                    }
+                    disabled={seasonLoading || isDisabled_Seasons}
                   />
 
                   <button
                     onClick={() => handleFetchSeasons()}
-                    className="p-2.5 rounded-full border border-[#D9D9D938] hover:bg-[#D9D9D91A] transition-all duration-200 active:rotate-180"
+                    className="grid min-h-[46px] min-w-[46px] place-items-center rounded-lg border border-white/[0.12] hover:bg-white/[0.04]"
                     title="Refresh Seasons"
                   >
                     <svg
@@ -1833,9 +1857,10 @@ export const AddComponent = ({
                       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                     </svg>
                   </button>
+                  </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="space-y-4">
                   {seasons.map((season, i) => {
                     return (
                       <SeasonComponent
@@ -1849,8 +1874,14 @@ export const AddComponent = ({
                       />
                     );
                   })}
+                  {seasons.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/[0.12] px-6 py-10 text-center">
+                      <p className="text-sm font-medium text-white">No seasons yet</p>
+                      <p className="mt-1 text-xs text-grey_500">Add Season 1 to continue building this series.</p>
+                    </div>
+                  ) : null}
                 </div>
-              </div>
+              </section>
             )}
           </>
 
@@ -2039,13 +2070,16 @@ export const AddComponent = ({
 
         <div className="sticky bottom-0 z-40 mt-8 flex justify-end border-t border-white/[0.08] bg-black3/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-10">
           <AppButton
-            title={selectedMedia ? "UPDATE" : "UPLOAD"}
-            disabled={
-              (isDisabled &&
-                !slug.includes("series") &&
-                (links_2 || videoTrailer_2) === null) ||
-              color === ""
+            title={
+              selectedMedia || createdSeriesId
+                ? slug.includes("series")
+                  ? "UPDATE SERIES"
+                  : "UPDATE"
+                : slug.includes("series")
+                  ? "CREATE SERIES"
+                  : "UPLOAD"
             }
+            disabled={isDisabled || color === ""}
             showPercentage
             isLoading={loading}
             bgColor="bg-[#EE2726]"
