@@ -48,7 +48,10 @@ import { HexAlphaColorPicker } from "react-colorful";
 import { useProgress } from "@bprogress/next";
 import SubtitleManager from "./SubtitleManager";
 import PosterUploadGuide from "@/components/PosterUploadGuide";
-import { validateSubtitleFile } from "@/utilities/subtitleUtils";
+import {
+  normalizeSubtitleTracks,
+  validateSubtitleFile,
+} from "@/utilities/subtitleUtils";
 
 interface ModalProps {
   handleClose: () => void;
@@ -430,14 +433,25 @@ export const AddComponent = ({
 
   async function handleFetchSubtitle() {
     if (!selectedMedia) return;
-    const res = await getSubtitles({ id: selectedMedia._id, type: "vod" });
-    if (res.ok && res.data) {
+    try {
+      const res = await getSubtitles({ id: selectedMedia._id, type: "vod" });
+      if (!res.ok || !res.data) {
+        setSRTArray([]);
+        toast(res.data?.message ?? "Subtitles could not be loaded.", { type: "error" });
+        return;
+      }
+
       setSRTArray(
-        res.data.data.map((x) => ({
+        normalizeSubtitleTracks(res.data.data).map((x) => ({
           language: x.language,
           srtFile: { url: x.src, name: x._id },
         })),
       );
+    } catch (error) {
+      setSRTArray([]);
+      toast(error instanceof Error ? error.message : "Subtitles could not be loaded.", {
+        type: "error",
+      });
     }
   }
 
@@ -485,14 +499,21 @@ export const AddComponent = ({
 
   async function handleAddSubtitle() {
     if (!selectedMedia) return;
-    setSrtLoading(true);
-    const uploaded = await uploadSubtitle(selectedMedia._id);
-    if (uploaded) {
-      setSUBTITLE("Select Language");
-      setSubtitleFile(null);
-      await handleFetchSubtitle();
+    try {
+      setSrtLoading(true);
+      const uploaded = await uploadSubtitle(selectedMedia._id);
+      if (uploaded) {
+        setSUBTITLE("Select Language");
+        setSubtitleFile(null);
+        await handleFetchSubtitle();
+      }
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Subtitle upload failed.", {
+        type: "error",
+      });
+    } finally {
+      setSrtLoading(false);
     }
-    setSrtLoading(false);
   }
 
   async function handleFetchSeasons(seriesId = activeSeriesId) {

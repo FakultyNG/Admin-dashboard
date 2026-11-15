@@ -57,11 +57,9 @@ export const seriesButtonValidity = async (id: string, type: string) =>
 
 export const addSubtitle = async (data: FormData) =>
   await apiCall<IGeneric>((baseApi) =>
-    baseApi.post<IGeneric>(`/superadmin/media/add-subtitle`, data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }),
+    // Do not set Content-Type manually. The browser must add the multipart
+    // boundary generated for this FormData instance.
+    baseApi.post<IGeneric>(`/superadmin/media/add-subtitle`, data),
   );
 
 export const addEpisodes = async (data: FormData, seasonId: string) =>

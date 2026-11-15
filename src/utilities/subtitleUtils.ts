@@ -1,6 +1,30 @@
 const MAX_SUBTITLE_BYTES = 5 * 1024 * 1024;
 const TIMING_LINE = /^(?:\d{1,2}:)?\d{2}:\d{2}[,.]\d{3}\s*-->\s*(?:\d{1,2}:)?\d{2}:\d{2}[,.]\d{3}(?:\s+.*)?$/;
 
+export type SubtitleTrack = {
+  _id: string;
+  language: string;
+  src: string;
+};
+
+export function normalizeSubtitleTracks(value: unknown): SubtitleTrack[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const track = item as Record<string, unknown>;
+    if (typeof track._id !== "string" || typeof track.language !== "string") {
+      return [];
+    }
+
+    return [{
+      _id: track._id,
+      language: track.language,
+      src: typeof track.src === "string" ? track.src : "",
+    }];
+  });
+}
+
 export async function validateSubtitleFile(file: File): Promise<string | null> {
   const extension = file.name.split(".").pop()?.toLowerCase();
   if (!extension || !["srt", "vtt"].includes(extension)) {
@@ -33,4 +57,3 @@ export async function validateSubtitleFile(file: File): Promise<string | null> {
     ? null
     : "No valid captions were found. Check that every cue has a start time, end time, and caption text.";
 }
-

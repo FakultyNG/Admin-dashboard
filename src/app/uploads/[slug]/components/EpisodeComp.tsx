@@ -15,7 +15,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import SubtitleManager from "./SubtitleManager";
 import type { IFile, ISubtitle } from "./UploadComponent";
-import { validateSubtitleFile } from "@/utilities/subtitleUtils";
+import {
+  normalizeSubtitleTracks,
+  validateSubtitleFile,
+} from "@/utilities/subtitleUtils";
 
 type Props = {
   episode: IEpisodeData;
@@ -76,14 +79,25 @@ export default function EpisodeComponent({
 
   const fetchSubtitles = useCallback(async () => {
     if (isNew || !episode._id) return;
-    const response = await getSubtitles({ id: episode._id, type: "episode" });
-    if (response.ok && response.data) {
+    try {
+      const response = await getSubtitles({ id: episode._id, type: "episode" });
+      if (!response.ok || !response.data) {
+        setSubtitles([]);
+        toast(response.data?.message ?? "Subtitles could not be loaded.", { type: "error" });
+        return;
+      }
+
       setSubtitles(
-        response.data.data.map((subtitle) => ({
+        normalizeSubtitleTracks(response.data.data).map((subtitle) => ({
           language: subtitle.language,
           srtFile: { name: subtitle._id, url: subtitle.src },
         })),
       );
+    } catch (error) {
+      setSubtitles([]);
+      toast(error instanceof Error ? error.message : "Subtitles could not be loaded.", {
+        type: "error",
+      });
     }
   }, [episode._id, isNew]);
 
@@ -193,6 +207,10 @@ export default function EpisodeComponent({
       setSubtitleLanguage("Select Language");
       await fetchSubtitles();
       toast("Subtitle added successfully.", { type: "success" });
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "The subtitle could not be uploaded.", {
+        type: "error",
+      });
     } finally {
       setSubtitleBusy(false);
     }

@@ -34,6 +34,7 @@ export default function SubtitleManager({
   deletingId,
   onDelete,
 }: Props) {
+  const safeSubtitles = Array.isArray(subtitles) ? subtitles : [];
   const selectionReady = Boolean(
     file && !language.toLowerCase().includes("select"),
   );
@@ -126,13 +127,13 @@ export default function SubtitleManager({
         </button>
       ) : null}
 
-      {subtitles.length > 0 ? (
+      {safeSubtitles.length > 0 ? (
         <div className="mt-6 border-t border-white/[0.07] pt-5">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-grey_500">
-            Added tracks ({subtitles.length})
+            Added tracks ({safeSubtitles.length})
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
-            {subtitles.map((subtitle) => {
+            {safeSubtitles.map((subtitle) => {
               const id = subtitle.srtFile.name;
               const deleting = deletingId === id;
               return (
