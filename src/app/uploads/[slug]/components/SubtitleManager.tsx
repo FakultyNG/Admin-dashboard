@@ -2,7 +2,8 @@
 
 import { AppButton, SelectInputForm } from "@/components/AppLayout";
 import { roboto_400, roboto_500 } from "@/config/fonts";
-import type { ChangeEvent, Dispatch, SetStateAction } from "react";
+import { useId, useRef } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { IFile, ISubtitle } from "./UploadComponent";
 
 const LANGUAGES = ["English", "Igbo", "Yoruba", "Hausa", "French", "Spanish"];
@@ -11,7 +12,7 @@ type Props = {
   language: string;
   setLanguage: Dispatch<SetStateAction<string>>;
   file: IFile | null;
-  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (file: File) => void | Promise<void>;
   onClearFile: () => void;
   onAdd: () => void;
   canUploadImmediately: boolean;
@@ -35,6 +36,8 @@ export default function SubtitleManager({
   onDelete,
 }: Props) {
   const safeSubtitles = Array.isArray(subtitles) ? subtitles : [];
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const selectionReady = Boolean(
     file && !language.toLowerCase().includes("select"),
   );
@@ -72,8 +75,9 @@ export default function SubtitleManager({
           >
             Caption file
           </span>
-          <label
-            htmlFor="subtitle-file"
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
             className="flex min-h-[46px] cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed border-white/[0.18] bg-white/[0.025] px-4 transition hover:border-red-400/60 hover:bg-white/[0.04]"
           >
             <span className="min-w-0 truncate text-sm text-grey_500">
@@ -82,15 +86,19 @@ export default function SubtitleManager({
             <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-red-400">
               Browse
             </span>
-            <input
-              key={file?.name ?? "empty-subtitle"}
-              id="subtitle-file"
-              type="file"
-              accept=".srt,.vtt,text/plain,text/vtt,application/x-subrip"
-              onChange={onFileChange}
-              className="sr-only"
-            />
-          </label>
+          </button>
+          <input
+            ref={inputRef}
+            id={`subtitle-file-${inputId}`}
+            type="file"
+            accept=".srt,.vtt,text/plain,text/vtt,application/x-subrip"
+            onChange={(event) => {
+              const selectedFile = event.currentTarget.files?.[0];
+              event.currentTarget.value = "";
+              if (selectedFile) void onFileChange(selectedFile);
+            }}
+            className="hidden"
+          />
         </div>
 
         {canUploadImmediately ? (
@@ -113,8 +121,13 @@ export default function SubtitleManager({
 
       <div className="mt-4 rounded-lg border border-white/[0.07] bg-black2 px-4 py-3 text-xs leading-5 text-grey_500">
         <p className="font-semibold text-white">Accepted subtitle guide</p>
-        <p>Use plain-text UTF-8 SRT or WebVTT, up to 5 MB. Every cue must include start and end times followed by caption text.</p>
-        <p className="mt-1 font-mono text-[11px] text-grey_500">00:00:01,000 --&gt; 00:00:04,000</p>
+        <p>
+          Use plain-text UTF-8 SRT or WebVTT, up to 5 MB. Every cue must
+          include start and end times followed by caption text.
+        </p>
+        <p className="mt-1 font-mono text-[11px] text-grey_500">
+          00:00:01,000 --&gt; 00:00:04,000
+        </p>
       </div>
 
       {file ? (

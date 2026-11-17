@@ -186,13 +186,10 @@ export default function EpisodeComponent({
     }
   };
 
-  const handleSubtitleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleSubtitleFile = async (file: File) => {
     const validationError = await validateSubtitleFile(file);
     if (validationError) {
       toast(validationError, { type: "error" });
-      event.target.value = "";
       return;
     }
     setSubtitleFile({ name: file.name, url: "", file });

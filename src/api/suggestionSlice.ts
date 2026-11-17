@@ -1,4 +1,4 @@
-import { IPagination, ISuggestionResponse } from "@/types/api/suggestion.types";
+import { IPagination, ISuggestionResponse, IUnreadSuggestionCountResponse } from "@/types/api/suggestion.types";
 import { apiSlice } from "./apiSlice";
 import { apiCall, } from "./auth.api";
 import { IGeneric } from "@/types/api/auth.types";
@@ -17,10 +17,24 @@ export const suggestionApiSlice = apiSlice.injectEndpoints({
                 };
             },
         }),
+        getUnreadSuggestionCount: builder.query<IUnreadSuggestionCountResponse, void>({
+            query: () => {
+                const authToken = localStorage.getItem("superadmin_token");
+                return {
+                    url: "superadmin/suggestions/unread-count",
+                    method: "GET",
+                    headers: { "superadmin-auth": `${authToken}` },
+                };
+            },
+        }),
     }),
 });
 
-export const { useGetSuggestionsQuery } = suggestionApiSlice;
+export const { useGetSuggestionsQuery, useGetUnreadSuggestionCountQuery } = suggestionApiSlice;
+
+export const notifySuggestionCountChanged = () => {
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("suggestions:changed"));
+};
 
 export const getSuggestions = async (data: IPagination) =>
     await apiCall<ISuggestionResponse>((baseApi) =>
@@ -29,12 +43,18 @@ export const getSuggestions = async (data: IPagination) =>
         )
     );
 
-export const markAsRead = async (_id: string) =>
-    await apiCall<IGeneric>((baseApi) =>
-        baseApi.put<IGeneric>(`/superadmin/suggestion/markread/${_id}`)
+export const markAsRead = async (_id: string) => {
+    const response = await apiCall<IGeneric>((baseApi) =>
+        baseApi.put<IGeneric>(`/superadmin/suggestions/markread/${_id}`)
     );
+    if (response.ok) notifySuggestionCountChanged();
+    return response;
+};
 
-export const deleteSuggestion = async (_id: string) =>
-    await apiCall<IGeneric>((baseApi) =>
-        baseApi.delete<IGeneric>(`/superadmin/suggestion/del/${_id}`)
+export const deleteSuggestion = async (_id: string) => {
+    const response = await apiCall<IGeneric>((baseApi) =>
+        baseApi.delete<IGeneric>(`/superadmin/suggestions/del/${_id}`)
     );
+    if (response.ok) notifySuggestionCountChanged();
+    return response;
+};

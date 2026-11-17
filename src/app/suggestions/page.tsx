@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { roboto_400, roboto_500, roboto_700 } from "@/config/fonts";
-import { getSuggestions, markAsRead, useGetSuggestionsQuery } from "@/api/suggestionSlice";
+import { getSuggestions, markAsRead, notifySuggestionCountChanged, useGetSuggestionsQuery } from "@/api/suggestionSlice";
 import { ISuggestionData } from "@/types/api/suggestion.types";
 import { toast } from "react-toastify";
 import { bulkDeleteRecords } from "@/api/bulkDelete.api";
@@ -86,6 +86,7 @@ export default function page() {
           return;
         }
         toast(`${res.data.data.deleted} suggestion(s) deleted`, {type: 'success'});
+        notifySuggestionCountChanged();
         setSelectedIds([]);
         setIsViewMsg(null);
         await handleGetSuggestions();

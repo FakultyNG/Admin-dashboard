@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { destroyCookie } from "nookies";
 import { useEffect, useRef, useState } from "react";
 import ModalNotificationBox from "./ModalNotification";
+import { useGetUnreadSuggestionCountQuery } from "@/api/suggestionSlice";
 
 const routeLabels: Record<string, string> = { ad: "Ad manager", cta: "Call to action", giftcards: "Gift cards", report: "Reports", uploads: "Content library" };
 
@@ -25,6 +26,13 @@ export default function Header() {
   const segment = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
   const title = routeLabels[segment] ?? segment.replaceAll("-", " ");
   const isChannel = user?.profile?.role === "channel";
+  const { data: unreadSuggestionData, refetch: refetchUnreadSuggestions } = useGetUnreadSuggestionCountQuery(undefined, {
+    skip: isChannel,
+    pollingInterval: 30000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
+  const unreadSuggestionCount = unreadSuggestionData?.data?.count ?? 0;
 
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
@@ -33,6 +41,13 @@ export default function Header() {
     document.addEventListener("mousedown", closeMenu);
     return () => document.removeEventListener("mousedown", closeMenu);
   }, []);
+
+  useEffect(() => {
+    if (isChannel) return;
+    const refresh = () => void refetchUnreadSuggestions();
+    window.addEventListener("suggestions:changed", refresh);
+    return () => window.removeEventListener("suggestions:changed", refresh);
+  }, [isChannel, refetchUnreadSuggestions]);
 
   if (pathname === "/") return null;
 
@@ -52,7 +67,7 @@ export default function Header() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           {!isChannel ? <HeaderIcon label="Create broadcast" onClick={() => setBroadcastOpen(true)}><Image src="/broadcast.svg" alt="" width={19} height={19} /></HeaderIcon> : null}
-          {!isChannel ? <HeaderIcon label="Open notification broadcast" onClick={() => setBroadcastOpen(true)}><span className="relative"><Image src="/notification.svg" alt="" width={20} height={20} /><span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-red-500 ring-2 ring-[#10131a]" /></span></HeaderIcon> : null}
+          {!isChannel ? <HeaderIcon label={unreadSuggestionCount ? `${unreadSuggestionCount} unread admin notification${unreadSuggestionCount === 1 ? "" : "s"}` : "No unread admin notifications"} onClick={() => router.push("/suggestions")}><span className="relative"><Image src="/notification.svg" alt="" width={20} height={20} />{unreadSuggestionCount > 0 ? <span className="absolute -right-2.5 -top-2.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-4 text-white ring-2 ring-[#10131a]">{unreadSuggestionCount > 99 ? "99+" : unreadSuggestionCount}</span> : null}</span></HeaderIcon> : null}
 
           <div className="relative ml-1" ref={menuRef}>
             <button type="button" className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70" onClick={() => setMenuOpen((value) => !value)} aria-label="Open account menu" aria-expanded={menuOpen}>

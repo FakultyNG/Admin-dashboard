@@ -345,18 +345,6 @@ export const AddComponent = ({
             }
           }
         };
-      } else if (type === "subtitle") {
-        const validationError = await validateSubtitleFile(files[0]);
-        if (validationError) {
-          toast(validationError, { type: "error" });
-          e.target.value = "";
-          return;
-        }
-        setSubtitleFile({
-          name: files[0].name,
-          url: "",
-          file: files[0],
-        });
       } else if (type === "portrait") {
         setPortrait({
           name: files[0].name,
@@ -376,6 +364,15 @@ export const AddComponent = ({
         // });
       }
     }
+  }
+
+  async function handleSubtitleFile(file: File) {
+    const validationError = await validateSubtitleFile(file);
+    if (validationError) {
+      toast(validationError, { type: "error" });
+      return;
+    }
+    setSubtitleFile({ name: file.name, url: "", file });
   }
 
   async function handleSearchCast(value: string) {
@@ -1870,7 +1867,7 @@ export const AddComponent = ({
                   language={subtitle_}
                   setLanguage={setSUBTITLE}
                   file={subtitleFile}
-                  onFileChange={(event) => handleInput(event, "subtitle")}
+                  onFileChange={handleSubtitleFile}
                   onClearFile={() => setSubtitleFile(null)}
                   onAdd={handleAddSubtitle}
                   canUploadImmediately={Boolean(selectedMedia)}

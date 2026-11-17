@@ -11,6 +11,10 @@ export interface ISuggestionResponse extends IGeneric {
     data: ISuggestionData[]
 }
 
+export interface IUnreadSuggestionCountResponse extends IGeneric {
+    data: { count: number }
+}
+
 
 export interface ISuggestionData {
     _id: string;
