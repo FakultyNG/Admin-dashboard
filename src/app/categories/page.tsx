@@ -35,7 +35,8 @@ export interface Table {
   link?: string;
   selectButtonType?:string;
     description?:string;
-    photoUrl?:string
+  photoUrl?:string
+  feedType?: "standard" | "personalized";
 }
 
 export const runtime = "edge";
@@ -84,7 +85,9 @@ export default function page() {
           ...CAT,
           title: CAT.name,
           position: "position" in CAT ? CAT.position : '0',
-          location: CAT.name.toLowerCase().includes('live') ? 'Live' : 'Homepage',
+          location: CAT.feedType === 'personalized'
+            ? 'Personalized feed'
+            : CAT.location ?? (CAT.name.toLowerCase().includes('live') ? 'Live/Channels' : 'Homepage'),
         };
       }
     });
@@ -293,7 +296,9 @@ export default function page() {
                           type="button"
                           onClick={() => handleDelete(item._id)}
                           aria-label={`Delete ${item.title}`}
-                          className="grid h-9 w-9 place-items-center rounded-lg border border-white/70 bg-[#0b0e14] transition-colors hover:bg-[#171b24]"
+                          disabled={item.feedType === "personalized"}
+                          title={item.feedType === "personalized" ? "Automatic feeds can be renamed and repositioned, but not deleted" : undefined}
+                          className="grid h-9 w-9 place-items-center rounded-lg border border-white/70 bg-[#0b0e14] transition-colors hover:bg-[#171b24] disabled:cursor-not-allowed disabled:opacity-25"
                         >
                           <Image src="/delete.svg" width={15} height={18} alt="" />
                         </button>

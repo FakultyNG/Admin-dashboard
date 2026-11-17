@@ -13,6 +13,8 @@ export interface ICategory {
     _id: string;
     name: string;
     position?: string;
+    location?: CategoryLocation;
+    feedType?: "standard" | "personalized";
     createdAt: string;
     updatedAt: string;
 }
@@ -34,4 +36,13 @@ export interface IAddCategory {
     name: string;
     title?: string
     position?: number
+    location?: CategoryLocation
 }
+
+export type CategoryLocation =
+    | "Homepage"
+    | "Live/Channels"
+    | "Live/Events"
+    | "Live/Tv Shows"
+    | "Live/Sports"
+    | "Live/Podcast";

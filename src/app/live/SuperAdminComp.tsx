@@ -362,7 +362,7 @@ function SuperAdminComp() {
   useEffect(() => {
     if (categories) {
       const liveCategories = categories.data.filter((x) =>
-        x.name.toLowerCase().includes("live"),
+        x.location?.startsWith("Live/") || x.name.toLowerCase().includes("live"),
       );
       setCat_List(liveCategories);
     }

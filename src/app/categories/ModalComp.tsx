@@ -13,7 +13,12 @@ import {
   SelectInputForm,
 } from "@/components/AppLayout";
 import { roboto_400, roboto_500 } from "@/config/fonts";
-import { ICastResponse, ICategoryResponse } from "@/types/api/category.types";
+import {
+  CategoryLocation,
+  IAddCategory,
+  ICastResponse,
+  ICategoryResponse,
+} from "@/types/api/category.types";
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -100,10 +105,11 @@ export const ModalComponent = ({
             formdata.append('selectButtonType', buttonType.toLowerCase().replace(' ', '-'));
           }
       }
-      const data =
+      const data: IAddCategory =
           {
             name: title,
-            position: Number(position)
+            position: Number(position),
+            ...(tab === "category" && { location: location as CategoryLocation })
           }
   
       const res = editValue ? await editCategoryEnums(tab === 'cast' ? formdata : data, tab, editValue._id) : await addCategoryEnums(tab === 'cast' ? formdata : data, tab);
