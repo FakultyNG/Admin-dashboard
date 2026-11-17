@@ -13,7 +13,12 @@ import ReactPlayer from "react-player";
 import { ModalComponent } from "./ModalComp";
 import { CURRENCY_TH } from "@/config/data/setting";
 import { ImageProps } from "../plans/ClientComponent";
-import { getGuestAccessSetting, updateGuestAccessSetting } from '@/api/platformSettings.api'
+import {
+  changeGiftCardAuthorizationCode,
+  getGiftCardAuthorizationStatus,
+  getGuestAccessSetting,
+  updateGuestAccessSetting,
+} from '@/api/platformSettings.api'
 import { toast } from 'react-toastify'
 
 const TABS = ['General', 'App settings', 'Currency', 'Email', 'API']
@@ -39,6 +44,8 @@ export default function page() {
   const [message_R, setMessage_R] = useState<string>('');
   const [client_message_R, setClientMessage_R] = useState<string>('');
   const [giftcard_pin, setGiftCardPin] = useState<string>('')
+  const [giftcard_pin_confirm, setGiftCardPinConfirm] = useState<string>('')
+  const [giftCardCodeConfigured, setGiftCardCodeConfigured] = useState(false)
   const [planPrices, setPlanPrices] = useState<PlanPrices>({
     one_month: '',
     six_month: '',
@@ -107,9 +114,43 @@ export default function page() {
         setF_Login(response.data.data.enabled ? 'Enable' : 'Disable')
       }
     })
+    getGiftCardAuthorizationStatus().then(response => {
+      if (response.ok && response.data?.data) {
+        setGiftCardCodeConfigured(response.data.data.configured)
+      }
+    })
   }, [])
 
   const saveSettings = async () => {
+    if (tab === 'general') {
+      const newCode = giftcard_pin.trim()
+      if (!newCode) {
+        toast('Enter a new gift card authorization code', {type: 'error'})
+        return
+      }
+      if (newCode.length < 4) {
+        toast('Authorization code must contain at least 4 characters', {type: 'error'})
+        return
+      }
+      if (newCode !== giftcard_pin_confirm.trim()) {
+        toast('The authorization codes do not match', {type: 'error'})
+        return
+      }
+
+      setSavingGuestAccess(true)
+      const response = await changeGiftCardAuthorizationCode(newCode)
+      setSavingGuestAccess(false)
+      if (!response.ok) {
+        toast(response.data?.message || 'Could not change authorization code', {type: 'error'})
+        return
+      }
+      setGiftCardPin('')
+      setGiftCardPinConfirm('')
+      setGiftCardCodeConfigured(true)
+      toast('Gift card authorization code changed', {type: 'success'})
+      return
+    }
+
     if (tab !== 'app settings') return
     if (f_Login !== 'Enable' && f_Login !== 'Disable') {
       toast('Select whether guest access should be enabled', { type: 'error' })
@@ -191,21 +232,53 @@ export default function page() {
             </div>
           </div>
 
-          <div className="flex flex-col">
-            <label
-              htmlFor="title"
-              className={`${roboto_400.className} font-normal text-grey_3 text-[14px] ml-2.5`}
-            >
-              Authorized Gift card Generation PIN *
-            </label>
+          <div className="rounded-xl border border-white/10 bg-white/[0.025] p-5">
+            <div className="mb-4">
+              <p className="text-base font-medium text-white">Gift card activation security</p>
+              <p className="mt-1 text-sm text-grey_700">
+                {giftCardCodeConfigured ? 'An authorization code is configured.' : 'No authorization code is configured.'}
+                {' '}Changing it immediately invalidates the previous code.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col">
+              <label
+                htmlFor="giftcard-code"
+                className={`${roboto_400.className} font-normal text-grey_3 text-[14px] ml-2.5`}
+              >
+                New authorization code *
+              </label>
             <CustomInput
-              type="text"
-              placeholder="0000"
-              id="title"
-              className="font-normal w-full max-w-[635px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
+              type="password"
+              placeholder="At least 4 characters"
+              id="giftcard-code"
+              autoComplete="new-password"
+              className="font-normal w-full text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
               value={giftcard_pin}
               onChange={(e) => setGiftCardPin(e.target.value)}
             />
+            </div>
+            <div className="flex flex-col">
+              <label
+                htmlFor="giftcard-code-confirm"
+                className={`${roboto_400.className} font-normal text-grey_3 text-[14px] ml-2.5`}
+              >
+                Confirm new code *
+              </label>
+              <CustomInput
+                type="password"
+                placeholder="Repeat the new code"
+                id="giftcard-code-confirm"
+                autoComplete="new-password"
+                className="font-normal w-full text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                value={giftcard_pin_confirm}
+                onChange={(e) => setGiftCardPinConfirm(e.target.value)}
+              />
+            </div>
+            </div>
+            <p className="mt-3 text-xs text-grey_700">
+              The code is stored as a secure hash and is never shown again after saving.
+            </p>
           </div>
 
           <div>

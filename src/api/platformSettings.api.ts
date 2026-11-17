@@ -13,3 +13,19 @@ export const updateGuestAccessSetting = (enabled: boolean) =>
   apiCall<GuestAccessResponse>(api =>
     api.put('/superadmin/platform-settings/guest-access', { enabled }),
   )
+
+type GiftCardAuthorizationStatusResponse = {
+  status: number
+  message: string
+  data: {configured: boolean}
+}
+
+export const getGiftCardAuthorizationStatus = () =>
+  apiCall<GiftCardAuthorizationStatusResponse>(api =>
+    api.get('/superadmin/giftcard/authorization-code'),
+  )
+
+export const changeGiftCardAuthorizationCode = (newCode: string) =>
+  apiCall<{status: number; message: string}>(api =>
+    api.put('/superadmin/giftcard/authorization-code', {newCode}),
+  )

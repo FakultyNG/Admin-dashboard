@@ -42,8 +42,8 @@ export const createGiftCard = async (data: {amount:string, currency:string}) =>
 export const activateGiftCard = async (data: {code:string, adminToken:string}) =>
   await apiCall<IGeneric>((baseApi) =>
     baseApi.put<IGeneric>(
-      `/superadmin/giftcard/activate/${data.code}/${data.adminToken}`, 
-      data,
+      `/superadmin/giftcard/activate/${encodeURIComponent(data.code)}`,
+      {authorizationCode: data.adminToken},
     )
   );
 
