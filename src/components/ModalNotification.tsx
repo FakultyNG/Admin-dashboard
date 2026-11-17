@@ -11,12 +11,21 @@ type BackProps = {
     onBack : () => void
 }
 
+const audiences = [
+    {value: "all", label: "Everyone", help: "All users who allow notifications."},
+    {value: "new_arrivals", label: "New arrivals", help: "Users interested in newly available library content."},
+    {value: "upcoming_events", label: "Upcoming content", help: "Users interested in scheduled films, series and events."},
+    {value: "live_channels", label: "Live channels", help: "Users interested in live-now and channel announcements."},
+    {value: "new_services", label: "New services", help: "Users interested in Reeplay product and feature updates."},
+] as const;
+
 export default function ModalNotificationBox ({onBack} : BackProps) {
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isSending, setIsSending] = useState(false);
+    const [audience, setAudience] = useState<(typeof audiences)[number]["value"]>("all");
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -42,6 +51,7 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
           title: title.trim(),
           body: message.trim(),
           photo: imageFile,
+          audience,
         });
 
         if (!response.ok) {
@@ -83,6 +93,22 @@ export default function ModalNotificationBox ({onBack} : BackProps) {
 
                 <div className="mx-auto w-full">
                 <h2 id="broadcast-title" className="mb-6 text-xl font-semibold text-white">Create broadcast</h2>
+                <label htmlFor="audience" className={`${roboto_500.className} mb-2 block text-xs font-medium text-slate-400`}>
+                    AUDIENCE *
+                </label>
+                <select
+                    id="audience"
+                    value={audience}
+                    onChange={event => setAudience(event.target.value as typeof audience)}
+                    className="h-11 w-full rounded-lg border border-white/10 bg-[#10131a] px-3 text-sm text-white outline-none focus:border-red"
+                >
+                    {audiences.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </select>
+                <p className="mb-5 mt-2 text-xs leading-5 text-slate-400">
+                    {audiences.find(option => option.value === audience)?.help}
+                </p>
                 <label htmlFor="title" className={`${roboto_500.className} mb-2 block text-xs font-medium text-slate-400`}>
                     TITLE *
                 </label>
