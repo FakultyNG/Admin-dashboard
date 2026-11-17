@@ -3,7 +3,7 @@ import { IPagination } from "@/types/api/suggestion.types";
 import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
 import { IGiftCardResponse } from "@/types/api/giftCard.types";
-import { IAdsResponse, IHomeAdsResponse } from "@/types/api/ads.types";
+import { IAdsResponse } from "@/types/api/ads.types";
 import { IGeneric } from "@/types/api/auth.types";
 
 export const adsApiSlice = apiSlice.injectEndpoints({
@@ -35,18 +35,6 @@ export const getAllAds = async (data: IPagination) =>
 export const createAds = async (data:FormData) =>
     await apiCall<IGeneric>(baseApi => baseApi.post<IGeneric>('/superadmin/ads/create', data, {
         headers:{
-            "Content-Type": "multipart/form-data"
-        }
-    }))
-
-export const getHomeAds = async () =>
-    await apiCall<IHomeAdsResponse>(baseApi =>
-        baseApi.get<IHomeAdsResponse>('/superadmin/ads/home')
-    )
-
-export const createHomeAd = async (data: FormData) =>
-    await apiCall<IGeneric>(baseApi => baseApi.post<IGeneric>('/superadmin/ads/home', data, {
-        headers: {
             "Content-Type": "multipart/form-data"
         }
     }))

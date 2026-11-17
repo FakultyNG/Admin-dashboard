@@ -20,19 +20,5 @@ export interface IAdsData {
     updatedAt: string;
     photoUrl: string;
     videoUrl?: string;
-}
-
-export interface IHomeAdData {
-    _id: string;
-    title: string;
-    type: "home_ad";
-    link: string;
-    active: boolean;
-    photoUrl: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface IHomeAdsResponse extends IGeneric {
-    data: IHomeAdData[];
+    hasVideo?: boolean;
 }

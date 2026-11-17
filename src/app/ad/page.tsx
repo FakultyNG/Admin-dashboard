@@ -65,7 +65,7 @@ export default function AdsPage() {
     total: ads.length,
     active: ads.filter(ad => campaignStatus(ad) === 'active').length,
     scheduled: ads.filter(ad => campaignStatus(ad) === 'scheduled').length,
-    home: ads.filter(ad => ad.type === 'home_ad').length,
+    mobile: ads.filter(ad => ad.type === 'mobile').length,
   }), [ads])
 
   const openCreate = () => { setSelectedAd(null); setEditorOpen(true) }
@@ -96,7 +96,7 @@ export default function AdsPage() {
         <Metric label="Campaigns on this page" value={counts.total} />
         <Metric label="Live now" value={counts.active} tone="text-emerald-400" />
         <Metric label="Scheduled" value={counts.scheduled} tone="text-amber-300" />
-        <Metric label="Home Ads" value={counts.home} tone="text-sky-300" />
+        <Metric label="Mobile campaigns" value={counts.mobile} tone="text-sky-300" />
       </div>
 
       <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#151922] p-4 lg:flex-row lg:items-center">
