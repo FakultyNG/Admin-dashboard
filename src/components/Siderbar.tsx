@@ -9,7 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const adminPrimary = ["dashboard", "featured", "users", "uploads", "live", "upcoming", "categories"];
+const adminPrimary = ["dashboard", "featured", "top-10", "users", "uploads", "live", "upcoming", "categories"];
 const adminManage = ["ad", "plans", "giftcards", "clients", "suggestions", "settings"];
 const clientLinks = ["dashboard", "live", "plans", "withdrawal", "currency", "support"];
 const uploadLinks = ["movies", "series", "skits", "music videos"];
@@ -18,6 +18,7 @@ const labels: Record<string, string> = {
   ad: "Ad manager",
   giftcards: "Gift cards",
   support: "Support tickets",
+  "top-10": "Top 10",
 };
 
 function MenuIcon({ open }: { open: boolean }) {
@@ -42,11 +43,12 @@ function NavItem({ name, hasLive, onNavigate }: NavItemProps) {
   const isActive = pathname.split("/")[1] === name;
   const isUploads = name === "uploads";
   const displayName = name === "plans" && hasLive ? "Edit live" : labels[name] ?? name;
+  const iconName = name === "top-10" ? "featured" : name;
   const iconSource = isActive
     ? name === "upcoming"
       ? "/upcoming-active.svg"
-      : `/${name}WH.svg`
-    : `/${name}.svg`;
+      : `/${iconName}WH.svg`
+    : `/${iconName}.svg`;
 
   useEffect(() => {
     if (!pathname.startsWith("/uploads")) setExpanded(false);

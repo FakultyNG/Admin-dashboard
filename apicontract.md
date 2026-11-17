@@ -80,6 +80,7 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | GET | `/api/v1/customers/shared/content-costs` | `customerAuth` | Check content costs |
 | GET | `/api/v1/customers/shared/check-content-payment/:contentType/:contentId` | `customerAuth` | Check payment for content |
 | GET | `/api/v1/customers/shared/vods/suggestions` | `customerAuth` | Fetch VOD suggestions |
+| GET | `/api/v1/customers/shared/vods/top-10` | `customerAuth` | Fetch the ordered home Top 10 |
 | GET | `/api/v1/customers/shared/vods/category/:catId` | `customerAuth` | Fetch VODs by category |
 | GET | `/api/v1/customers/shared/vods/similar-by-cast/:castId` | `customerAuth` | Fetch similar VODs by cast |
 | GET | `/api/v1/customers/shared/vods/seasons/:vidId` | `customerAuth` | Fetch seasons and episodes |
@@ -236,6 +237,7 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | POST | `/api/v1/superadmin/shared/initiate-payment` | `superadminAuth` | Initiate payment |
 | POST | `/api/v1/superadmin/shared/authorize-payment` | `superadminAuth` | Authorize wallet payment |
 | GET | `/api/v1/superadmin/shared/vods/suggestions` | `superadminAuth` | Fetch VOD suggestions |
+| GET | `/api/v1/superadmin/shared/vods/top-10` | `superadminAuth` | Fetch the ordered home Top 10 |
 | GET | `/api/v1/superadmin/shared/vods/category/:catId` | `superadminAuth` | Fetch VODs by category |
 | GET | `/api/v1/superadmin/shared/vods/similar-by-cast/:castId` | `superadminAuth` | Fetch similar VODs by cast |
 | GET | `/api/v1/superadmin/shared/vods/seasons/:vidId` | `superadminAuth` | Fetch seasons and episodes |
@@ -244,7 +246,6 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | GET | `/api/v1/superadmin/shared/vods/vod-meta/:vodId` | `superadminAuth` | Fetch VOD metadata |
 | GET | `/api/v1/superadmin/shared/vods/default-library` | `superadminAuth` | Fetch default VOD library |
 | GET | `/api/v1/superadmin/shared/vods/categ-and-genre/:genreId/:catId` | `superadminAuth` | Fetch VODs by category and genre |
-| GET | `/api/v1/superadmin/shared/featured/contents/search/:text` | `superadminAuth` | Search featured content |
 | GET | `/api/v1/superadmin/shared/vid-upload/isready/:id` | `superadminAuth` | Check video transcoding status |
 | GET | `/api/v1/superadmin/clients/allfetch` | `superadminAuth` | Fetch all clients |
 | GET | `/api/v1/superadmin/clients/onefetch/:id` | `superadminAuth` | Fetch one client |
@@ -288,6 +289,9 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 | PUT | `/api/v1/superadmin/subscription/plans/update/:id` | `superadminAuth` | Update subscription plan |
 | GET | `/api/v1/superadmin/featured/contents/fetch` | `superadminAuth` | Fetch featured contents |
 | POST | `/api/v1/superadmin/featured/contents/add` | `superadminAuth` | Add featured content |
+| GET | `/api/v1/superadmin/top-10` | `superadminAuth` | Fetch the editorial Top 10 |
+| PUT | `/api/v1/superadmin/top-10` | `superadminAuth` | Replace and reorder the editorial Top 10 |
+| POST | `/api/v1/superadmin/top-10/auto-rank` | `superadminAuth` | Rank Top 10 from current engagement data |
 | GET | `/api/v1/superadmin/uploads/fetch/:type` | `superadminAuth` | Fetch uploaded videos |
 | GET | `/api/v1/superadmin/uploads/seasons/fetch/:vidId` | `superadminAuth` | Fetch seasons and episodes |
 | POST | `/api/v1/superadmin/uploads/video/add/:type` | `superadminAuth` | Upload video |

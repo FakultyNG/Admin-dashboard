@@ -300,7 +300,11 @@ export default function EpisodeComponent({
               label="Episode video"
               required={isNew}
               currentUrl={currentVideo}
-              processing={!currentVideo && episode.isVideoReady === false}
+              processing={
+                Boolean(episode.videoUploadId) &&
+                !currentVideo &&
+                episode.isVideoReady === false
+              }
               url={videoUrl}
               file={videoFile}
               onUrlChange={setVideoUrl}
@@ -310,7 +314,11 @@ export default function EpisodeComponent({
               label="Episode trailer"
               required={false}
               currentUrl={currentTrailer}
-              processing={!currentTrailer && episode.isTrailerReady === false}
+              processing={
+                Boolean(episode.trailerUploadId) &&
+                !currentTrailer &&
+                episode.isTrailerReady === false
+              }
               url={trailerUrl}
               file={trailerFile}
               onUrlChange={setTrailerUrl}

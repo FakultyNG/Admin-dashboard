@@ -1557,6 +1557,45 @@
         ]
       }
     },
+    "/api/v1/customers/shared/vods/top-10": {
+      "get": {
+        "tags": [
+          "Customer app"
+        ],
+        "summary": "Fetch the ordered home Top 10",
+        "operationId": "get__api_v1_customers_shared_vods_top_10",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "customerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/customers/shared/vods/category/{catId}": {
       "get": {
         "tags": [
@@ -8049,6 +8088,45 @@
         ]
       }
     },
+    "/api/v1/superadmin/shared/vods/top-10": {
+      "get": {
+        "tags": [
+          "Superadmin"
+        ],
+        "summary": "Fetch the ordered home Top 10",
+        "operationId": "get__api_v1_superadmin_shared_vods_top_10",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "superadminAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/superadmin/shared/vods/category/{catId}": {
       "get": {
         "tags": [
@@ -8402,54 +8480,6 @@
           },
           {
             "name": "catId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request"
-          },
-          "401": {
-            "description": "Missing or invalid authentication"
-          },
-          "404": {
-            "description": "Resource not found"
-          },
-          "500": {
-            "description": "Server error"
-          }
-        },
-        "security": [
-          {
-            "superadminAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/superadmin/shared/featured/contents/search/{text}": {
-      "get": {
-        "tags": [
-          "Superadmin"
-        ],
-        "summary": "Search featured content",
-        "operationId": "get__api_v1_superadmin_shared_featured_contents_search_text_",
-        "parameters": [
-          {
-            "name": "text",
             "in": "path",
             "required": true,
             "schema": {
@@ -10541,6 +10571,141 @@
         }
       }
     },
+    "/api/v1/superadmin/top-10": {
+      "get": {
+        "tags": [
+          "Superadmin"
+        ],
+        "summary": "Fetch the editorial Top 10",
+        "operationId": "get__api_v1_superadmin_top_10",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "superadminAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Superadmin"
+        ],
+        "summary": "Replace and reorder the editorial Top 10",
+        "operationId": "put__api_v1_superadmin_top_10",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "superadminAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopTenReplace"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/superadmin/top-10/auto-rank": {
+      "post": {
+        "tags": [
+          "Superadmin"
+        ],
+        "summary": "Rank Top 10 from current engagement data",
+        "operationId": "post__api_v1_superadmin_top_10_auto_rank",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "superadminAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlexibleBody"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/superadmin/uploads/fetch/{type}": {
       "get": {
         "tags": [
@@ -12417,6 +12582,22 @@
               "event",
               "vod"
             ]
+          }
+        }
+      },
+      "TopTenReplace": {
+        "type": "object",
+        "required": [
+          "videoIds"
+        ],
+        "properties": {
+          "videoIds": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
           }
         }
       },

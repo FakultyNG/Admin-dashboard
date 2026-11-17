@@ -11,6 +11,7 @@ type PageMeta = {
 const PAGE_META: Record<string, PageMeta> = {
   dashboard: { kicker: "Workspace overview", title: "Dashboard", description: "Monitor catalogue activity, audiences, and live performance from one place." },
   featured: { kicker: "Content curation", title: "Featured content", description: "Choose and order the titles that receive the most visibility across Reeplay." },
+  "top-10": { kicker: "Editorial ranking", title: "Top 10", description: "Choose, order, or automatically rank the ten titles highlighted on the Reeplay home screen." },
   users: { kicker: "Audience management", title: "Users", description: "Find accounts, review access, and manage customer records." },
   uploads: { kicker: "Content library", title: "Uploads", description: "Manage published video, artwork, metadata, seasons, and episodes." },
   live: { kicker: "Broadcast operations", title: "Live", description: "Schedule and manage channels, events, shows, podcasts, and sports broadcasts." },
