@@ -51,6 +51,13 @@ export const createHomeAd = async (data: FormData) =>
         }
     }))
 
+export const updateAds = async (_id: string, data: FormData) =>
+    await apiCall<IGeneric>(baseApi => baseApi.put<IGeneric>(`/superadmin/ads/update/${_id}`, data, {
+        headers: {
+            "Content-Type": "multipart/form-data"
+        }
+    }))
+
 export const deleteAds = async (_id: string) =>
     await apiCall<IGeneric>((baseApi) =>
         baseApi.delete<IGeneric>(

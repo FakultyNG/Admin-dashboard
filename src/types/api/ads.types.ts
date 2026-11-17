@@ -8,16 +8,18 @@ export interface IAdsResponse extends IGeneric {
 export interface IAdsData {
     _id: string;
     title: string;
-    sub_title: string;
-    type: string;
+    type: "general" | "web" | "mobile" | "home_ad" | "movie_ad";
     brand: string;
     link: string;
-    duration: string;
+    cta: string;
+    duration?: number;
     start: string;
     expiry: string;
     active: boolean;
     createdAt: string;
-    updatedAt: string
+    updatedAt: string;
+    photoUrl: string;
+    videoUrl?: string;
 }
 
 export interface IHomeAdData {

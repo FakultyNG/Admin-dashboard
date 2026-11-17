@@ -343,6 +343,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .app-content input:not([type="checkbox"]):not([type="radio"]), .app-content textarea, .app-content select { min-height: 44px; max-width: 100%; border-color: var(--border-strong) !important; border-radius: 10px !important; background-color: rgba(255,255,255,.025) !important; color: #e7e9ee !important; }
 .app-content input::placeholder, .app-content textarea::placeholder { color: #60697a !important; }
 .app-content input:focus, .app-content textarea:focus, .app-content select:focus { border-color: rgba(239,68,68,.5) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.08); }
+.ad-input { width: 100%; border: 1px solid var(--border-strong); border-radius: 10px; background: rgba(0,0,0,.2); padding: 11px 14px; color: #f3f4f6; outline: none; }
+.ad-input:focus { border-color: rgba(239,68,68,.55); box-shadow: 0 0 0 3px rgba(239,68,68,.08); }
+.ad-file { display: block; width: 100%; cursor: pointer; border: 1px dashed var(--border-strong); border-radius: 10px; background: rgba(0,0,0,.18); padding: 11px; color: #aab2c0; font-size: 13px; }
 .app-content .app-input-with-icon input:not([type="checkbox"]):not([type="radio"]) {
   min-height: 0;
   border: 0 !important;
