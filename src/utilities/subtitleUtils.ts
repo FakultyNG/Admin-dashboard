@@ -57,3 +57,20 @@ export async function validateSubtitleFile(file: File): Promise<string | null> {
     ? null
     : "No valid captions were found. Check that every cue has a start time, end time, and caption text.";
 }
+
+/**
+ * Keep a subtitle independent from the browser's temporary file-input handle.
+ * Some browsers invalidate that handle after the picker is reset or after a
+ * long episode upload, which produces a multipart request with no file part.
+ */
+export async function preserveSubtitleFile(file: File): Promise<File> {
+  const bytes = await file.arrayBuffer();
+  return new File([bytes], file.name, {
+    type:
+      file.type ||
+      (file.name.toLowerCase().endsWith(".vtt")
+        ? "text/vtt"
+        : "application/x-subrip"),
+    lastModified: file.lastModified,
+  });
+}

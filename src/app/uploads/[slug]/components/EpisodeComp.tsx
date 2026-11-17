@@ -17,6 +17,7 @@ import SubtitleManager from "./SubtitleManager";
 import type { IFile, ISubtitle } from "./UploadComponent";
 import {
   normalizeSubtitleTracks,
+  preserveSubtitleFile,
   validateSubtitleFile,
 } from "@/utilities/subtitleUtils";
 
@@ -109,14 +110,19 @@ export default function EpisodeComponent({
   }, [episode.description, episode.title]);
 
   const uploadSelectedSubtitle = async (parentId: string) => {
-    if (!subtitleFile?.file || subtitleLanguage.toLowerCase().includes("select")) return true;
+    if (!subtitleFile?.file || subtitleLanguage.toLowerCase().includes("select")) {
+      return { ok: true, message: "" };
+    }
     const data = new FormData();
     data.append("parentId", parentId);
     data.append("parentType", "episode");
     data.append("language", subtitleLanguage);
-    data.append("subtitle", subtitleFile.file);
+    data.append("subtitle", subtitleFile.file, subtitleFile.file.name);
     const response = await addSubtitle(data);
-    return response.ok;
+    return {
+      ok: response.ok,
+      message: response.data?.message ?? response.problem ?? "The subtitle upload failed.",
+    };
   };
 
   const handleSave = async () => {
@@ -149,12 +155,14 @@ export default function EpisodeComponent({
       }
 
       const savedId = response.data.data?._id ?? episode._id;
-      const subtitleSaved = savedId ? await uploadSelectedSubtitle(savedId) : true;
+      const subtitleResult = savedId
+        ? await uploadSelectedSubtitle(savedId)
+        : { ok: false, message: "The saved episode ID was missing from the server response." };
       toast(
-        subtitleSaved
+        subtitleResult.ok
           ? response.data.message
-          : "Episode saved, but the subtitle upload failed. Reopen it to retry.",
-        { type: subtitleSaved ? "success" : "warning" },
+          : `Episode saved, but the subtitle upload failed: ${subtitleResult.message}`,
+        { type: subtitleResult.ok ? "success" : "warning" },
       );
       onSaved();
     } catch (error) {
@@ -187,19 +195,21 @@ export default function EpisodeComponent({
   };
 
   const handleSubtitleFile = async (file: File) => {
-    const validationError = await validateSubtitleFile(file);
+    const preservedFile = await preserveSubtitleFile(file);
+    const validationError = await validateSubtitleFile(preservedFile);
     if (validationError) {
       toast(validationError, { type: "error" });
       return;
     }
-    setSubtitleFile({ name: file.name, url: "", file });
+    setSubtitleFile({ name: preservedFile.name, url: "", file: preservedFile });
   };
 
   const handleAddSubtitle = async () => {
     try {
       setSubtitleBusy(true);
-      if (!(await uploadSelectedSubtitle(episode._id))) {
-        toast("The subtitle could not be uploaded.", { type: "error" });
+      const result = await uploadSelectedSubtitle(episode._id);
+      if (!result.ok) {
+        toast(result.message, { type: "error" });
         return;
       }
       setSubtitleFile(null);

@@ -50,6 +50,7 @@ import SubtitleManager from "./SubtitleManager";
 import PosterUploadGuide from "@/components/PosterUploadGuide";
 import {
   normalizeSubtitleTracks,
+  preserveSubtitleFile,
   validateSubtitleFile,
 } from "@/utilities/subtitleUtils";
 
@@ -367,12 +368,13 @@ export const AddComponent = ({
   }
 
   async function handleSubtitleFile(file: File) {
-    const validationError = await validateSubtitleFile(file);
+    const preservedFile = await preserveSubtitleFile(file);
+    const validationError = await validateSubtitleFile(preservedFile);
     if (validationError) {
       toast(validationError, { type: "error" });
       return;
     }
-    setSubtitleFile({ name: file.name, url: "", file });
+    setSubtitleFile({ name: preservedFile.name, url: "", file: preservedFile });
   }
 
   async function handleSearchCast(value: string) {
@@ -514,7 +516,7 @@ export const AddComponent = ({
       formdata.append("parentId", parentId);
       formdata.append("parentType", "vod");
       formdata.append("language", subtitle_);
-      formdata.append("subtitle", subtitleFile.file);
+      formdata.append("subtitle", subtitleFile.file, subtitleFile.file.name);
       const res = await addSubtitle(formdata);
 
       if (res.ok && res.data) {

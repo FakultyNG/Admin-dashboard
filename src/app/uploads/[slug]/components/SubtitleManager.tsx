@@ -92,10 +92,10 @@ export default function SubtitleManager({
             id={`subtitle-file-${inputId}`}
             type="file"
             accept=".srt,.vtt,text/plain,text/vtt,application/x-subrip"
-            onChange={(event) => {
+            onChange={async (event) => {
               const selectedFile = event.currentTarget.files?.[0];
+              if (selectedFile) await onFileChange(selectedFile);
               event.currentTarget.value = "";
-              if (selectedFile) void onFileChange(selectedFile);
             }}
             className="hidden"
           />
