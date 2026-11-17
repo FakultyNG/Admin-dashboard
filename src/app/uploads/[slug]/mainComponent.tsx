@@ -180,15 +180,15 @@ function MainComponent({ slug }: Props) {
   }, [isAdd]);
 
   return (
-    <section className={`${roboto_400.className} h-full pl-5`}>
-      <div className="bg-black3 py-3 px-10">
+    <section className={`${roboto_400.className} h-full px-3 sm:px-5`}>
+      <div className="rounded-xl border border-white/[0.06] bg-black3 px-4 py-3 sm:px-6">
         <p className="font-normal text-lg text-grey_700">
           Home / Uploads / {decodeURI(slug)}
         </p>
       </div>
 
-      <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
-        <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
+      <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex w-full items-center sm:max-w-[556px]">
           <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
             <Image src="/searchIcon.svg" width={20} height={20} alt="search" />
           </button>
@@ -202,19 +202,20 @@ function MainComponent({ slug }: Props) {
         </div>
 
         {/* add butn */}
-        <div
+        <button
+          type="button"
           onClick={() => setIsAdd(!isAdd)}
-          className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
+          className={`${roboto_500.className} w-full rounded-lg bg-red_500 px-5 py-3 text-center text-sm font-medium text-white shadow-[0_12px_30px_rgba(238,39,38,0.18)] transition hover:bg-red-500/90 sm:w-auto sm:min-w-[145px]`}
         >
           {isAdd
             ? "Back"
             : `Add ${slug.includes("videos") ? "Videos" : decodeURI(slug)}`}
-        </div>
+        </button>
       </div>
 
       {!isAdd ? (
         <>
-          <div className="mt-8 w-full pr-5">
+          <div className="mt-8 w-full">
             <div className="w-full overflow-x-auto py-5 pb-6 pl-0 sm:ml-0 sm:pl-3 md:pl-10">
               <div className="w-full">
                 <table
@@ -350,34 +351,3 @@ function MainComponent({ slug }: Props) {
 }
 
 export default MainComponent;
-
-// Add auto-refresh functionality after upload
-
-const MainComponentWithAutoRefresh = ({ slug }: { slug: string }) => {
-  const [mediaList, setMediaList] = useState<IMediaData[]>([]);
-  const [isAdd, setIsAdd] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<IMediaData | null>(null);
-
-  const handleRefreshMedia = async () => {
-    // Fetch media list logic here
-    // After fetching, setMediaList with the new data
-    toast.success("Media list refreshed!");
-  };
-
-  const handleUploadComplete = () => {
-    handleRefreshMedia(); // Refresh media list after upload
-    setIsAdd(false); // Close the add component
-  };
-
-  return (
-    <div>
-      {/* Other components */}
-      <AddComponent
-        slug={slug}
-        selectedMedia={selectedMedia}
-        handleClose={handleUploadComplete}
-      />
-      {/* Render media list */}
-    </div>
-  );
-};

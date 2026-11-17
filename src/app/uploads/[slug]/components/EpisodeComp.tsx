@@ -64,17 +64,15 @@ export default function EpisodeComponent({
   const currentVideo = episode.video ?? "";
   const currentTrailer = episode.trailer ?? "";
   const hasNewVideo = Boolean(videoFile || videoUrl.trim());
-  const hasNewTrailer = Boolean(trailerFile || trailerUrl.trim());
   const formValid = useMemo(
     () =>
       Boolean(
         title.trim() &&
-          description.trim() &&
-          (!isNew || (hasNewVideo && hasNewTrailer)) &&
+          (!isNew || hasNewVideo) &&
           (!videoUrl.trim() || isValidMediaUrl(videoUrl.trim())) &&
           (!trailerUrl.trim() || isValidMediaUrl(trailerUrl.trim())),
       ),
-    [description, hasNewTrailer, hasNewVideo, isNew, title, trailerUrl, videoUrl],
+    [hasNewVideo, isNew, title, trailerUrl, videoUrl],
   );
 
   const fetchSubtitles = useCallback(async () => {
@@ -129,10 +127,10 @@ export default function EpisodeComponent({
 
     try {
       setSaving(true);
-      const payload: Record<string, string> = {
-        title: title.trim(),
-        description: description.trim(),
-      };
+      const payload: Record<string, string> = { title: title.trim() };
+      if (!isNew || description.trim()) {
+        payload.description = description.trim();
+      }
       if (!videoFile && videoUrl.trim()) payload.videoLink = videoUrl.trim();
       if (!trailerFile && trailerUrl.trim()) payload.trailerLink = trailerUrl.trim();
 
@@ -179,6 +177,10 @@ export default function EpisodeComponent({
       }
       toast("Episode deleted successfully.", { type: "success" });
       onSaved();
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "The episode could not be deleted.", {
+        type: "error",
+      });
     } finally {
       setDeleting(false);
     }
@@ -232,7 +234,11 @@ export default function EpisodeComponent({
   };
 
   const readiness =
-    episode.isVideoReady === false || episode.isTrailerReady === false ? "Processing media" : "Ready";
+    episode.isVideoReady === false
+      ? "Processing video"
+      : episode.trailerUploadId && episode.isTrailerReady === false
+        ? "Processing trailer"
+        : "Ready";
 
   return (
     <article className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d0f15]">
@@ -274,7 +280,7 @@ export default function EpisodeComponent({
               />
             </label>
             <label className={`${roboto_500.className} block text-sm text-grey_500`}>
-              Description <span className="text-red-400">*</span>
+              Description <span className="text-grey_500">(optional)</span>
               <textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
@@ -302,7 +308,7 @@ export default function EpisodeComponent({
             />
             <MediaSourceField
               label="Episode trailer"
-              required={isNew}
+              required={false}
               currentUrl={currentTrailer}
               processing={!currentTrailer && episode.isTrailerReady === false}
               url={trailerUrl}

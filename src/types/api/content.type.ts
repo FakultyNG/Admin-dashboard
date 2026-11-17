@@ -10,12 +10,14 @@ export interface ContentData {
   genre: string[];
   cast?: string[];
   description?: string;
-  runtime: string;
+  runtime?: string;
   defaultRating: string;
   expiryDate: string;
   vidClass: string;
   videoLink?: string;
   trailerLink?: string;
+  removeTrailer?: boolean;
+  removeVideo?: boolean;
   artistName?: string;
   currency?: string;
   amount?: number;
@@ -58,6 +60,8 @@ export interface IEpisodeData {
   trailer?: string | null;
   isVideoReady?: boolean;
   isTrailerReady?: boolean;
+  videoUploadId?: string;
+  trailerUploadId?: string;
 }
 
 export interface IEpisodeMutationResponse extends IGeneric {

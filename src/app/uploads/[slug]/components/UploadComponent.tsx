@@ -159,7 +159,9 @@ export const AddComponent = ({
     selectedMedia ? selectedMedia.runtime : "",
   );
   const [rating, setRating] = useState<string>(
-    selectedMedia ? selectedMedia.averageRating.toString() : "Select",
+    selectedMedia
+      ? (selectedMedia.defaultRating ?? selectedMedia.averageRating).toString()
+      : "Select",
   );
   const [subtitle_, setSUBTITLE] = useState<string>("Select Language");
 
@@ -185,6 +187,8 @@ export const AddComponent = ({
   );
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [isPreview_2, setIsPreview_2] = useState<boolean>(false);
+  const [trailerChanged, setTrailerChanged] = useState(false);
+  const [trailerRemoved, setTrailerRemoved] = useState(false);
   const [details, setDetails] = useState(
     selectedMedia ? (selectedMedia.description ?? "") : "",
   );
@@ -193,6 +197,7 @@ export const AddComponent = ({
   const [seasonLoading, setSeasonLoading] = useState<boolean>(false);
   const [createdSeriesId, setCreatedSeriesId] = useState<string>("");
   const [seasonDescription, setSeasonDescription] = useState<string>("");
+  const [seasonBlockReason, setSeasonBlockReason] = useState<string>("");
   const maxLength = 200;
   const [seasons, setSeasons] = useState<ISeasonData[]>([]);
   const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
@@ -224,6 +229,7 @@ export const AddComponent = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showPicker]);
 
+  const isSeries = slug === "series";
   const activeSeriesId = selectedMedia?._id ?? createdSeriesId;
   const hasTrailer = Boolean(videoTrailer || links?.url || urlLink.trim());
   const hasMainVideo =
@@ -239,16 +245,38 @@ export const AddComponent = ({
     selectedGenries.length === 0 ||
     selectedGenries.length > 3 ||
     selectedCategories.length === 0 ||
-    !hasTrailer ||
+    (!isSeries && !hasTrailer) ||
     !hasMainVideo ||
     details.trim() === "" ||
-    time === "" ||
+    (!isSeries && time === "") ||
     rating === "Select" ||
     portrait === null ||
     portrait_L === null ||
     (class_.toLowerCase() === "exclusive" &&
       (amount.trim() === "" || currency.trim() === "")) ||
     Boolean(subtitleFile && subtitle_.toLowerCase().includes("select"));
+
+  const missingFields = [
+    !title.trim() && "title",
+    class_ === "Select" && "class",
+    PG === "Select" && "PG rating",
+    !releaseDate && "release date",
+    !expiryDate && "expiry date",
+    selectedGenries.length === 0 && "genre",
+    selectedCategories.length === 0 && "category",
+    !isSeries && !hasTrailer && "trailer",
+    !hasMainVideo && "main video",
+    !details.trim() && "description",
+    !isSeries && !time && "runtime",
+    rating === "Select" && "default rating",
+    !portrait && "portrait poster",
+    !portrait_L && "landscape poster",
+    !color && "cover colour",
+    class_.toLowerCase() === "exclusive" && !amount.trim() && "amount",
+    class_.toLowerCase() === "exclusive" && !currency.trim() && "currency",
+    subtitleFile && subtitle_.toLowerCase().includes("select") &&
+      "subtitle language",
+  ].filter(Boolean) as string[];
 
   const handleTextChange = (newText: string) => {
     if (newText.length <= maxLength) {
@@ -279,6 +307,8 @@ export const AddComponent = ({
       } else if (type === "video" || type === "trailer") {
         const videoObjectUrl = URL.createObjectURL(files[0]);
         if (type === "trailer") {
+          setTrailerChanged(true);
+          setTrailerRemoved(false);
           setVideoTrailer({
             name: files[0].name,
             url: videoObjectUrl,
@@ -398,6 +428,8 @@ export const AddComponent = ({
         if (type === "2") {
           setLinks_2(transformResponse(res, normalizedUrl));
         } else {
+          setTrailerChanged(true);
+          setTrailerRemoved(false);
           setLinks(transformResponse(res, normalizedUrl));
         }
         setUrlLink("");
@@ -408,6 +440,8 @@ export const AddComponent = ({
         setLinks_2(linkPreview);
       } else {
         const linkPreview = transformResponse(res, normalizedUrl);
+        setTrailerChanged(true);
+        setTrailerRemoved(false);
         setLinks(linkPreview);
       }
       setUrlLink("");
@@ -424,6 +458,7 @@ export const AddComponent = ({
       setSeasonLoading(true);
       const res = await seriesButtonValidity(seriesId, "seasons");
       setDisabled(!res.ok);
+      setSeasonBlockReason(res.ok ? "" : (res.data?.message ?? "Add an episode to the latest season first."));
     } catch (error) {
       toast(`${error}`, { type: "error" });
     } finally {
@@ -523,6 +558,9 @@ export const AddComponent = ({
       const res = await getSeasons({ id: seriesId });
       if (res.ok && res.data) {
         setSeasons(res.data.data);
+      } else {
+        setSeasons([]);
+        toast(res.data?.message ?? "Seasons could not be loaded.", { type: "error" });
       }
       await handleDisableButton(seriesId);
     } finally {
@@ -602,10 +640,10 @@ export const AddComponent = ({
           description: details,
           pg: PG === "G" ? "0" : PG.replace("+", ""),
           releasedDate: dateInputToLagosISOString(releaseDate),
-          runtime: time,
           title: slug.includes("videos") ? subtitle : title,
           vidClass: class_.toLowerCase(),
           primaryColor: color,
+          ...(!isSeries && { runtime: time }),
           ...(class_.toLowerCase() === "exclusive" && {
             amount: Number(amount.trim()),
             currency,
@@ -625,8 +663,11 @@ export const AddComponent = ({
 
       if (videoTrailer && videoTrailer.file) {
         formdata.append("trailer", videoTrailer.file);
-      } else {
-        content.data.trailerLink = links?.url ?? urlLink;
+      } else if (selectedMedia && trailerRemoved) {
+        content.data.removeTrailer = true;
+      } else if (!selectedMedia || trailerChanged) {
+        const trailerLink = (links?.url ?? urlLink).trim();
+        if (trailerLink) content.data.trailerLink = trailerLink;
       }
       if (videoTrailer_2 && videoTrailer_2.file && !slug.includes("series")) {
         formdata.append("video", videoTrailer_2.file);
@@ -738,11 +779,18 @@ export const AddComponent = ({
             Content library
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-            {selectedMedia ? "Edit content" : "Add content"}
+            {isSeries
+              ? selectedMedia || createdSeriesId
+                ? "Edit series"
+                : "Create series"
+              : selectedMedia
+                ? "Edit content"
+                : "Add content"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-grey_500">
-            Complete the essentials first, then add media, artwork, and optional
-            accessibility tracks.
+            {isSeries
+              ? "Save the series details first, then build its seasons, episodes, and subtitle tracks below."
+              : "Complete the essentials first, then add media, artwork, and optional accessibility tracks."}
           </p>
         </div>
         <div className="space-y-8">
@@ -763,7 +811,7 @@ export const AddComponent = ({
                   className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  maxLength={20}
+                  maxLength={120}
                 />
               </div>
 
@@ -992,9 +1040,8 @@ export const AddComponent = ({
                     >
                       CAST{" "}
                       <span className="text-grey_800 text-sm">
-                        (Max 10 selections)
+                        (Optional, max 10)
                       </span>
-                      *
                     </p>
                     <div className="min-h-[40px] border border-[#D9D9D938] p-1 overflow-y-auto">
                       <input
@@ -1126,8 +1173,10 @@ export const AddComponent = ({
                 htmlFor="trailer"
                 className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
               >
-                TRAILER{" "}
-                <span className="text-grey_800 text-sm">(90 sec max)</span> *
+                PROMO TRAILER{" "}
+                <span className="text-grey_800 text-sm">
+                  {isSeries ? "(Optional)" : "(90 sec max) *"}
+                </span>
               </label>
               <CustomInput
                 type="text"
@@ -1135,10 +1184,12 @@ export const AddComponent = ({
                 placeholder="Paste Deep link Url ex. Youtube"
                 className="font-normal w-full sm:min-w-[364px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                 value={urlLink}
-                onChange={(e) => [
-                  setUrlLink(e.target.value),
-                  getData(e.target.value),
-                ]}
+                onChange={(e) => {
+                  setUrlLink(e.target.value);
+                  setTrailerChanged(true);
+                  setTrailerRemoved(false);
+                }}
+                onBlur={() => urlLink.trim() && getData(urlLink)}
                 readOnly={videoTrailer ? true : false}
               />
 
@@ -1192,7 +1243,12 @@ export const AddComponent = ({
 
                       <button
                         className="hover:scale-110 transition-all duration-200"
-                        onClick={() => setLinks(null)}
+                        onClick={() => {
+                          setLinks(null);
+                          setUrlLink("");
+                          setTrailerChanged(true);
+                          setTrailerRemoved(Boolean(selectedMedia));
+                        }}
                       >
                         <Image
                           src="/delete.svg"
@@ -1252,7 +1308,7 @@ export const AddComponent = ({
                 <p
                   className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
                 >
-                  Upload Trailer *
+                  Upload promo trailer {isSeries ? "(optional)" : "*"}
                 </p>
                 <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                   <div className="flex items-center ml-5 py-2 relative">
@@ -1331,7 +1387,11 @@ export const AddComponent = ({
 
                         <button
                           className="hover:scale-110 transition-all duration-200"
-                          onClick={() => setVideoTrailer(null)}
+                          onClick={() => {
+                            setVideoTrailer(null);
+                            setTrailerChanged(true);
+                            setTrailerRemoved(Boolean(selectedMedia));
+                          }}
                         >
                           <Image
                             src="/delete.svg"
@@ -1392,14 +1452,14 @@ export const AddComponent = ({
 
           {/* fourth level */}
           <>
-            <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
+            {!isSeries && (
+              <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
               <p
                 className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
               >
-                VIDEO UPLOAD *
+                DESCRIPTION *
               </p>
 
-              {slug !== "series" && (
                 <div className="">
                   <p
                     className={`${roboto_400.className} text-grey_500 font-normal text-base ml-3`}
@@ -1421,8 +1481,8 @@ export const AddComponent = ({
                     </p>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* ratings */}
             <div className="mx-4 rounded-xl border border-white/[0.07] bg-[#101116] p-5 sm:mx-6 sm:p-6 lg:mx-10">
@@ -1466,10 +1526,8 @@ export const AddComponent = ({
                     placeholder="Paste Deep link Url ex. Youtube"
                     className="font-normal w-full sm:min-w-[364px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                     value={urlLink_2}
-                    onChange={(e) => [
-                      setUrlLink_2(e.target.value),
-                      getData(e.target.value, "2"),
-                    ]}
+                    onChange={(e) => setUrlLink_2(e.target.value)}
+                    onBlur={() => urlLink_2.trim() && getData(urlLink_2, "2")}
                     readOnly={videoTrailer_2 ? true : false}
                   />
 
@@ -1836,6 +1894,9 @@ export const AddComponent = ({
                     <p className="mt-1 text-sm leading-6 text-grey_500">
                       Add one season at a time. Each season must contain an episode before the next season can be created.
                     </p>
+                    {seasonBlockReason ? (
+                      <p className="mt-2 text-xs text-amber-300">{seasonBlockReason}</p>
+                    ) : null}
                   </div>
                   <div className="flex w-full flex-col gap-3 sm:flex-row lg:max-w-xl">
                     <CustomInput
@@ -2085,7 +2146,18 @@ export const AddComponent = ({
           )}
         </div>
 
-        <div className="sticky bottom-0 z-40 mt-8 flex justify-end border-t border-white/[0.08] bg-black3/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-10">
+        <div className="sticky bottom-0 z-40 mt-8 flex flex-col gap-3 border-t border-white/[0.08] bg-black3/95 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+          <p className="text-xs leading-5 text-grey_500">
+            {missingFields.length
+              ? `Still needed: ${missingFields.slice(0, 4).join(", ")}${
+                  missingFields.length > 4
+                    ? ` and ${missingFields.length - 4} more`
+                    : ""
+                }.`
+              : isSeries && !activeSeriesId
+                ? "Ready to create. Seasons and episodes unlock after this step."
+                : "Ready to save."}
+          </p>
           <AppButton
             title={
               selectedMedia || createdSeriesId
