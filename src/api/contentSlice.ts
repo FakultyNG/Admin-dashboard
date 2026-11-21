@@ -2,11 +2,19 @@ import { IGeneric } from "@/types/api/auth.types";
 import { apiCall } from "./auth.api";
 import {
   IContentMutationResponse,
+  IContentProcessingResponse,
   IEpisodeMutationResponse,
   ISeasonMutationResponse,
   ISeasonResponse,
   ISubtitleResponse,
 } from "@/types/api/content.type";
+
+export const getContentProcessingStatus = async (id: string, live = true) =>
+  await apiCall<IContentProcessingResponse>((baseApi) =>
+    baseApi.get<IContentProcessingResponse>(
+      `/superadmin/uploads/status/${id}?live=${live}`,
+    ),
+  );
 
 export const createContent = async (data: FormData, type: string) =>
   await apiCall<IContentMutationResponse>((baseApi) =>

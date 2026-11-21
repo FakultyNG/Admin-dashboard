@@ -12,7 +12,7 @@ import {
 } from "@/api/mediaSlice";
 import { TABLE_TH } from "@/config/data/upload";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
-import { IMediaData, IMediaResponse } from "@/types/api/media.types";
+import { IContentProcessingStatus, IMediaData, IMediaResponse } from "@/types/api/media.types";
 import { isExpired } from "@/utilities/dateUtilities";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
@@ -20,11 +20,12 @@ import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { AddComponent } from "./components/UploadComponent";
-import { deleteContent } from "@/api/contentSlice";
+import { deleteContent, getContentProcessingStatus } from "@/api/contentSlice";
 import {
   ADMIN_LIST_PAGE_SIZE,
   ListPagination,
 } from "@/components/ListPagination";
+import { ProcessingStatusModal } from "./components/ProcessingStatusModal";
 
 interface Props {
   slug: string;
@@ -38,6 +39,9 @@ function MainComponent({ slug }: Props) {
   const [loading, setLoading] = useState<boolean>(false);
   const [pg, setPg] = useState<number>(1);
   const [searchParams, setSearchParams] = useState<string>("");
+  const [processingStatus, setProcessingStatus] = useState<IContentProcessingStatus | null>(null);
+  const [processingContentId, setProcessingContentId] = useState<string | null>(null);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
   const searchRequest = useRef(0);
   const {
     data: moviesData,
@@ -157,6 +161,29 @@ function MainComponent({ slug }: Props) {
     }
   }
 
+  async function refreshProcessingStatus(id: string, showSpinner = true) {
+    if (showSpinner) setRefreshingStatus(true);
+    try {
+      const response = await getContentProcessingStatus(id, true);
+      if (response.ok && response.data) {
+        setProcessingStatus(response.data.data);
+        if (response.data.data.state === "ready" || response.data.data.state === "failed") {
+          await handleRefreshMedia();
+        }
+      } else if (showSpinner) {
+        toast("Could not check media processing status", { type: "error" });
+      }
+    } finally {
+      if (showSpinner) setRefreshingStatus(false);
+    }
+  }
+
+  function openProcessingStatus(media: IMediaData) {
+    setProcessingContentId(media._id);
+    if (media.processing) setProcessingStatus(media.processing);
+    void refreshProcessingStatus(media._id);
+  }
+
   useEffect(() => {
     if (slug.toLowerCase() === "movies") handleMediaList(moviesData);
     if (slug.toLowerCase() === "skits") handleMediaList(skitsData);
@@ -171,6 +198,22 @@ function MainComponent({ slug }: Props) {
       setSelectedMedia(null);
     }
   }, [isAdd]);
+
+  useEffect(() => {
+    const hasProcessing = mediaList.some((media) => media.processing?.state === "processing");
+    if (!hasProcessing || isAdd) return;
+    const timer = window.setInterval(() => void handleRefreshMedia(), 15000);
+    return () => window.clearInterval(timer);
+  }, [mediaList, isAdd, pg, slug]);
+
+  useEffect(() => {
+    if (!processingContentId || processingStatus?.state !== "processing") return;
+    const timer = window.setInterval(
+      () => void refreshProcessingStatus(processingContentId, false),
+      5000,
+    );
+    return () => window.clearInterval(timer);
+  }, [processingContentId, processingStatus?.state]);
 
   useEffect(() => {
     refetch();
@@ -294,6 +337,26 @@ function MainComponent({ slug }: Props) {
                             {!isExpired(tx.expiryDate) ? "Active" : "Inactive"}
                           </td>
 
+                          <td className="text-center text-xs">
+                            <button
+                              type="button"
+                              onClick={() => openProcessingStatus(tx)}
+                              className={`rounded-full border px-3 py-1.5 capitalize transition hover:brightness-125 ${
+                                tx.processing?.state === "ready"
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                  : tx.processing?.state === "failed"
+                                    ? "border-red-500/30 bg-red-500/10 text-red-300"
+                                    : tx.processing?.state === "processing"
+                                      ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                                      : "border-white/15 bg-white/5 text-gray-300"
+                              }`}
+                            >
+                              {tx.processing?.published
+                                ? tx.processing.state === "processing" ? "Published · processing" : "Published"
+                                : tx.processing?.state ?? "View status"}
+                            </button>
+                          </td>
+
                           <td className="w-[50px] xl:w-[400px]">
                             <div className="flex items-center justify-center gap-x-10">
                               <button
@@ -346,6 +409,17 @@ function MainComponent({ slug }: Props) {
           />
         </>
       )}
+      {processingStatus && processingContentId ? (
+        <ProcessingStatusModal
+          status={processingStatus}
+          refreshing={refreshingStatus}
+          onClose={() => {
+            setProcessingStatus(null);
+            setProcessingContentId(null);
+          }}
+          onRefresh={() => void refreshProcessingStatus(processingContentId)}
+        />
+      ) : null}
     </section>
   );
 }

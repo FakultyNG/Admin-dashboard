@@ -6,5 +6,6 @@ export const TABLE_TH = [
     'Class',
     'Year',
     'Status',
+    'Processing',
     'Options'
 ]

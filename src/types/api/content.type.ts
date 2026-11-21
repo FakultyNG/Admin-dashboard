@@ -1,5 +1,6 @@
 import { ImageProps } from "@/app/plans/ClientComponent";
 import { IGeneric } from "./auth.types";
+import { IContentProcessingStatus } from "./media.types";
 
 export interface ContentData {
   title: string;
@@ -80,6 +81,10 @@ export interface IContentMutationResponse extends IGeneric {
   data: {
     _id: string;
   };
+}
+
+export interface IContentProcessingResponse extends IGeneric {
+  data: IContentProcessingStatus;
 }
 
 export interface ISubtitleData {

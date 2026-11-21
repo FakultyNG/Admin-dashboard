@@ -48,6 +48,37 @@ export interface IMediaData {
     episodes?: IEpisodes[]
     seasons: [];
     createdAt: string
+    videoUploadId?: string;
+    trailerUploadId?: string;
+    videoStatus?: ProcessingItemStatus;
+    trailerStatus?: ProcessingItemStatus;
+    videoError?: string | null;
+    trailerError?: string | null;
+    processing?: IContentProcessingStatus;
+}
+
+export type ProcessingItemStatus = "pending" | "processing" | "ready" | "failed" | "missing";
+
+export interface IProcessingItem {
+    id: string | null;
+    kind: "main" | "trailer";
+    label: string;
+    status: ProcessingItemStatus;
+    progress: number | null;
+    providerStatus?: string | null;
+    error?: string | null;
+    updatedAt?: string;
+}
+
+export interface IContentProcessingStatus {
+    contentId: string;
+    title: string;
+    type: string;
+    state: "processing" | "failed" | "ready" | "draft";
+    mediaReady: boolean;
+    published: boolean;
+    publicationReason: string;
+    items: IProcessingItem[];
 }
 
 export interface IRemiders {
