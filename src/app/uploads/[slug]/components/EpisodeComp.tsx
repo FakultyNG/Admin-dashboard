@@ -241,7 +241,11 @@ export default function EpisodeComponent({
   };
 
   const readiness =
-    episode.isVideoReady === false
+    episode.videoStatus === "failed"
+      ? `Video failed${episode.videoError ? `: ${episode.videoError}` : ""}`
+      : episode.trailerStatus === "failed"
+        ? `Trailer failed${episode.trailerError ? `: ${episode.trailerError}` : ""}`
+        : episode.isVideoReady === false
       ? "Processing video"
       : episode.trailerUploadId && episode.isTrailerReady === false
         ? "Processing trailer"

@@ -62,6 +62,10 @@ export interface IEpisodeData {
   isTrailerReady?: boolean;
   videoUploadId?: string;
   trailerUploadId?: string;
+  videoStatus?: "pending" | "processing" | "ready" | "failed";
+  videoError?: string | null;
+  trailerStatus?: "pending" | "processing" | "ready" | "failed";
+  trailerError?: string | null;
 }
 
 export interface IEpisodeMutationResponse extends IGeneric {
