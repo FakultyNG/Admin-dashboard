@@ -12,6 +12,9 @@ export const createAdminAuthWrapper = async (isClient?:boolean) => {
   const token = localStorage.getItem(isClient ? "auth_token": "superadmin_token");
   return create({
     baseURL: MAIN_API_BASE_URL,
+    // Large media uploads can take several minutes on slower connections.
+    timeout: 30 * 60 * 1000,
+    timeoutErrorMessage: "Upload timed out. Check your connection and try again.",
     headers: {
       [isClient ? "clients-auth" :"superadmin-auth"]: token,
     },

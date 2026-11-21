@@ -10,28 +10,12 @@ import {
 
 export const createContent = async (data: FormData, type: string) =>
   await apiCall<IContentMutationResponse>((baseApi) =>
-    baseApi.post<IContentMutationResponse>(
-      `/superadmin/uploads/video/add/${type}`,
-      data,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
-    ),
+    baseApi.post<IContentMutationResponse>(`/superadmin/uploads/video/add/${type}`, data),
   );
 
 export const editContent = async (data: FormData, id: string) =>
   await apiCall<IContentMutationResponse>((baseApi) =>
-    baseApi.put<IContentMutationResponse>(
-      `/superadmin/uploads/edit/${id}`,
-      data,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
-    ),
+    baseApi.put<IContentMutationResponse>(`/superadmin/uploads/edit/${id}`, data),
   );
 
 export const editContentTaxonomy = async (
@@ -64,24 +48,12 @@ export const addSubtitle = async (data: FormData) =>
 
 export const addEpisodes = async (data: FormData, seasonId: string) =>
   await apiCall<IEpisodeMutationResponse>((baseApi) =>
-    baseApi.post<IEpisodeMutationResponse>(
-      `/superadmin/uploads/episodes/add/${seasonId}`,
-      data,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
-    ),
+    baseApi.post<IEpisodeMutationResponse>(`/superadmin/uploads/episodes/add/${seasonId}`, data),
   );
 
 export const editEpisode = async (data: FormData, episodeId: string) =>
   await apiCall<IEpisodeMutationResponse>((baseApi) =>
-    baseApi.put<IEpisodeMutationResponse>(
-      `/superadmin/uploads/episodes/edit/${episodeId}`,
-      data,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    ),
+    baseApi.put<IEpisodeMutationResponse>(`/superadmin/uploads/episodes/edit/${episodeId}`, data),
   );
 
 export const deleteEpisode = async (episodeId: string) =>

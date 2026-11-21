@@ -50,7 +50,7 @@ export default function SubtitleManager({
         </p>
         <h3 className="mt-2 text-xl font-semibold text-white">Subtitles</h3>
         <p className={`${roboto_400.className} mt-1 text-sm text-grey_500`}>
-          Optional. Add an SRT or VTT caption file for each available language.
+          Optional. Add a caption file for each available language.
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export default function SubtitleManager({
             className="flex min-h-[46px] cursor-pointer items-center justify-between gap-3 rounded-lg border border-dashed border-white/[0.18] bg-white/[0.025] px-4 transition hover:border-red-400/60 hover:bg-white/[0.04]"
           >
             <span className="min-w-0 truncate text-sm text-grey_500">
-              {file?.name ?? "Choose an .srt or .vtt file"}
+              {file?.name ?? "Choose a caption file"}
             </span>
             <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-red-400">
               Browse
@@ -91,7 +91,6 @@ export default function SubtitleManager({
             ref={inputRef}
             id={`subtitle-file-${inputId}`}
             type="file"
-            accept=".srt,.vtt,text/plain,text/vtt,application/x-subrip"
             onChange={async (event) => {
               const selectedFile = event.currentTarget.files?.[0];
               if (selectedFile) await onFileChange(selectedFile);
@@ -120,10 +119,11 @@ export default function SubtitleManager({
       </div>
 
       <div className="mt-4 rounded-lg border border-white/[0.07] bg-black2 px-4 py-3 text-xs leading-5 text-grey_500">
-        <p className="font-semibold text-white">Accepted subtitle guide</p>
+        <p className="font-semibold text-white">Subtitle guide</p>
         <p>
-          Use plain-text UTF-8 SRT or WebVTT, up to 5 MB. Every cue must
-          include start and end times followed by caption text.
+          Caption files up to 5 MB are accepted. SRT and WebVTT are recommended
+          for the widest player compatibility, but encoding and timestamps are
+          not strictly rejected during upload.
         </p>
         <p className="mt-1 font-mono text-[11px] text-grey_500">
           00:00:01,000 --&gt; 00:00:04,000
