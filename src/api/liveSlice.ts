@@ -124,11 +124,7 @@ export const getFetchSport = async (data: IPagination) =>
 
 export const createLive = async (data: FormData) =>
   await apiCall<ICreateLiveContentResponse>((baseApi) =>
-    baseApi.post<ICreateLiveContentResponse>(`/superadmin/shared/lives/create`, data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }),
+    baseApi.post<ICreateLiveContentResponse>(`/superadmin/shared/lives/create`, data),
   );
 
 export const updateLiveActive = async (liveId: string, active: boolean) =>
@@ -139,15 +135,7 @@ export const updateLiveActive = async (liveId: string, active: boolean) =>
 export const clientCreateLive = async (data: FormData) =>
   await apiCall<ICreateLiveContentResponse>(
     (baseApi) =>
-      baseApi.post<ICreateLiveContentResponse>(
-        `/clients/shared/lives/create`,
-        data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      ),
+      baseApi.post<ICreateLiveContentResponse>(`/clients/shared/lives/create`, data),
     true,
   );
 

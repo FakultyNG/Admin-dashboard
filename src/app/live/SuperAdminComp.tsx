@@ -67,12 +67,15 @@ function SuperAdminComp() {
   const [loading, setLoading] = useState<boolean>(false);
   const [loading_B, setLoading_B] = useState<boolean>(false);
   const [loading_C, setLoading_C] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>("");
   const [pg, setPg] = useState<number>(1);
   const isEVENT = tab.toLowerCase() === "events";
   const isTVSHOW = tab.toLowerCase() === "tv shows";
   const isChannel = tab.toLowerCase() === "channels";
   const isPodcast = tab.toLowerCase() === "podcasts";
   const [isPaymentActive, setIsPaymentActive] = useState<boolean>(false);
+  const [currency, setCurrency] = useState<string>("NGN");
+  const [amount, setAmount] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
   const [eventHours, setEventHours] = useState<string>("0");
@@ -201,9 +204,46 @@ function SuperAdminComp() {
   }
 
   async function handleCreateLive() {
+    const categoryIds = selectedCategories
+      .map((name) => cat_List.find((category) => category.name === name)?._id)
+      .filter((id): id is string => Boolean(id));
+    const validationMessage =
+      !client
+        ? "Select a client."
+        : !title.trim()
+          ? "Enter a title."
+          : !location.trim()
+            ? "Enter a location."
+            : _class === "Select"
+              ? "Select a class."
+              : pg_M === "Select"
+                ? "Select a PG rating."
+                : !details.trim()
+                  ? "Enter the live content details."
+                  : categoryIds.length === 0
+                    ? "Select at least one category."
+                    : !coverImage?.file
+                      ? "Select a cover image."
+                      : isChannel && !image?.file
+                        ? "Select a channel logo."
+                        : !isChannel && !videoTrailer?.file
+                          ? "Select a video trailer."
+                          : _class.toLowerCase() === "exclusive" &&
+                              (!amount || Number(amount) <= 0)
+                            ? "Enter a valid price for exclusive content."
+                            : Number(eventHours) <= 0
+                              ? "Enter a duration greater than zero."
+                              : null;
+
+    if (validationMessage) {
+      setFormError(validationMessage);
+      toast(validationMessage, { type: "error" });
+      return;
+    }
     if (!client) return;
-    console.log(tab.toLowerCase().slice(0, -1), coverImage?.name);
+
     try {
+      setFormError("");
       setLoading_B(true);
       const { end, start } = getDates(Number(eventHours), startDate);
       const formdata = new FormData();
@@ -220,7 +260,10 @@ function SuperAdminComp() {
         subTitle: "subtitle",
         upcoming: addToUpcoming,
 
-        category: selectedCategories,
+        category: categoryIds,
+        ...(_class.toLowerCase() === "exclusive"
+          ? { currency, amount: Number(amount) }
+          : {}),
       };
 
       if (coverImage && coverImage.file)
@@ -242,10 +285,14 @@ function SuperAdminComp() {
         toast(`${res.data.message}`, { type: "success" });
         setStage("main");
       } else {
-        toast(`${res.data?.message}`, { type: "error" });
+        const message = res.data?.message || "Live content could not be created.";
+        setFormError(message);
+        toast(message, { type: "error" });
       }
     } catch (error) {
-      toast(`${error}`, { type: "error" });
+      const message = error instanceof Error ? error.message : `${error}`;
+      setFormError(message);
+      toast(message, { type: "error" });
     } finally {
       setLoading_B(false);
       handleRefreshLive();
@@ -609,23 +656,42 @@ function SuperAdminComp() {
                 <div className="flex items-start flex-wrap gap-y-4">
                   <div className="space-y-7 flex-1">
                     {isChannel ? (
-                      <div className="w-[75%]">
-                        <label
-                          htmlFor="name"
-                          className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
-                        >
-                          CHANNEL NAME *
-                        </label>
-                        <CustomInput
-                          required
-                          type="text"
-                          placeholder=""
-                          id="name"
-                          className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                        />
-                      </div>
+                      <>
+                        <div className="w-[75%]">
+                          <label
+                            htmlFor="name"
+                            className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
+                          >
+                            CHANNEL NAME *
+                          </label>
+                          <CustomInput
+                            required
+                            type="text"
+                            placeholder=""
+                            id="name"
+                            className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                          />
+                        </div>
+                        <div className="w-[75%]">
+                          <label
+                            htmlFor="channel-location"
+                            className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
+                          >
+                            LOCATION *
+                          </label>
+                          <CustomInput
+                            required
+                            type="text"
+                            placeholder="e.g. Lagos, Nigeria"
+                            id="channel-location"
+                            className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                          />
+                        </div>
+                      </>
                     ) : (
                       <>
                         <div className="w-[75%]">
@@ -697,9 +763,41 @@ function SuperAdminComp() {
                         />
                       </div>
                     </div>
+
+                    {_class.toLowerCase() === "exclusive" && (
+                      <div className="flex w-[75%] gap-5 lg:gap-14">
+                        <div className="flex-1">
+                          <label className={`${roboto_500.className} text-base text-white`}>
+                            CURRENCY *
+                          </label>
+                          <SelectInputForm
+                            placeholder={currency}
+                            setType={setCurrency}
+                            selectData={["NGN", "USD", "GMD"]}
+                            className="font-normal h-[30px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
+                            textStyles="text-grey_500 text-sm"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label htmlFor="live-amount" className={`${roboto_500.className} text-base text-white`}>
+                            PRICE *
+                          </label>
+                          <CustomInput
+                            required
+                            type="number"
+                            min="1"
+                            placeholder="0"
+                            id="live-amount"
+                            value={amount}
+                            onChange={(event) => setAmount(event.target.value)}
+                            className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {(isEVENT || isTVSHOW || isPodcast) && (
+                  {!isChannel && (
                     <div className="flex items-start gap-x-10 lg:gap-x-20">
                       <div className="w-full md:w-[350px] md:ml-auto mt-10">
                         <p
@@ -1033,7 +1131,7 @@ function SuperAdminComp() {
                     </div>
                   </div>
 
-                  {(isEVENT || isPodcast || isTVSHOW) && (
+                  {!isChannel && (
                     <div className="min-w-[350px] flex flex-col sm:items-center sm:ml-10 lg:ml-36">
                       <label
                         className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -1171,6 +1269,7 @@ function SuperAdminComp() {
                         <input
                           type="file"
                           id="file"
+                          accept="image/jpeg,image/png,image/webp"
                           onChange={handleInput}
                           className="absolute z-20 opacity-0"
                         />
@@ -1279,18 +1378,27 @@ function SuperAdminComp() {
                 className="w-full"
                 isLoading={loading_B}
                 disabled={
-                  location === "" ||
-                  title === "" ||
-                  pg_M === "" ||
-                  _class === "" ||
+                  location.trim() === "" ||
+                  title.trim() === "" ||
+                  details.trim() === "" ||
+                  pg_M === "Select" ||
+                  _class === "Select" ||
                   !startDate ||
                   Number(eventHours) <= 0 ||
                   !client ||
+                  selectedCategories.length === 0 ||
                   loading_B ||
-                  !coverImage ||
-                  (tab.toLowerCase() === "channels" ? !image : !videoTrailer)
+                  !coverImage?.file ||
+                  (isChannel ? !image?.file : !videoTrailer?.file) ||
+                  (_class.toLowerCase() === "exclusive" &&
+                    (!amount || Number(amount) <= 0))
                 }
               />
+              {formError && (
+                <p role="alert" className="mt-2 min-w-[320px] text-sm text-red_500">
+                  {formError}
+                </p>
+              )}
             </div>
           </div>
         </div>
