@@ -47,6 +47,7 @@ export const ModalComponent = ({
   const [link, setLink] = useState((editValue && editValue.link) ?editValue.link : "");
   const [buttonType, setButtonType] = useState((editValue && editValue.selectButtonType) ? editValue.selectButtonType.replace('-', ' ').toUpperCase() : "Select button");
   const [details, setDetails] = useState((editValue && editValue.description) ? editValue.description : "");
+  const isPersonalizedFeed = editValue?.feedType === "personalized";
   const maxLength = 200;
   const hasLink = link.trim() !== "";
   const hasButtonType = buttonType !== "Select button";
@@ -109,7 +110,9 @@ export const ModalComponent = ({
           {
             name: title,
             position: Number(position),
-            ...(tab === "category" && { location: location as CategoryLocation })
+            ...(tab === "category" && !isPersonalizedFeed && location !== "Select" && {
+              location: location as CategoryLocation,
+            })
           }
   
       const res = editValue ? await editCategoryEnums(tab === 'cast' ? formdata : data, tab, editValue._id) : await addCategoryEnums(tab === 'cast' ? formdata : data, tab);
@@ -218,7 +221,7 @@ export const ModalComponent = ({
               )}
             </div>
 
-            {tab === "category" && (
+            {tab === "category" && !isPersonalizedFeed && (
               <div className="z-[10px]">
                 <label
                   htmlFor="location"
