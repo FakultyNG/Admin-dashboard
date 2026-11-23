@@ -7,6 +7,8 @@ import {
   IDashboardTOTAL_Users,
   ILivestreamDetailsResponse,
   IAnalyticsOverviewResponse,
+  AnalyticsReportFilters,
+  IAnalyticsReportResponse,
 } from "@/types/api/dashboard.types";
 
 const SUPERADMIN_URL = "superadmin";
@@ -51,6 +53,22 @@ export const dashboardApiSlice = apiSlice.injectEndpoints({
       },
     }),
 
+    getAnalyticsReport: builder.query<IAnalyticsReportResponse, AnalyticsReportFilters>({
+      query: ({ days, platform, contentType }) => {
+        const authToken = localStorage.getItem("superadmin_token");
+        const params = new URLSearchParams({
+          days: String(days),
+          platform,
+          contentType,
+        });
+        return {
+          url: `${SUPERADMIN_URL}/dashboard/analytics/report?${params.toString()}`,
+          method: "GET",
+          headers: { "superadmin-auth": `${authToken}` },
+        };
+      },
+    }),
+
 
     getLivestreamDetails: builder.query<ILivestreamDetailsResponse, void>({
       query: () => {
@@ -72,4 +90,5 @@ export const {
   useGetDashboardTotalUserQuery,
   useGetLivestreamDetailsQuery,
   useGetAnalyticsOverviewQuery,
+  useGetAnalyticsReportQuery,
 } = dashboardApiSlice;
