@@ -46,6 +46,7 @@ import { truncateText } from "@/utilities/textUtils";
 import { ImageProps } from "../plans/ClientComponent";
 import { ICategory } from "@/types/api/category.types";
 import { useGetCategoryQuery } from "@/api/categorySlice";
+import Link from "next/link";
 import { searchClient } from "@/api/clientSlice";
 import { IClientsData } from "@/types/api/clients.types";
 import {
@@ -54,6 +55,13 @@ import {
 } from "@/components/ListPagination";
 
 const TABS = ["Channels", "Events", "Tv Shows", "Podcasts", "Sports"];
+const LIVE_CATEGORY_LOCATION_BY_TAB: Record<string, string> = {
+  channels: "Live/Channels",
+  events: "Live/Events",
+  "tv shows": "Live/Tv Shows",
+  podcasts: "Live/Podcast",
+  sports: "Live/Sports",
+};
 
 interface IFile extends ImageProps {
   file?: File;
@@ -408,12 +416,16 @@ function SuperAdminComp() {
 
   useEffect(() => {
     if (categories) {
+      const expectedLocation = LIVE_CATEGORY_LOCATION_BY_TAB[tab];
       const liveCategories = categories.data.filter((x) =>
-        x.location?.startsWith("Live/") || x.name.toLowerCase().includes("live"),
+        x.location === expectedLocation && x.active !== false,
       );
       setCat_List(liveCategories);
+      setSelectedCategories(current =>
+        current.filter(name => liveCategories.some(category => category.name === name)),
+      );
     }
-  }, [categories, isSuccess_C]);
+  }, [categories, isSuccess_C, tab]);
 
   useEffect(() => {
     if (tab === "channels") handleLiveList(allChannels);
@@ -1007,6 +1019,14 @@ function SuperAdminComp() {
                       className="border-[#D9D9D938] h-[110px] items-start text-white rounded-sm flex-1"
                     />
                   </div>
+                  {cat_List.length === 0 && (
+                    <p className="mt-2 text-sm text-amber-300">
+                      No active categories exist for {LIVE_CATEGORY_LOCATION_BY_TAB[tab]}.{" "}
+                      <Link href="/categories" className="font-medium text-red-300 underline underline-offset-2">
+                        Add a live category
+                      </Link>
+                    </p>
+                  )}
                 </div>
 
                 <div className="">

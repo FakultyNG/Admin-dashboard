@@ -30,19 +30,22 @@ interface ModalProps {
   tab: string;
   handleReset: () => void;
   editValue: Table | null
+  defaultLocation?: CategoryLocation
 }
 
 export const ModalComponent = ({
   handleClose,
   handleReset,
   tab,
-  editValue
+  editValue,
+  defaultLocation,
 }: ModalProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(editValue ? editValue.title: tab === "cast" ? "Select" : "");
   const [names, setNames] = useState<string>(editValue?.names ?? "");
-  const [location, setLocation] = useState<string>(editValue ? editValue.location??'' :"Select");
+  const [location, setLocation] = useState<string>(editValue ? editValue.location??'' : defaultLocation ?? "Select");
   const [position, setPosition] = useState<string>((editValue && editValue.position) ? editValue.position : "Select");
+  const [status, setStatus] = useState<string>(editValue?.active === false ? "Inactive" : "Active");
   const [userPic, setUserPic] = useState<File | null>(null);
   const [link, setLink] = useState((editValue && editValue.link) ?editValue.link : "");
   const [buttonType, setButtonType] = useState((editValue && editValue.selectButtonType) ? editValue.selectButtonType.replace('-', ' ').toUpperCase() : "Select button");
@@ -112,7 +115,8 @@ export const ModalComponent = ({
             position: Number(position),
             ...(tab === "category" && !isPersonalizedFeed && location !== "Select" && {
               location: location as CategoryLocation,
-            })
+              active: status === "Active",
+            }),
           }
   
       const res = editValue ? await editCategoryEnums(tab === 'cast' ? formdata : data, tab, editValue._id) : await addCategoryEnums(tab === 'cast' ? formdata : data, tab);
@@ -257,18 +261,23 @@ export const ModalComponent = ({
                   placeholder={position}
                   setType={setPosition}
                   selectData={[
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
+                    ...Array.from({ length: 100 }, (_, index) => String(index + 1)),
                   ]}
                   className="border-border_grey w-full mt-1.5 text-grey_500 z-[9] rounded-sm flex-1"
+                />
+              </div>
+            )}
+
+            {tab === "category" && !isPersonalizedFeed && (
+              <div>
+                <label className={`${roboto_500.className} ml-2.5 text-base font-medium text-white`}>
+                  STATUS *
+                </label>
+                <SelectInputForm
+                  placeholder={status}
+                  setType={setStatus}
+                  selectData={["Active", "Inactive"]}
+                  className="border-border_grey mt-1.5 w-full flex-1 rounded-sm text-grey_500"
                 />
               </div>
             )}

@@ -37,7 +37,10 @@ export interface Table {
     description?:string;
   photoUrl?:string
   feedType?: "standard" | "personalized";
+  active?: boolean;
 }
+
+type CategoryScope = "all" | "homepage" | "live";
 
 export const runtime = "edge";
 
@@ -48,6 +51,7 @@ export default function page() {
   const [categoryTableFiltered, setFilteredTable] = useState<Table[]>([]);
   const [editValues, setEditValues] = useState<Table|null>(null);
   const [searchParams, setSearchParams] = useState<string>("");
+  const [categoryScope, setCategoryScope] = useState<CategoryScope>("all");
     const [pg_c, setPg_c] = useState<number>(1);
     const [pg_g, setPg_g] = useState<number>(1);
     const [pg_C, setPg_C] = useState<number>(1);
@@ -124,13 +128,6 @@ export default function page() {
   function handleSearchfilter(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
     setSearchParams(value);
-    setFilteredTable(
-      value.trim()
-        ? categoryTable.filter((item) =>
-            item.title.toLowerCase().includes(value.trim().toLowerCase())
-          )
-        : categoryTable
-    );
   }
 
   function handleCategoryList(
@@ -139,8 +136,22 @@ export default function page() {
     if (!data) return;
     const categoryList = transformEventData(data.data);
     setTable(categoryList);
-    setFilteredTable(categoryList);
   }
+
+  useEffect(() => {
+    const query = searchParams.trim().toLowerCase();
+    setFilteredTable(
+      categoryTable.filter((item) => {
+        const matchesSearch = !query || item.title.toLowerCase().includes(query);
+        const matchesScope =
+          tab !== "category" ||
+          categoryScope === "all" ||
+          (categoryScope === "homepage" && item.location === "Homepage") ||
+          (categoryScope === "live" && item.location?.startsWith("Live/"));
+        return matchesSearch && matchesScope;
+      }),
+    );
+  }, [categoryScope, categoryTable, searchParams, tab]);
 
   async function handleRefreshMedia(query?: number) {
       try {
@@ -186,17 +197,20 @@ export default function page() {
             onClick={() => setIsAdd(true)}
             className={`${roboto_500.className} w-full rounded-xl bg-red_500 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-red-500/10 sm:w-auto`}
           >
-            Add {tab === "category" ? "category" : tab}
+            {tab === "category" && categoryScope === "live"
+              ? "Add live category"
+              : `Add ${tab === "category" ? "category" : tab}`}
           </button>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#11141b]/80 shadow-2xl shadow-black/10">
           <div className="flex flex-col gap-4 border-b border-white/[0.08] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-            <div
-              role="tablist"
-              aria-label="Category type"
-              className="grid w-full grid-cols-3 rounded-xl border border-white/[0.08] bg-black/20 p-1 lg:w-auto"
-            >
+            <div className="flex w-full flex-col gap-3 lg:w-auto">
+              <div
+                role="tablist"
+                aria-label="Category type"
+                className="grid w-full grid-cols-3 rounded-xl border border-white/[0.08] bg-black/20 p-1 lg:w-auto"
+              >
               {TABS.map((item) => {
                 const value = item.toLowerCase();
                 const active = value === tab;
@@ -220,6 +234,25 @@ export default function page() {
                   </button>
                 );
               })}
+              </div>
+              {tab === "category" && (
+                <div role="group" aria-label="Category placement" className="flex flex-wrap gap-2">
+                  {(["all", "homepage", "live"] as CategoryScope[]).map(scope => (
+                    <button
+                      key={scope}
+                      type="button"
+                      onClick={() => setCategoryScope(scope)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium capitalize transition ${
+                        categoryScope === scope
+                          ? "border-red-500/50 bg-red-500/10 text-red-300"
+                          : "border-white/[0.08] text-slate-500 hover:text-slate-200"
+                      }`}
+                    >
+                      {scope === "live" ? "Live content" : scope}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <label className="relative block w-full lg:max-w-sm">
@@ -279,6 +312,17 @@ export default function page() {
                     {item.position && (
                       <td className="text-sm text-slate-400">{item.position}</td>
                     )}
+                    {tab === "category" && (
+                      <td className="text-sm">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                          item.active === false
+                            ? "bg-slate-500/10 text-slate-500"
+                            : "bg-emerald-500/10 text-emerald-300"
+                        }`}>
+                          {item.active === false ? "Inactive" : "Active"}
+                        </span>
+                      </td>
+                    )}
                     {item.names && (
                       <td className="text-sm capitalize text-slate-400">{item.names}</td>
                     )}
@@ -308,7 +352,7 @@ export default function page() {
                 ))}
                 {!categoryTableFiltered.length && (
                   <tr>
-                    <td colSpan={tab === "category" ? 5 : 4} className="py-16 text-center text-sm text-slate-500">
+                    <td colSpan={tab === "category" ? 6 : 4} className="py-16 text-center text-sm text-slate-500">
                       No {tab} entries found.
                     </td>
                   </tr>
@@ -335,6 +379,7 @@ export default function page() {
           handleClose={() => (editValues ? setEditValues(null) : setIsAdd(false))}
           tab={tab}
           editValue={editValues}
+          defaultLocation={categoryScope === "live" ? "Live/Channels" : undefined}
           handleReset={() => [handleRefreshMedia()]}
         />
       )}

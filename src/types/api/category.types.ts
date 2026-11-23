@@ -15,6 +15,7 @@ export interface ICategory {
     position?: string;
     location?: CategoryLocation;
     feedType?: "standard" | "personalized";
+    active?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -37,6 +38,7 @@ export interface IAddCategory {
     title?: string
     position?: number
     location?: CategoryLocation
+    active?: boolean
 }
 
 export type CategoryLocation =
