@@ -9,10 +9,11 @@ import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import AddComponent from './AddComponentAD'
+import CampaignAnalyticsPanel from './CampaignAnalyticsPanel'
 
 export const runtime = 'edge'
 
-type StatusFilter = 'all' | 'active' | 'scheduled' | 'paused'
+type StatusFilter = 'all' | 'active' | 'scheduled' | 'paused' | 'archived'
 
 const placementLabel: Record<IAdsData['type'], string> = {
   general: 'General',
@@ -24,6 +25,7 @@ const placementLabel: Record<IAdsData['type'], string> = {
 
 const campaignStatus = (ad: IAdsData) => {
   const now = Date.now()
+  if (ad.archivedAt || new Date(ad.expiry).getTime() <= now) return 'archived' as const
   if (!ad.active) return 'paused' as const
   if (new Date(ad.start).getTime() > now) return 'scheduled' as const
   return 'active' as const
@@ -37,6 +39,7 @@ export default function AdsPage() {
   const [loading, setLoading] = useState(true)
   const [editorOpen, setEditorOpen] = useState(false)
   const [selectedAd, setSelectedAd] = useState<IAdsData | null>(null)
+  const [analyticsAd, setAnalyticsAd] = useState<IAdsData | null>(null)
 
   const loadAds = useCallback(async (requestedPage = page) => {
     setLoading(true)
@@ -86,6 +89,7 @@ export default function AdsPage() {
   }
 
   return <section className="relative h-full overflow-y-auto px-5 pb-12 lg:px-8">
+    {analyticsAd ? <CampaignAnalyticsPanel ad={analyticsAd} onClose={() => setAnalyticsAd(null)} /> : null}
     <div className="flex flex-col gap-4 border-b border-white/10 py-6 sm:flex-row sm:items-end sm:justify-between">
       <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-400">Campaign management</p><h1 className="mt-2 text-2xl font-semibold text-white">Ad Manager</h1><p className="mt-1 max-w-2xl text-sm text-slate-400">Create, schedule, edit, pause, and remove every Reeplay ad placement from one workspace.</p></div>
       {!editorOpen ? <button type="button" onClick={openCreate} className="rounded-xl bg-red px-5 py-3 text-sm font-semibold text-white">+ New campaign</button> : null}
@@ -101,7 +105,7 @@ export default function AdsPage() {
 
       <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#151922] p-4 lg:flex-row lg:items-center">
         <div className="relative flex-1"><Image src="/searchIcon.svg" alt="" width={17} height={17} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search title, brand, or placement" className="w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-11 pr-4 text-sm text-white outline-none" /></div>
-        <select value={status} onChange={event => setStatus(event.target.value as StatusFilter)} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white"><option value="all">All statuses</option><option value="active">Live now</option><option value="scheduled">Scheduled</option><option value="paused">Paused</option></select>
+        <select value={status} onChange={event => setStatus(event.target.value as StatusFilter)} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white"><option value="all">All statuses</option><option value="active">Live now</option><option value="scheduled">Scheduled</option><option value="paused">Paused</option><option value="archived">Archived</option></select>
         <button type="button" onClick={() => void loadAds(page)} disabled={loading} className="rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-50">{loading ? 'Refreshing…' : 'Refresh'}</button>
       </div>
 
@@ -116,7 +120,7 @@ export default function AdsPage() {
               <td className="px-4 py-4"><span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">{placementLabel[ad.type] ?? ad.type}</span></td>
               <td className="px-4 py-4"><p>{new Date(ad.start).toLocaleString()}</p><p className="mt-1 text-xs text-slate-500">to {new Date(ad.expiry).toLocaleString()}</p></td>
               <td className="px-4 py-4"><StatusBadge status={currentStatus} /></td>
-              <td className="px-4 py-4"><div className="flex justify-end gap-2"><button type="button" onClick={() => openEdit(ad)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/5">Edit</button><button type="button" onClick={() => void remove(ad)} className="rounded-lg border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10">Delete</button></div></td>
+              <td className="px-4 py-4"><div className="flex justify-end gap-2"><button type="button" onClick={() => setAnalyticsAd(ad)} className="rounded-lg border border-emerald-500/20 px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10">Analytics</button><button type="button" onClick={() => openEdit(ad)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/5">Edit</button><button type="button" onClick={() => void remove(ad)} className="rounded-lg border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10">Delete</button></div></td>
             </tr>
           })}</tbody>
         </table>
@@ -131,7 +135,7 @@ function Metric({ label, value, tone = 'text-white' }: { label: string; value: n
   return <div className="rounded-2xl border border-white/10 bg-[#151922] p-4"><p className="text-xs text-slate-500">{label}</p><p className={`mt-2 text-2xl font-semibold ${tone}`}>{value}</p></div>
 }
 
-function StatusBadge({ status }: { status: 'active' | 'scheduled' | 'paused' }) {
-  const styles = status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : status === 'scheduled' ? 'bg-amber-500/10 text-amber-300' : 'bg-slate-500/10 text-slate-400'
+function StatusBadge({ status }: { status: 'active' | 'scheduled' | 'paused' | 'archived' }) {
+  const styles = status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : status === 'scheduled' ? 'bg-amber-500/10 text-amber-300' : status === 'archived' ? 'bg-purple-500/10 text-purple-300' : 'bg-slate-500/10 text-slate-400'
   return <span className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${styles}`}>{status === 'active' ? 'Live now' : status}</span>
 }

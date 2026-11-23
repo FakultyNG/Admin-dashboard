@@ -28,6 +28,10 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
     localDateTime(ad?.expiry ?? new Date(Date.now() + 604800000)),
   )
   const [active, setActive] = useState(ad?.active ?? true)
+  const [advertiserEmails, setAdvertiserEmails] = useState((ad?.advertiserEmails ?? []).join(', '))
+  const [reportDelivery, setReportDelivery] = useState<IAdsData['reportDelivery']>(ad?.reportDelivery ?? 'none')
+  const [reportFrequency, setReportFrequency] = useState<IAdsData['reportFrequency']>(ad?.reportFrequency ?? 'weekly')
+  const [reportTimezone, setReportTimezone] = useState(ad?.reportTimezone ?? 'Africa/Lagos')
   const [poster, setPoster] = useState<File | null>(null)
   const [video, setVideo] = useState<File | null>(null)
   const [preview, setPreview] = useState(ad?.photoUrl ?? '')
@@ -41,7 +45,8 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
   )
 
   const generalValid = Boolean(
-    title.trim() && brand.trim() && cta.trim() && link.trim() && start && expiry,
+    title.trim() && brand.trim() && cta.trim() && link.trim() && start && expiry &&
+      (reportDelivery === 'none' || advertiserEmails.trim()),
   )
   const mediaValid = Boolean(
     (editing ? preview : poster) &&
@@ -77,6 +82,11 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
       toast('Enter a complete CTA link beginning with https://', {type: 'error'})
       return false
     }
+    const emails = advertiserEmails.split(',').map(value => value.trim()).filter(Boolean)
+    if (reportDelivery !== 'none' && (!emails.length || emails.some(email => !/^\S+@\S+\.\S+$/.test(email)))) {
+      toast('Enter at least one valid advertiser email address.', {type: 'error'})
+      return false
+    }
     return true
   }
 
@@ -106,6 +116,10 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
           start: new Date(start).toISOString(),
           expiry: new Date(expiry).toISOString(),
           active,
+          advertiserEmails: advertiserEmails.split(',').map(value => value.trim().toLowerCase()).filter(Boolean),
+          reportDelivery,
+          reportFrequency,
+          reportTimezone,
         }),
       )
       if (poster) form.append('image', poster)
@@ -217,7 +231,7 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
                   className="ad-input [color-scheme:dark]"
                 />
               </Field>
-              <Field label="Expires" required hint="Expired campaigns are deleted automatically.">
+              <Field label="Expires" required hint="Expired campaigns are archived with analytics retained.">
                 <input
                   type="datetime-local"
                   min={start}
@@ -226,6 +240,39 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
                   className="ad-input [color-scheme:dark]"
                 />
               </Field>
+              <Field label="Advertiser report emails" required={reportDelivery !== 'none'} hint="Separate multiple addresses with commas.">
+                <input
+                  type="text"
+                  value={advertiserEmails}
+                  onChange={event => setAdvertiserEmails(event.target.value)}
+                  className="ad-input"
+                  placeholder="advertiser@example.com"
+                />
+              </Field>
+              <Field label="Report delivery" hint="Choose one delivery format.">
+                <select value={reportDelivery} onChange={event => setReportDelivery(event.target.value as IAdsData['reportDelivery'])} className="ad-input">
+                  <option value="none">Off</option>
+                  <option value="live_link">Secure live analytics link</option>
+                  <option value="csv">CSV attachment</option>
+                </select>
+              </Field>
+              {reportDelivery !== 'none' ? <>
+                <Field label="Delivery frequency" required>
+                  <select value={reportFrequency} onChange={event => setReportFrequency(event.target.value as IAdsData['reportFrequency'])} className="ad-input">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </Field>
+                <Field label="Report timezone" required hint="Used for report timestamps.">
+                  <select value={reportTimezone} onChange={event => setReportTimezone(event.target.value)} className="ad-input">
+                    <option value="Africa/Lagos">Africa/Lagos</option>
+                    <option value="UTC">UTC</option>
+                    <option value="Europe/London">Europe/London</option>
+                    <option value="America/New_York">America/New_York</option>
+                  </select>
+                </Field>
+              </> : null}
             </div>
             <label className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-3">
               <span>
