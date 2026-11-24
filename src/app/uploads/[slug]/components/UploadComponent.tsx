@@ -86,9 +86,9 @@ export interface IFile extends ImageProps {
   file?: File;
 }
 
-function formatVidClass(value: string) {
+function formatVidClass(value: string, isReeplayOriginal = false) {
   const lower = value.toLowerCase();
-  if (lower === "exclusive") return "Exclusive";
+  if (lower === "exclusive" || isReeplayOriginal) return "Reeplay Original";
   if (lower === "premium") return "Premium";
   if (lower === "free") return "Free";
   if (lower === "ad") return "AD";
@@ -124,15 +124,9 @@ export const AddComponent = ({
         ).toISOString(),
   );
   const [class_, setClass] = useState<string>(
-    selectedMedia ? formatVidClass(selectedMedia.vidClass) : "Select",
-  );
-  const [amount, setAmount] = useState<string>(
-    selectedMedia?.amount != null && selectedMedia.amount !== ""
-      ? Number(selectedMedia.amount).toFixed(2)
-      : "",
-  );
-  const [currency, setCurrency] = useState<string>(
-    selectedMedia?.currency ?? "",
+    selectedMedia
+      ? formatVidClass(selectedMedia.vidClass, selectedMedia.isReeplayOriginal)
+      : "Select",
   );
   const [PG, setPG] = useState<string>(
     selectedMedia
@@ -253,8 +247,6 @@ export const AddComponent = ({
     rating === "Select" ||
     portrait === null ||
     portrait_L === null ||
-    (class_.toLowerCase() === "exclusive" &&
-      (amount.trim() === "" || currency.trim() === "")) ||
     Boolean(subtitleFile && subtitle_.toLowerCase().includes("select"));
 
   const missingFields = [
@@ -273,8 +265,6 @@ export const AddComponent = ({
     !portrait && "portrait poster",
     !portrait_L && "landscape poster",
     !color && "cover colour",
-    class_.toLowerCase() === "exclusive" && !amount.trim() && "amount",
-    class_.toLowerCase() === "exclusive" && !currency.trim() && "currency",
     subtitleFile && subtitle_.toLowerCase().includes("select") &&
       "subtitle language",
   ].filter(Boolean) as string[];
@@ -556,7 +546,9 @@ export const AddComponent = ({
       start();
       const res = await getSeasons({ id: seriesId });
       if (res.ok && res.data) {
-        setSeasons(res.data.data);
+        setSeasons(
+          [...res.data.data].sort((a, b) => a.serial_number - b.serial_number),
+        );
       } else {
         setSeasons([]);
         toast(res.data?.message ?? "Seasons could not be loaded.", { type: "error" });
@@ -640,13 +632,10 @@ export const AddComponent = ({
           pg: PG === "G" ? "0" : PG.replace("+", ""),
           releasedDate: dateInputToLagosISOString(releaseDate),
           title: slug.includes("videos") ? subtitle : title,
-          vidClass: class_.toLowerCase(),
+          vidClass: class_ === "Free" ? "free" : "premium",
+          isReeplayOriginal: class_ === "Reeplay Original",
           primaryColor: color,
           ...(!isSeries && { runtime: time }),
-          ...(class_.toLowerCase() === "exclusive" && {
-            amount: Number(amount.trim()),
-            currency,
-          }),
           ...(slug.includes("videos")
             ? { artistName: title }
             : {
@@ -723,8 +712,6 @@ export const AddComponent = ({
           ).toISOString(),
         );
         setClass("Select");
-        setAmount("");
-        setCurrency("");
         setPG("Select");
         setPortrait(null);
         setPortrait_L(null);
@@ -828,7 +815,7 @@ export const AddComponent = ({
                     selectData={[
                       "Free",
                       "Premium",
-                      "Exclusive",
+                      "Reeplay Original",
                       // `${slug === "movies" ? "AD" : ""}`,
                     ].filter((x) => x !== "")}
                     className="border-border_grey text-grey_500 rounded-sm flex-1"
@@ -850,55 +837,12 @@ export const AddComponent = ({
                 </div>
               </div>
 
-              {/* AMOUNT */}
-              {class_.toLowerCase() === "exclusive" && (
-                <div className="flex flex-row flex-wrap gap-x-10 gap-y-4">
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="amount"
-                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                    >
-                      AMOUNT *
-                    </label>
-                    <CustomInput
-                      type="text"
-                      id="amount"
-                      className="font-normal w-[140px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                      value={
-                        amount
-                          ? parseFloat(amount).toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })
-                          : ""
-                      }
-                      onChange={(e) => {
-                        let raw = e.target.value.replace(/[^0-9]/g, "");
-                        if (raw === "") {
-                          setAmount("");
-                          return;
-                        }
-                        const numericValue = (parseFloat(raw) / 100).toFixed(2);
-                        setAmount(numericValue);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="currency"
-                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                    >
-                      CURRENCY *
-                    </label>
-                    <SelectInputForm
-                      placeholder={currency}
-                      setType={setCurrency}
-                      selectData={["NGN", "USD", "GMD"]}
-                      className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
-                      textStyles="text-grey_500 text-center"
-                    />
-                  </div>
+              {class_ !== "Select" && class_ !== "Free" && (
+                <div className="rounded-xl border border-[#f04444]/25 bg-[#f04444]/5 px-4 py-3 text-sm text-grey_500">
+                  <span className="font-medium text-white">Fixed store price:</span>{" "}
+                  $0.30 per movie or $0.80 per season, with 30 days of access.
+                  {class_ === "Reeplay Original" &&
+                    " Reeplay Original is premium access with Reeplay branding."}
                 </div>
               )}
 
@@ -1891,8 +1835,13 @@ export const AddComponent = ({
                     </p>
                     <h3 className="mt-2 text-xl font-semibold text-white">Seasons & episodes</h3>
                     <p className="mt-1 text-sm leading-6 text-grey_500">
-                      Add one season at a time. Each season must contain an episode before the next season can be created.
+                      Build the series in order: save its details, add a season, then add episodes from Episode 1 downward.
                     </p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-grey_500">1. Series details saved</span>
+                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-grey_500">2. Add seasons</span>
+                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-grey_500">3. Add episodes & subtitles</span>
+                    </div>
                     {seasonBlockReason ? (
                       <p className="mt-2 text-xs text-amber-300">{seasonBlockReason}</p>
                     ) : null}
@@ -1938,7 +1887,9 @@ export const AddComponent = ({
                 </div>
 
                 <div className="space-y-4">
-                  {seasons.map((season, i) => {
+                  {[...seasons]
+                    .sort((a, b) => a.serial_number - b.serial_number)
+                    .map((season, i) => {
                     return (
                       <SeasonComponent
                         key={

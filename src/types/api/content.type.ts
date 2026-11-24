@@ -15,13 +15,12 @@ export interface ContentData {
   defaultRating: string;
   expiryDate: string;
   vidClass: string;
+  isReeplayOriginal?: boolean;
   videoLink?: string;
   trailerLink?: string;
   removeTrailer?: boolean;
   removeVideo?: boolean;
   artistName?: string;
-  currency?: string;
-  amount?: number;
 }
 
 export interface ContentFormData {

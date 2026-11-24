@@ -75,7 +75,7 @@ export const ClientsComponent = () => {
         undefined,
         {}
     );
-    const isDisable = eventEstimatedPrice === 0 || currency === 'Select' || location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || !videoTrailer || _class.toLowerCase() === 'exclusive' && amount === '' || _class.toLowerCase() === 'exclusive' && currency === ''
+    const isDisable = eventEstimatedPrice === 0 || currency === 'Select' || location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || !videoTrailer
 
     const config = {
         reference: (new Date()).getTime().toString(),
@@ -265,7 +265,6 @@ export const ClientsComponent = () => {
                 start,
                 subTitle: 'subtitle',
                 category,
-                ...(_class.toLowerCase() === 'exclusive' && { amount: Number(amount), currency: currency_e })
             }
 
             if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
@@ -392,7 +391,7 @@ export const ClientsComponent = () => {
                                         <SelectInputForm
                                             placeholder={_class}
                                             setType={setClass}
-                                            selectData={live ? [] : ["Free", "Exclusive"]}
+                                            selectData={live ? [] : ["Free", "Premium"]}
                                             className="font-normal h-[34px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
                                             textStyles="text-grey_500 text-sm"
                                         />
@@ -413,7 +412,7 @@ export const ClientsComponent = () => {
                                     </div>
                                 </div>
 
-                                {_class.toLowerCase() === "exclusive" && (
+                                {false && (
                                     <div className={`flex flex-row items-start ${isChannel ? 'w-[100%]' : 'w-[75%]'} gap-x-5 lg:gap-x-14`}>
                                         <div className="flex flex-col flex-1">
                                             <label

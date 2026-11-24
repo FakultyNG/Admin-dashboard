@@ -327,7 +327,7 @@ function MainComponent({ slug }: Props) {
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
-                            {tx.vidClass}
+                            {tx.isReeplayOriginal ? "Reeplay Original" : tx.vidClass}
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">

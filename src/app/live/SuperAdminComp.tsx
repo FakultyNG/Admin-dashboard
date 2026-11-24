@@ -95,7 +95,11 @@ function SuperAdminComp() {
     selectedEvent ? selectedEvent.description : "",
   );
   const [_class, setClass] = useState<string>(
-    selectedEvent ? selectedEvent.vidClass : "Select",
+    selectedEvent
+      ? selectedEvent.vidClass === "exclusive"
+        ? "premium"
+        : selectedEvent.vidClass
+      : "Select",
   );
   const [pg_M, setPG_] = useState<string>(
     selectedEvent ? selectedEvent.pg : "Select",
@@ -236,10 +240,7 @@ function SuperAdminComp() {
                         ? "Select a channel logo."
                         : !isChannel && !videoTrailer?.file
                           ? "Select a video trailer."
-                          : _class.toLowerCase() === "exclusive" &&
-                              (!amount || Number(amount) <= 0)
-                            ? "Enter a valid price for exclusive content."
-                            : Number(eventHours) <= 0
+                          : Number(eventHours) <= 0
                               ? "Enter a duration greater than zero."
                               : null;
 
@@ -269,9 +270,6 @@ function SuperAdminComp() {
         upcoming: addToUpcoming,
 
         category: categoryIds,
-        ...(_class.toLowerCase() === "exclusive"
-          ? { currency, amount: Number(amount) }
-          : {}),
       };
 
       if (coverImage && coverImage.file)
@@ -395,7 +393,7 @@ function SuperAdminComp() {
       }
 
       setTitle(selectedEvent.title);
-      setClass(selectedEvent.vidClass);
+      setClass(selectedEvent.vidClass === "exclusive" ? "premium" : selectedEvent.vidClass);
       setPG_(selectedEvent.pg);
       setLocation(selectedEvent.location);
       setActive(selectedEvent.active);
@@ -755,7 +753,7 @@ function SuperAdminComp() {
                         <SelectInputForm
                           placeholder={_class}
                           setType={setClass}
-                          selectData={["Free", "Premium", "Exclusive"]}
+                          selectData={["Free", "Premium"]}
                           className="font-normal h-[30px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
                           textStyles="text-grey_500 text-sm"
                         />
@@ -776,7 +774,7 @@ function SuperAdminComp() {
                       </div>
                     </div>
 
-                    {_class.toLowerCase() === "exclusive" && (
+                    {false && (
                       <div className="flex w-[75%] gap-5 lg:gap-14">
                         <div className="flex-1">
                           <label className={`${roboto_500.className} text-base text-white`}>
@@ -1410,8 +1408,7 @@ function SuperAdminComp() {
                   loading_B ||
                   !coverImage?.file ||
                   (isChannel ? !image?.file : !videoTrailer?.file) ||
-                  (_class.toLowerCase() === "exclusive" &&
-                    (!amount || Number(amount) <= 0))
+                  false
                 }
               />
               {formError && (

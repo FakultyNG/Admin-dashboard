@@ -2,7 +2,7 @@ export const F_Table = [
   {
     title: "Mum's Soldier",
     rating: "4.6",
-    class: "exclusive",
+    class: "premium",
     type: "movie",
     expired: "12-5-2023",
     views: "654,234",

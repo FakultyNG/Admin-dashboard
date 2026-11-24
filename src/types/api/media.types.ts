@@ -21,8 +21,7 @@ export interface IMediaData {
     description: string;
     viewsCount: number;
     vidClass: string;
-    amount?: number | string;
-    currency?: string;
+    isReeplayOriginal?: boolean;
     pg: string;
     primaryColor: string;
     genre: ICategory[];

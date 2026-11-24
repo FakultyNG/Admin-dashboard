@@ -121,7 +121,10 @@ export default function SeasonComponent({ season, handleFunc }: Props) {
             <div>
               <h4 className="text-sm font-semibold text-white">Episodes</h4>
               <p className="mt-1 text-xs text-grey_500">
-                Add the full episode and trailer, then attach any subtitle tracks.
+                Displayed in play order. Add the full episode and trailer, then attach subtitle tracks.
+              </p>
+              <p className={`mt-1 text-xs ${episodes.length === 8 ? "text-emerald-300" : "text-amber-200"}`}>
+                Acquisition target: 8 episodes per published season ({episodes.length}/8 added). This is advisory, not enforced.
               </p>
             </div>
             <button
