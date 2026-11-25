@@ -20,6 +20,7 @@ import {
   preserveSubtitleFile,
   validateSubtitleFile,
 } from "@/utilities/subtitleUtils";
+import { uploadVideoResumably } from "@/utilities/resumableVideoUpload";
 
 type Props = {
   episode: IEpisodeData;
@@ -54,6 +55,9 @@ export default function EpisodeComponent({
   const [trailerUrl, setTrailerUrl] = useState("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [trailerFile, setTrailerFile] = useState<File | null>(null);
+  const [videoDirectUploadId, setVideoDirectUploadId] = useState<string | null>(null);
+  const [trailerDirectUploadId, setTrailerDirectUploadId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [subtitleLanguage, setSubtitleLanguage] = useState("Select Language");
@@ -61,6 +65,9 @@ export default function EpisodeComponent({
   const [subtitles, setSubtitles] = useState<ISubtitle[]>([]);
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleDeletingId, setSubtitleDeletingId] = useState("");
+
+  useEffect(() => setVideoDirectUploadId(null), [videoFile]);
+  useEffect(() => setTrailerDirectUploadId(null), [trailerFile]);
 
   const currentVideo = episode.video ?? "";
   const currentTrailer = episode.trailer ?? "";
@@ -140,10 +147,27 @@ export default function EpisodeComponent({
       if (!videoFile && videoUrl.trim()) payload.videoLink = videoUrl.trim();
       if (!trailerFile && trailerUrl.trim()) payload.trailerLink = trailerUrl.trim();
 
+      if (videoFile) {
+        const uploadId = videoDirectUploadId ?? await uploadVideoResumably(videoFile, {
+          mediaKind: "main",
+          target: "episode",
+          onProgress: (percent) => setUploadProgress(`Uploading episode: ${percent}%`),
+        });
+        setVideoDirectUploadId(uploadId);
+        payload.videoUploadId = uploadId;
+      }
+      if (trailerFile) {
+        const uploadId = trailerDirectUploadId ?? await uploadVideoResumably(trailerFile, {
+          mediaKind: "trailer",
+          target: "episode",
+          onProgress: (percent) => setUploadProgress(`Uploading trailer: ${percent}%`),
+        });
+        setTrailerDirectUploadId(uploadId);
+        payload.trailerUploadId = uploadId;
+      }
+
       const data = new FormData();
       data.append("data", JSON.stringify(payload));
-      if (videoFile) data.append("video", videoFile);
-      if (trailerFile) data.append("trailer", trailerFile);
 
       const response = isNew
         ? await addEpisodes(data, seasonId)
@@ -164,6 +188,7 @@ export default function EpisodeComponent({
           : `Episode saved, but the subtitle upload failed: ${subtitleResult.message}`,
         { type: subtitleResult.ok ? "success" : "warning" },
       );
+      setUploadProgress("");
       onSaved();
     } catch (error) {
       toast(error instanceof Error ? error.message : "The episode could not be saved.", {
@@ -352,6 +377,9 @@ export default function EpisodeComponent({
           />
 
           <div className="flex flex-col-reverse gap-3 border-t border-white/[0.07] pt-5 sm:flex-row sm:items-center sm:justify-between">
+            {uploadProgress ? (
+              <p className="text-sm font-medium text-white">{uploadProgress} · safe to retry</p>
+            ) : null}
             {!isNew ? (
               <button
                 type="button"
@@ -407,6 +435,9 @@ function MediaSourceField({
       <legend className="px-1 text-sm font-semibold text-white">
         {label} {required ? <span className="text-red-400">*</span> : null}
       </legend>
+      <p className="mb-3 text-xs text-grey_500">
+        MP4 (H.264/AAC) recommended · MOV/M4V/MXF accepted · {label.toLowerCase().includes("trailer") ? "1 GB" : "10 GB"} max · resumable
+      </p>
       {currentUrl ? (
         <a
           href={currentUrl}
@@ -442,7 +473,7 @@ function MediaSourceField({
         <input
           key={file?.name ?? "empty"}
           type="file"
-          accept="video/*"
+          accept="video/*,.mp4,.mov,.m4v,.mxf"
           className="sr-only"
           disabled={Boolean(url)}
           onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}

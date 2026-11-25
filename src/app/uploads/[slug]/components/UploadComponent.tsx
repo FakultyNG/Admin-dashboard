@@ -53,6 +53,7 @@ import {
   preserveSubtitleFile,
   validateSubtitleFile,
 } from "@/utilities/subtitleUtils";
+import { uploadVideoResumably } from "@/utilities/resumableVideoUpload";
 
 interface ModalProps {
   handleClose: () => void;
@@ -144,6 +145,9 @@ export const AddComponent = ({
   const [subtitleFile, setSubtitleFile] = useState<IFile | null>(null);
   const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
   const [videoTrailer_2, setVideoTrailer_2] = useState<IFile | null>(null);
+  const [trailerDirectUploadId, setTrailerDirectUploadId] = useState<string | null>(null);
+  const [videoDirectUploadId, setVideoDirectUploadId] = useState<string | null>(null);
+  const [directUploadProgress, setDirectUploadProgress] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [thumbnailUrl_2, setThumbnailUrl_2] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -655,7 +659,13 @@ export const AddComponent = ({
       if (slug.includes("videos")) content.data.artistName = title;
 
       if (videoTrailer && videoTrailer.file) {
-        formdata.append("trailer", videoTrailer.file);
+        const uploadId = trailerDirectUploadId ?? await uploadVideoResumably(videoTrailer.file, {
+          mediaKind: "trailer",
+          target: "vod",
+          onProgress: (percent) => setDirectUploadProgress(`Uploading trailer: ${percent}%`),
+        });
+        setTrailerDirectUploadId(uploadId);
+        content.data.trailerUploadId = uploadId;
       } else if (selectedMedia && trailerRemoved) {
         content.data.removeTrailer = true;
       } else if (!selectedMedia || trailerChanged) {
@@ -663,7 +673,13 @@ export const AddComponent = ({
         if (trailerLink) content.data.trailerLink = trailerLink;
       }
       if (videoTrailer_2 && videoTrailer_2.file && !slug.includes("series")) {
-        formdata.append("video", videoTrailer_2.file);
+        const uploadId = videoDirectUploadId ?? await uploadVideoResumably(videoTrailer_2.file, {
+          mediaKind: "main",
+          target: "vod",
+          onProgress: (percent) => setDirectUploadProgress(`Uploading main video: ${percent}%`),
+        });
+        setVideoDirectUploadId(uploadId);
+        content.data.videoUploadId = uploadId;
       } else if (
         !slug.includes("series") &&
         (!selectedMedia || mainVideoChanged)
@@ -692,6 +708,7 @@ export const AddComponent = ({
                   : slug,
           );
       if (res.ok && res.data) {
+        setDirectUploadProgress("");
         toast(res.data.message, { type: "success" });
         if (!selectedMedia && subtitleFile?.file) {
           setSrtLoading(true);
@@ -754,6 +771,9 @@ export const AddComponent = ({
     handleInputChange(genriesPlaceholder);
     handleInputChange(cat_Placeholder, "categories");
   }, [genriesPlaceholder, cat_Placeholder]);
+
+  useEffect(() => setTrailerDirectUploadId(null), [videoTrailer?.file]);
+  useEffect(() => setVideoDirectUploadId(null), [videoTrailer_2?.file]);
 
   useEffect(() => {
     if (genries) setGenriesList(genries.data);
@@ -1131,6 +1151,7 @@ export const AddComponent = ({
                   {isSeries ? "(Optional)" : "(90 sec max) *"}
                 </span>
               </label>
+              <p className="ml-2.5 mt-1 text-xs text-grey_500">MP4 (H.264/AAC) recommended · MOV/M4V/MXF accepted · 1 GB max · resumable</p>
               <CustomInput
                 type="text"
                 id="trailer"
@@ -1473,6 +1494,7 @@ export const AddComponent = ({
                         : "MOVIE"}{" "}
                     FILE *
                   </label>
+                  <p className="ml-2.5 mt-1 text-xs text-grey_500">MP4 (H.264/AAC) recommended · MOV/M4V/MXF accepted · 25 GB max · resumable</p>
                   <CustomInput
                     type="text"
                     id="movie"
@@ -2118,6 +2140,11 @@ export const AddComponent = ({
                 ? "Ready to create. Seasons and episodes unlock after this step."
                 : "Ready to save."}
           </p>
+          {directUploadProgress ? (
+            <p className="text-sm font-medium text-white">
+              {directUploadProgress} · safe to retry if interrupted
+            </p>
+          ) : null}
           <AppButton
             title={
               selectedMedia || createdSeriesId

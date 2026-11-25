@@ -20,6 +20,8 @@ export interface ContentData {
   trailerLink?: string;
   removeTrailer?: boolean;
   removeVideo?: boolean;
+  videoUploadId?: string;
+  trailerUploadId?: string;
   artistName?: string;
 }
 

@@ -9,6 +9,51 @@ import {
   ISubtitleResponse,
 } from "@/types/api/content.type";
 
+export interface MultipartUploadSession {
+  sessionId: string;
+  partSize: number;
+  totalParts: number;
+  expiresAt: string;
+}
+
+export interface MultipartUploadStatus extends MultipartUploadSession {
+  status: "active" | "uploaded" | "completed" | "aborted";
+  uploadedParts: Array<{ PartNumber: number; ETag: string; Size: number }>;
+  videoUploadId: string | null;
+}
+
+interface DataResponse<T> extends IGeneric { data: T }
+
+export const initiateMultipartUpload = async (data: {
+  fileName: string;
+  contentType: string;
+  size: number;
+  mediaKind: "main" | "trailer";
+  target: "vod" | "episode";
+}) => await apiCall<DataResponse<MultipartUploadSession>>((baseApi) =>
+  baseApi.post("/superadmin/uploads/multipart/initiate", data),
+);
+
+export const getMultipartUploadStatus = async (sessionId: string) =>
+  await apiCall<DataResponse<MultipartUploadStatus>>((baseApi) =>
+    baseApi.get(`/superadmin/uploads/multipart/${sessionId}`),
+  );
+
+export const signMultipartUploadParts = async (sessionId: string, partNumbers: number[]) =>
+  await apiCall<DataResponse<Array<{ partNumber: number; url: string }>>>((baseApi) =>
+    baseApi.post(`/superadmin/uploads/multipart/${sessionId}/parts`, { partNumbers }),
+  );
+
+export const completeMultipartUpload = async (sessionId: string) =>
+  await apiCall<DataResponse<{ videoUploadId: string; status: string }>>((baseApi) =>
+    baseApi.post(`/superadmin/uploads/multipart/${sessionId}/complete`),
+  );
+
+export const abortMultipartUpload = async (sessionId: string) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.delete(`/superadmin/uploads/multipart/${sessionId}`),
+  );
+
 export const getContentProcessingStatus = async (id: string, live = true) =>
   await apiCall<IContentProcessingResponse>((baseApi) =>
     baseApi.get<IContentProcessingResponse>(
