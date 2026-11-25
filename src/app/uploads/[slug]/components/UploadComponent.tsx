@@ -184,6 +184,7 @@ export const AddComponent = ({
   const [isPreview_2, setIsPreview_2] = useState<boolean>(false);
   const [trailerChanged, setTrailerChanged] = useState(false);
   const [trailerRemoved, setTrailerRemoved] = useState(false);
+  const [mainVideoChanged, setMainVideoChanged] = useState(false);
   const [details, setDetails] = useState(
     selectedMedia ? (selectedMedia.description ?? "") : "",
   );
@@ -229,6 +230,7 @@ export const AddComponent = ({
   const hasTrailer = Boolean(videoTrailer || links?.url || urlLink.trim());
   const hasMainVideo =
     slug.includes("series") ||
+    Boolean(selectedMedia) ||
     Boolean(videoTrailer_2 || links_2?.url || urlLink_2.trim());
   const isDisabled =
     title.trim() === "" ||
@@ -306,6 +308,7 @@ export const AddComponent = ({
             file: files[0],
           });
         } else {
+          setMainVideoChanged(true);
           setVideoTrailer_2({
             name: files[0].name,
             url: videoObjectUrl,
@@ -415,6 +418,7 @@ export const AddComponent = ({
       const res = await getPreview(normalizedUrl);
       if (typeof res === "string") {
         if (type === "2") {
+          setMainVideoChanged(true);
           setLinks_2(transformResponse(res, normalizedUrl));
         } else {
           setTrailerChanged(true);
@@ -425,6 +429,7 @@ export const AddComponent = ({
         return;
       }
       if (type === "2") {
+        setMainVideoChanged(true);
         const linkPreview = transformResponse(res, normalizedUrl);
         setLinks_2(linkPreview);
       } else {
@@ -659,9 +664,14 @@ export const AddComponent = ({
       }
       if (videoTrailer_2 && videoTrailer_2.file && !slug.includes("series")) {
         formdata.append("video", videoTrailer_2.file);
-      } else {
-        if (!slug.includes("series"))
-          content.data.videoLink = links_2?.url ?? urlLink_2;
+      } else if (
+        !slug.includes("series") &&
+        (!selectedMedia || mainVideoChanged)
+      ) {
+        const replacementVideoLink = (links_2?.url ?? urlLink_2).trim();
+        if (replacementVideoLink) {
+          content.data.videoLink = replacementVideoLink;
+        }
       }
 
       formdata.append("data", JSON.stringify(content.data));
