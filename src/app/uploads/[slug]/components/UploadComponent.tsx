@@ -840,7 +840,7 @@ export const AddComponent = ({
               {class_ !== "Select" && class_ !== "Free" && (
                 <div className="rounded-xl border border-[#f04444]/25 bg-[#f04444]/5 px-4 py-3 text-sm text-grey_500">
                   <span className="font-medium text-white">Fixed store price:</span>{" "}
-                  $0.30 per movie or $0.80 per season, with 30 days of access.
+                  $0.59 per movie or $1.59 per season, with 30 days of access.
                   {class_ === "Reeplay Original" &&
                     " Reeplay Original is premium access with Reeplay branding."}
                 </div>
