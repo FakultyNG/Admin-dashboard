@@ -91,6 +91,7 @@ export default function SubtitleManager({
             ref={inputRef}
             id={`subtitle-file-${inputId}`}
             type="file"
+            accept=".srt,.vtt,text/plain,text/vtt,application/x-subrip"
             onChange={async (event) => {
               const selectedFile = event.currentTarget.files?.[0];
               if (selectedFile) await onFileChange(selectedFile);
@@ -121,9 +122,9 @@ export default function SubtitleManager({
       <div className="mt-4 rounded-lg border border-white/[0.07] bg-black2 px-4 py-3 text-xs leading-5 text-grey_500">
         <p className="font-semibold text-white">Subtitle guide</p>
         <p>
-          Caption files up to 5 MB are accepted. SRT and WebVTT are recommended
-          for the widest player compatibility, but encoding and timestamps are
-          not strictly rejected during upload.
+          Upload a valid SRT or WebVTT caption file up to 5 MB. Timestamps are
+          checked before upload and the backend standardizes every track to
+          WebVTT for consistent playback.
         </p>
         <p className="mt-1 font-mono text-[11px] text-grey_500">
           00:00:01,000 --&gt; 00:00:04,000

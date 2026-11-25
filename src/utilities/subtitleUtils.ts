@@ -49,6 +49,26 @@ export async function validateSubtitleFile(file: File): Promise<string | null> {
   if (!normalized || normalized.includes("\0")) {
     return "The selected file is empty or is not a plain-text subtitle.";
   }
+
+  const timingPattern = /^\s*((?:\d{1,2}:)?\d{2}:\d{2}[.,]\d{1,3})\s*-->\s*((?:\d{1,2}:)?\d{2}:\d{2}[.,]\d{1,3})(?:\s+.*)?$/;
+  const toMilliseconds = (value: string) => {
+    const parts = value.replace(",", ".").split(":");
+    const seconds = Number(parts.pop());
+    const minutes = Number(parts.pop());
+    const hours = Number(parts.pop() || 0);
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000;
+  };
+  const timingLines = normalized
+    .split("\n")
+    .map((line) => line.match(timingPattern))
+    .filter((match): match is RegExpMatchArray => Boolean(match));
+
+  if (!timingLines.length) {
+    return "No valid subtitle cues were found. Upload a correctly formatted SRT or WebVTT file.";
+  }
+  if (timingLines.some((match) => toMilliseconds(match[2]) <= toMilliseconds(match[1]))) {
+    return "A subtitle cue ends before it starts. Correct its timestamp and try again.";
+  }
   return null;
 }
 
