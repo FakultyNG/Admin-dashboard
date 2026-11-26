@@ -16,7 +16,8 @@ function getObjectSource(value: Record<string, unknown>): unknown {
 
   if (typeof value.Bucket === "string" && typeof value.Key === "string") {
     const encodedKey = value.Key.split("/").map(encodeURIComponent).join("/");
-    return `https://${value.Bucket}.s3.amazonaws.com/${encodedKey}`;
+    const apiOrigin = new URL(MAIN_API_BASE_URL).origin;
+    return `${apiOrigin}/media/images/${encodedKey}`;
   }
 
   return null;
@@ -40,7 +41,21 @@ export function normalizeImageSource(value: unknown): string | null {
   }
 
   if (source.startsWith("//")) return `https:${source}`;
-  if (/^(https?:|blob:|data:)/i.test(source)) return source;
+  if (/^(blob:|data:)/i.test(source)) return source;
+  if (/^https?:/i.test(source)) {
+    try {
+      const parsed = new URL(source);
+      if (/^(?:[^.]+\.)?s3(?:[.-][^.]+)?\.amazonaws\.com$/i.test(parsed.hostname)) {
+        const parts = parsed.pathname.split("/").filter(Boolean);
+        const objectParts = parsed.hostname.startsWith("s3") ? parts.slice(1) : parts;
+        const apiOrigin = new URL(MAIN_API_BASE_URL).origin;
+        return `${apiOrigin}/media/images/${objectParts.map(encodeURIComponent).join("/")}`;
+      }
+    } catch {
+      return null;
+    }
+    return source;
+  }
   if (source.startsWith("/")) return source;
   if (/^[\w.-]+\.[a-z]{2,}(?:\/|$)/i.test(source)) return `https://${source}`;
 

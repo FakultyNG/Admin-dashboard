@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://reeplay-api-ts-production.up.railway.app",
+      "url": "https://api.reeplay.app",
       "description": "Railway production candidate"
     },
     {

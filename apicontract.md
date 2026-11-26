@@ -4,7 +4,7 @@
 
 ## Environments
 
-- Railway: `https://reeplay-api-ts-production.up.railway.app`
+- Production API: `https://api.reeplay.app`
 - Local: `http://localhost:3000`
 - API prefix: `/api/v1`
 - Interactive docs: `/api-docs`
@@ -325,4 +325,3 @@ The OpenAPI document contains reusable schemas for authentication, onboarding, p
 - `GET /superadmin/media/read-photo` and `GET /superadmin/media/read-subtitle` currently validate a JSON body. Some clients/proxies do not reliably send GET bodies; migrate these values to query parameters in a versioned change.
 - The inactive `customerRoutes/notificationsRouter.ts` is not mounted and is therefore excluded.
 - Webhook signature requirements are provider-specific and enforced by controller logic where implemented.
-
