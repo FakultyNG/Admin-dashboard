@@ -17,7 +17,10 @@ import {
   changeGiftCardAuthorizationCode,
   getGiftCardAuthorizationStatus,
   getGuestAccessSetting,
+  getLiveAccessSetting,
   updateGuestAccessSetting,
+  updateLiveAccessSetting,
+  type LiveAccessSetting,
 } from '@/api/platformSettings.api'
 import { toast } from 'react-toastify'
 
@@ -79,6 +82,9 @@ export default function page() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isModal, setIsModal] = useState<boolean>(false);
   const [savingGuestAccess, setSavingGuestAccess] = useState(false)
+  const [liveSetting, setLiveSetting] = useState<LiveAccessSetting>({enabled: true})
+  const [loadingLiveSetting, setLoadingLiveSetting] = useState(true)
+  const [savingLiveSetting, setSavingLiveSetting] = useState(false)
 
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
@@ -119,7 +125,36 @@ export default function page() {
         setGiftCardCodeConfigured(response.data.data.configured)
       }
     })
+    getLiveAccessSetting().then(response => {
+      if (response.ok && response.data?.data) {
+        setLiveSetting(response.data.data)
+      } else {
+        toast('Could not load the Live visibility setting', {type: 'error'})
+      }
+      setLoadingLiveSetting(false)
+    })
   }, [])
+
+  const toggleLiveAccess = async () => {
+    if (loadingLiveSetting || savingLiveSetting) return
+    const nextEnabled = !liveSetting.enabled
+    const confirmed = window.confirm(
+      nextEnabled
+        ? 'Turn Live on? The Live tab and Live content will become available in the mobile app.'
+        : 'Turn Live off? The Live tab, Live entry points, and Live notifications will be hidden. Existing Live configuration will be kept.',
+    )
+    if (!confirmed) return
+
+    setSavingLiveSetting(true)
+    const response = await updateLiveAccessSetting(nextEnabled)
+    setSavingLiveSetting(false)
+    if (!response.ok || !response.data?.data) {
+      toast(response.data?.message || 'Could not update Live visibility', {type: 'error'})
+      return
+    }
+    setLiveSetting(response.data.data)
+    toast(response.data.message, {type: 'success'})
+  }
 
   const saveSettings = async () => {
     if (tab === 'general') {
@@ -531,6 +566,47 @@ export default function page() {
         <>
 
           <div className="space-y-6">
+            <div className="mt-10 rounded-2xl border border-white/10 bg-[#111319] p-5 sm:p-6">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${liveSetting.enabled ? 'bg-emerald-400' : 'bg-grey_700'}`} />
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-grey_500">
+                      Mobile app feature
+                    </p>
+                  </div>
+                  <h2 className="text-xl font-medium text-white">Live section</h2>
+                  <p className="mt-2 text-sm leading-6 text-grey_500">
+                    {liveSetting.enabled
+                      ? 'Live is visible. Customers can open the Live tab and receive Live event notifications.'
+                      : 'Live is hidden. The app uses a balanced three-tab navigation while your Live setup stays safely stored.'}
+                  </p>
+                  {liveSetting.updatedAt ? (
+                    <p className="mt-3 text-xs text-grey_700">
+                      Last changed {new Date(liveSetting.updatedAt).toLocaleString()}
+                      {liveSetting.updatedBy?.name || liveSetting.updatedBy?.email
+                        ? ` by ${liveSetting.updatedBy.name || liveSetting.updatedBy.email}`
+                        : ''}
+                    </p>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={liveSetting.enabled}
+                  aria-label={`${liveSetting.enabled ? 'Disable' : 'Enable'} Live in the mobile app`}
+                  disabled={loadingLiveSetting || savingLiveSetting}
+                  onClick={toggleLiveAccess}
+                  className="group flex min-w-[150px] items-center justify-between gap-4 rounded-full border border-white/10 bg-black/30 px-4 py-3 text-sm font-medium text-white transition hover:border-white/20 disabled:cursor-wait disabled:opacity-60">
+                  <span>{savingLiveSetting ? 'Saving…' : liveSetting.enabled ? 'Live is on' : 'Live is off'}</span>
+                  <span className={`relative h-7 w-12 rounded-full transition-colors ${liveSetting.enabled ? 'bg-[#EE2726]' : 'bg-[#343741]'}`}>
+                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${liveSetting.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </span>
+                </button>
+              </div>
+            </div>
+
             <div className="mt-10 flex gap-x-10 gap-y-10 flex-wrap">
               <div className="pt-14">
                 <AppButton

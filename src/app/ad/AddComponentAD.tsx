@@ -65,6 +65,22 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
     setPreview(URL.createObjectURL(file))
   }
 
+  const chooseVideo = (file?: File) => {
+    if (!file) {
+      setVideo(null)
+      return
+    }
+    if (file.type !== 'video/mp4' || !file.name.toLowerCase().endsWith('.mp4')) {
+      toast('Choose an MP4 video for the welcome screen.', {type: 'error'})
+      return
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      toast('Welcome videos must be 100 MB or smaller.', {type: 'error'})
+      return
+    }
+    setVideo(file)
+  }
+
   const validateGeneral = () => {
     if (!generalValid) {
       toast('Complete all General fields before continuing.', {type: 'error'})
@@ -297,12 +313,12 @@ export default function AddComponent({ad, onCancel, onSaved}: Props) {
               hint={editing && ad?.type !== 'home_ad' ? 'Leave empty to retain the current video.' : undefined}>
               <input
                 type="file"
-                accept="video/*"
-                onChange={event => setVideo(event.target.files?.[0] ?? null)}
+                accept="video/mp4,.mp4"
+                onChange={event => chooseVideo(event.target.files?.[0])}
                 className="ad-file"
               />
               <p className="mt-2 text-xs leading-5 text-slate-500">
-                Recommended 1080 × 1920 (9:16). Plays on the authentication welcome screen.
+                MP4 only, maximum 100 MB. Recommended 1080 × 1920 (9:16). Plays on the authentication welcome screen.
               </p>
               {video ? (
                 <p className="mt-3 truncate text-xs text-emerald-400">Selected: {video.name}</p>

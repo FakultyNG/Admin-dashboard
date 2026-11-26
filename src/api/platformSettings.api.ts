@@ -14,6 +14,32 @@ export const updateGuestAccessSetting = (enabled: boolean) =>
     api.put('/superadmin/platform-settings/guest-access', { enabled }),
   )
 
+export type LiveAccessSetting = {
+  enabled: boolean
+  updatedAt?: string
+  updatedBy?: {
+    id: string
+    name: string
+    email: string
+  } | null
+}
+
+type LiveAccessResponse = {
+  status: number
+  message: string
+  data: LiveAccessSetting
+}
+
+export const getLiveAccessSetting = () =>
+  apiCall<LiveAccessResponse>(api =>
+    api.get('/superadmin/platform-settings/live-access'),
+  )
+
+export const updateLiveAccessSetting = (enabled: boolean) =>
+  apiCall<LiveAccessResponse>(api =>
+    api.put('/superadmin/platform-settings/live-access', {enabled}),
+  )
+
 type GiftCardAuthorizationStatusResponse = {
   status: number
   message: string
