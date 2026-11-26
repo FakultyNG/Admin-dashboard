@@ -32,12 +32,14 @@ export const featuredApiSlice = apiSlice.injectEndpoints({
 
 export const { useSearchFeaturedContentMutation, useGetFeaturesQuery } = featuredApiSlice;
 
-export const searchFeaturedContent = async (data: string) =>
-  await apiCall((baseApi) =>
-    baseApi.get<IContentSearchResponse>(
-      `/superadmin/shared/featured/contents/search/${data}`
-    )
+export const searchFeaturedContent = async (data: string) => {
+  const token = localStorage.getItem("superadmin_token");
+  return await createAuth.get<IContentSearchResponse>(
+    `/superadmin/shared/featured/contents/search/${encodeURIComponent(data.trim())}`,
+    {},
+    { headers: { "superadmin-auth": token } },
   );
+};
 
 export const addFeaturedContent = async (data: IAddFeatured) =>
   await apiCall((baseApi) =>

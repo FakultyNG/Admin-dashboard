@@ -25,7 +25,7 @@ import Lottie from "lottie-react";
 import Image from "next/image";
 import SafeImage from "@/components/SafeImage";
 import { RowCheckbox, SelectAllCheckbox } from "@/components/BulkSelect";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { IAddFeatured, IFeaturedContentResponse, ILiveContents } from "@/types/api/featured.types";
@@ -62,6 +62,7 @@ export default function page() {
     (IEventData | IUpcomingData)[]
   >([]);
   const [pageNumber, setPageNumber] = useState(1);
+  const searchRequestRef = useRef(0);
   const {
     data: featuredData,
     refetch,
@@ -107,18 +108,31 @@ export default function page() {
 
   async function handleSearch(value: string) {
     setSearchTerm(value);
+    const query = value.trim();
+    const requestId = ++searchRequestRef.current;
 
-    if (value === "") setContentList([]);
+    if (!query) {
+      setContentList([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const res = await searchFeaturedContent(value);
-      if ((res.status === 200 || res.status === 201) && res.data) {
+      const res = await searchFeaturedContent(query);
+      if (requestId !== searchRequestRef.current) return;
+      if (res.ok && res.data) {
         setContentList([...res.data.data.vods.map(x => ({...x, type:'vod'})), ...res.data.data.events.map(x => ({...x, type:'event'}))]);
+      } else {
+        setContentList([]);
+        toast(res.data?.message || "Featured search timed out. Try again.", { type: "error" });
       }
     } catch (error) {
-      toast("Opps! couldn't search for content!", { type: "error" });
+      if (requestId === searchRequestRef.current) {
+        setContentList([]);
+        toast("Couldn't search for content. Try again.", { type: "error" });
+      }
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestRef.current) setLoading(false);
     }
   }
 
