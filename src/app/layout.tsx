@@ -9,6 +9,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import 'video.js/dist/video-js.css';
 import AdminPageIntro from "@/components/AdminPageIntro";
+import { UploadManagerProvider } from "@/components/uploads/UploadManager";
 
 
 
@@ -32,14 +33,16 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${appFont.className} app-body`}>
         <ProviderContainer>
-          <Sidebar />
-          <div className="app-main">
-            <Header />
-            <main className="app-content">
-              <AdminPageIntro />
-              {children}
-            </main>
-          </div>
+          <UploadManagerProvider>
+            <Sidebar />
+            <div className="app-main">
+              <Header />
+              <main className="app-content">
+                <AdminPageIntro />
+                {children}
+              </main>
+            </div>
+          </UploadManagerProvider>
           <ToastContainer
             autoClose={5000}
             position="bottom-right"

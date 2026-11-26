@@ -53,7 +53,7 @@ import {
   preserveSubtitleFile,
   validateSubtitleFile,
 } from "@/utilities/subtitleUtils";
-import { uploadVideoResumably } from "@/utilities/resumableVideoUpload";
+import { useUploadManager } from "@/components/uploads/UploadManager";
 
 interface ModalProps {
   handleClose: () => void;
@@ -147,7 +147,6 @@ export const AddComponent = ({
   const [videoTrailer_2, setVideoTrailer_2] = useState<IFile | null>(null);
   const [trailerDirectUploadId, setTrailerDirectUploadId] = useState<string | null>(null);
   const [videoDirectUploadId, setVideoDirectUploadId] = useState<string | null>(null);
-  const [directUploadProgress, setDirectUploadProgress] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [thumbnailUrl_2, setThumbnailUrl_2] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -208,12 +207,16 @@ export const AddComponent = ({
   const [color, setColor] = useState<string>(
     selectedMedia ? selectedMedia.primaryColor : "#D9D9D9", // ✅ Added fallback default
   );
+  const [publishWhenReady, setPublishWhenReady] = useState(selectedMedia ? !selectedMedia.draft : true);
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
     {},
   );
   const pickerRef = useRef<HTMLDivElement | null>(null);
+  const { startUpload, bindUpload, dismissUpload, getJob } = useUploadManager();
+  const trailerUploadJob = getJob(trailerDirectUploadId);
+  const mainUploadJob = getJob(videoDirectUploadId);
 
   // 🟩 Detect click outside picker to close it
   useEffect(() => {
@@ -658,14 +661,21 @@ export const AddComponent = ({
 
       if (slug.includes("videos")) content.data.artistName = title;
 
+      let trailerJobId = trailerDirectUploadId;
+      let mainJobId = videoDirectUploadId;
+      if (videoTrailer?.file && !trailerJobId) {
+        trailerJobId = startUpload(videoTrailer.file, { mediaKind: "trailer", target: "vod", label: `${content.data.title} · Trailer` });
+        setTrailerDirectUploadId(trailerJobId);
+      }
+      if (videoTrailer_2?.file && !isSeries && !mainJobId) {
+        mainJobId = startUpload(videoTrailer_2.file, { mediaKind: "main", target: "vod", label: `${content.data.title} · Main video` });
+        setVideoDirectUploadId(mainJobId);
+      }
+      const trailerJob = getJob(trailerJobId);
+      const mainJob = getJob(mainJobId);
+
       if (videoTrailer && videoTrailer.file) {
-        const uploadId = trailerDirectUploadId ?? await uploadVideoResumably(videoTrailer.file, {
-          mediaKind: "trailer",
-          target: "vod",
-          onProgress: (percent) => setDirectUploadProgress(`Uploading trailer: ${percent}%`),
-        });
-        setTrailerDirectUploadId(uploadId);
-        content.data.trailerUploadId = uploadId;
+        if (trailerJob?.videoUploadId) content.data.trailerUploadId = trailerJob.videoUploadId;
       } else if (selectedMedia && trailerRemoved) {
         content.data.removeTrailer = true;
       } else if (!selectedMedia || trailerChanged) {
@@ -673,13 +683,7 @@ export const AddComponent = ({
         if (trailerLink) content.data.trailerLink = trailerLink;
       }
       if (videoTrailer_2 && videoTrailer_2.file && !slug.includes("series")) {
-        const uploadId = videoDirectUploadId ?? await uploadVideoResumably(videoTrailer_2.file, {
-          mediaKind: "main",
-          target: "vod",
-          onProgress: (percent) => setDirectUploadProgress(`Uploading main video: ${percent}%`),
-        });
-        setVideoDirectUploadId(uploadId);
-        content.data.videoUploadId = uploadId;
+        if (mainJob?.videoUploadId) content.data.videoUploadId = mainJob.videoUploadId;
       } else if (
         !slug.includes("series") &&
         (!selectedMedia || mainVideoChanged)
@@ -688,6 +692,12 @@ export const AddComponent = ({
         if (replacementVideoLink) {
           content.data.videoLink = replacementVideoLink;
         }
+      }
+      const mainPending = Boolean(videoTrailer_2?.file && !mainJob?.videoUploadId && !isSeries);
+      const trailerPending = Boolean(videoTrailer?.file && !trailerJob?.videoUploadId);
+      if (!isSeries) {
+        content.data.draft = mainPending || trailerPending ? true : !publishWhenReady;
+        content.data.active = publishWhenReady;
       }
 
       formdata.append("data", JSON.stringify(content.data));
@@ -708,7 +718,11 @@ export const AddComponent = ({
                   : slug,
           );
       if (res.ok && res.data) {
-        setDirectUploadProgress("");
+        const savedId = existingContentId || res.data.data._id;
+        if (mainJobId && mainPending) bindUpload(mainJobId, { contentId: savedId, target: "vod", mediaKind: "main", finalizeDraft: publishWhenReady });
+        if (trailerJobId && trailerPending) bindUpload(trailerJobId, { contentId: savedId, target: "vod", mediaKind: "trailer", finalizeDraft: publishWhenReady && !mainPending });
+        if (mainJobId && !mainPending) dismissUpload(mainJobId);
+        if (trailerJobId && !trailerPending) dismissUpload(trailerJobId);
         toast(res.data.message, { type: "success" });
         if (!selectedMedia && subtitleFile?.file) {
           setSrtLoading(true);
@@ -1307,19 +1321,23 @@ export const AddComponent = ({
                       accept="video/*"
                       onChange={(e) => handleInput(e, "trailer")}
                       className="absolute z-20 opacity-0"
-                      disabled={links ? true : false}
+                      disabled={Boolean(links) || Boolean(trailerUploadJob)}
                     />
                   </div>
-                  <div
+                  <button
+                    type="button"
+                    disabled={!videoTrailer?.file || Boolean(trailerUploadJob) || Boolean(links)}
+                    onClick={() => videoTrailer?.file && setTrailerDirectUploadId(startUpload(videoTrailer.file, { mediaKind: "trailer", target: "vod", label: `${subtitle || title || "New content"} · Trailer` }))}
                     className={`${
                       roboto_500.className
-                    } cursor-pointer text-white text-[15px] ${
+                    } cursor-pointer text-white text-[15px] disabled:cursor-not-allowed disabled:opacity-60 ${
                       links ? "bg-grey_800" : "bg-[#EE2726]"
                     } h-[42px] px-4 flex items-center justify-center`}
                   >
-                    UPLOAD
-                  </div>
+                    {trailerUploadJob ? `${trailerUploadJob.progress}%` : "UPLOAD FILE"}
+                  </button>
                 </div>
+                {trailerUploadJob ? <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.07]"><div className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-400 transition-all" style={{width: `${trailerUploadJob.progress}%`}} /></div> : null}
 
                 <>
                   <div className="flex flex-row items-end mt-5 justify-center gap-x-3">
@@ -1673,19 +1691,23 @@ export const AddComponent = ({
                           accept="video/*"
                           onChange={(e) => handleInput(e, "video")}
                           className="absolute z-20 opacity-0"
-                          disabled={links_2 ? true : false}
+                          disabled={Boolean(links_2) || Boolean(mainUploadJob)}
                         />
                       </div>
-                      <div
+                      <button
+                        type="button"
+                        disabled={!videoTrailer_2?.file || Boolean(mainUploadJob) || Boolean(links_2)}
+                        onClick={() => videoTrailer_2?.file && setVideoDirectUploadId(startUpload(videoTrailer_2.file, { mediaKind: "main", target: "vod", label: `${subtitle || title || "New content"} · Main video` }))}
                         className={`${
                           roboto_500.className
-                        } cursor-pointer text-white text-[15px] ${
+                        } cursor-pointer text-white text-[15px] disabled:cursor-not-allowed disabled:opacity-60 ${
                           links_2 ? "bg-grey_800" : "bg-[#EE2726]"
                         } h-[42px] px-4 flex items-center justify-center`}
                       >
-                        UPLOAD
-                      </div>
+                        {mainUploadJob ? `${mainUploadJob.progress}%` : "UPLOAD FILE"}
+                      </button>
                      </div>
+                    {mainUploadJob ? <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.07]"><div className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-400 transition-all" style={{width: `${mainUploadJob.progress}%`}} /></div> : null}
 
                     <div className="mt-5">
                       <label
@@ -2140,11 +2162,8 @@ export const AddComponent = ({
                 ? "Ready to create. Seasons and episodes unlock after this step."
                 : "Ready to save."}
           </p>
-          {directUploadProgress ? (
-            <p className="text-sm font-medium text-white">
-              {directUploadProgress} · safe to retry if interrupted
-            </p>
-          ) : null}
+          <p className="text-xs text-grey_500">Save and close at any time; active uploads remain in Upload Centre.</p>
+          {!isSeries ? <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={publishWhenReady} onChange={event => setPublishWhenReady(event.target.checked)} className="h-4 w-4 accent-red-500" />Publish automatically when all required media is ready</label> : null}
           <AppButton
             title={
               selectedMedia || createdSeriesId
@@ -2153,7 +2172,7 @@ export const AddComponent = ({
                   : "UPDATE"
                 : slug.includes("series")
                   ? "CREATE SERIES"
-                  : "UPLOAD"
+                  : "SAVE & CLOSE"
             }
             disabled={isDisabled || color === ""}
             showPercentage

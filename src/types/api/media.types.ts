@@ -36,6 +36,7 @@ export interface IMediaData {
     featured: boolean;
     featuredSource?: "manual" | "automatic";
     active: boolean;
+    draft?: boolean;
     showViews: boolean;
     upcoming: boolean;
     upcomingSubscribers: string[]

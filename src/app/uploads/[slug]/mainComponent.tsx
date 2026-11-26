@@ -26,6 +26,7 @@ import {
   ListPagination,
 } from "@/components/ListPagination";
 import { ProcessingStatusModal } from "./components/ProcessingStatusModal";
+import { useUploadManager } from "@/components/uploads/UploadManager";
 
 interface Props {
   slug: string;
@@ -43,6 +44,7 @@ function MainComponent({ slug }: Props) {
   const [processingContentId, setProcessingContentId] = useState<string | null>(null);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
   const searchRequest = useRef(0);
+  const { jobs: uploadJobs } = useUploadManager();
   const {
     data: moviesData,
     refetch,
@@ -206,6 +208,14 @@ function MainComponent({ slug }: Props) {
     return () => window.clearInterval(timer);
   }, [mediaList, isAdd, pg, slug]);
 
+  const attachedUploadSignature = uploadJobs
+    .filter(job => job.status === "processing" && job.binding)
+    .map(job => `${job.id}:${job.binding?.contentId}`)
+    .join("|");
+  useEffect(() => {
+    if (attachedUploadSignature && !isAdd) void handleRefreshMedia();
+  }, [attachedUploadSignature, isAdd]);
+
   useEffect(() => {
     if (!processingContentId || processingStatus?.state !== "processing") return;
     const timer = window.setInterval(
@@ -281,6 +291,10 @@ function MainComponent({ slug }: Props) {
                   </thead>
                   <tbody>
                     {mediaFilteredList.map((tx, indx) => {
+                      const localUpload = uploadJobs.find(job =>
+                        job.binding?.target === "vod" && job.binding.contentId === tx._id &&
+                        !["processing", "cancelled"].includes(job.status),
+                      );
                       return (
                         <tr key={indx} className="text-white h-[110px]">
                           <td className="w-12"><RowCheckbox group={`uploads-${slug}`} value={tx._id} label={`Select ${tx.title}`} /></td>
@@ -351,7 +365,9 @@ function MainComponent({ slug }: Props) {
                                       : "border-white/15 bg-white/5 text-gray-300"
                               }`}
                             >
-                              {tx.processing?.published
+                              {localUpload
+                                ? localUpload.status === "uploading" ? `Uploading ${localUpload.progress}%` : localUpload.status.replace("-", " ")
+                                : tx.processing?.published
                                 ? tx.processing.state === "processing" ? "Published · processing" : "Published"
                                 : tx.processing?.state ?? "View status"}
                             </button>

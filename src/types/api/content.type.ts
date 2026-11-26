@@ -23,6 +23,8 @@ export interface ContentData {
   videoUploadId?: string;
   trailerUploadId?: string;
   artistName?: string;
+  draft?: boolean;
+  active?: boolean;
 }
 
 export interface ContentFormData {
@@ -68,6 +70,7 @@ export interface IEpisodeData {
   videoError?: string | null;
   trailerStatus?: "pending" | "processing" | "ready" | "failed";
   trailerError?: string | null;
+  draft?: boolean;
 }
 
 export interface IEpisodeMutationResponse extends IGeneric {

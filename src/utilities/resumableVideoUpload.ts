@@ -5,10 +5,12 @@ import {
   signMultipartUploadParts,
 } from "@/api/contentSlice";
 
-type UploadOptions = {
+export type UploadOptions = {
   mediaKind: "main" | "trailer";
   target: "vod" | "episode";
   onProgress?: (percent: number) => void;
+  onSession?: (sessionId: string) => void;
+  signal?: AbortSignal;
 };
 
 const STORAGE_PREFIX = "reeplay-multipart-v1";
@@ -20,16 +22,17 @@ const fingerprint = (file: File, options: UploadOptions) =>
 
 const fail = (message?: string) => new Error(message || "The resumable upload failed.");
 
-async function putPart(url: string, body: Blob) {
+async function putPart(url: string, body: Blob, signal?: AbortSignal) {
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const response = await fetch(url, { method: "PUT", body });
+      const response = await fetch(url, { method: "PUT", body, signal });
       if (response.ok) return;
       lastError = new Error(`S3 rejected upload part (${response.status})`);
     } catch (error) {
       lastError = error;
     }
+    if (signal?.aborted) throw new DOMException("Upload paused", "AbortError");
     await new Promise((resolve) => setTimeout(resolve, 600 * 2 ** attempt));
   }
   throw lastError instanceof Error ? lastError : fail();
@@ -50,6 +53,7 @@ export async function uploadVideoResumably(file: File, options: UploadOptions) {
   let status = null;
 
   if (sessionId) {
+    options.onSession?.(sessionId);
     const statusResponse = await getMultipartUploadStatus(sessionId);
     if (statusResponse.ok && statusResponse.data?.data.status === "active") {
       status = statusResponse.data.data;
@@ -80,6 +84,7 @@ export async function uploadVideoResumably(file: File, options: UploadOptions) {
     if (!initiated.ok || !initiated.data?.data) throw fail(initiated.data?.message);
     sessionId = initiated.data.data.sessionId;
     localStorage.setItem(storageKey, sessionId);
+    options.onSession?.(sessionId);
     const freshStatus = await getMultipartUploadStatus(sessionId);
     if (!freshStatus.ok || !freshStatus.data?.data) throw fail(freshStatus.data?.message);
     status = freshStatus.data.data;
@@ -104,7 +109,7 @@ export async function uploadVideoResumably(file: File, options: UploadOptions) {
         if (!part) return;
         const start = (part.partNumber - 1) * status!.partSize;
         const end = Math.min(start + status!.partSize, file.size);
-        await putPart(part.url, file.slice(start, end));
+        await putPart(part.url, file.slice(start, end), options.signal);
         uploadedBytes += end - start;
         options.onProgress?.(Math.min(99, Math.round((uploadedBytes / file.size) * 100)));
       }

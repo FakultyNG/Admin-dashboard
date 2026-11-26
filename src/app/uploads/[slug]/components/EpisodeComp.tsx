@@ -20,7 +20,7 @@ import {
   preserveSubtitleFile,
   validateSubtitleFile,
 } from "@/utilities/subtitleUtils";
-import { uploadVideoResumably } from "@/utilities/resumableVideoUpload";
+import { useUploadManager, type UploadJob } from "@/components/uploads/UploadManager";
 
 type Props = {
   episode: IEpisodeData;
@@ -57,7 +57,6 @@ export default function EpisodeComponent({
   const [trailerFile, setTrailerFile] = useState<File | null>(null);
   const [videoDirectUploadId, setVideoDirectUploadId] = useState<string | null>(null);
   const [trailerDirectUploadId, setTrailerDirectUploadId] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [subtitleLanguage, setSubtitleLanguage] = useState("Select Language");
@@ -65,6 +64,11 @@ export default function EpisodeComponent({
   const [subtitles, setSubtitles] = useState<ISubtitle[]>([]);
   const [subtitleBusy, setSubtitleBusy] = useState(false);
   const [subtitleDeletingId, setSubtitleDeletingId] = useState("");
+  const [publishWhenReady, setPublishWhenReady] = useState(!episode.draft);
+  const { jobs, startUpload, bindUpload, dismissUpload, getJob } = useUploadManager();
+  const videoJob = getJob(videoDirectUploadId);
+  const trailerJob = getJob(trailerDirectUploadId);
+  const boundUpload = jobs.find(job => job.binding?.target === "episode" && job.binding.contentId === episode._id && !["processing", "cancelled"].includes(job.status));
 
   useEffect(() => setVideoDirectUploadId(null), [videoFile]);
   useEffect(() => setTrailerDirectUploadId(null), [trailerFile]);
@@ -140,31 +144,30 @@ export default function EpisodeComponent({
 
     try {
       setSaving(true);
-      const payload: Record<string, string> = { title: title.trim() };
+      const payload: Record<string, string | boolean> = { title: title.trim() };
       if (!isNew || description.trim()) {
         payload.description = description.trim();
       }
       if (!videoFile && videoUrl.trim()) payload.videoLink = videoUrl.trim();
       if (!trailerFile && trailerUrl.trim()) payload.trailerLink = trailerUrl.trim();
 
-      if (videoFile) {
-        const uploadId = videoDirectUploadId ?? await uploadVideoResumably(videoFile, {
-          mediaKind: "main",
-          target: "episode",
-          onProgress: (percent) => setUploadProgress(`Uploading episode: ${percent}%`),
-        });
-        setVideoDirectUploadId(uploadId);
-        payload.videoUploadId = uploadId;
+      let mainJobId = videoDirectUploadId;
+      let promoJobId = trailerDirectUploadId;
+      if (videoFile && !mainJobId) {
+        mainJobId = startUpload(videoFile, { mediaKind: "main", target: "episode", label: `${title.trim()} · Episode video` });
+        setVideoDirectUploadId(mainJobId);
       }
-      if (trailerFile) {
-        const uploadId = trailerDirectUploadId ?? await uploadVideoResumably(trailerFile, {
-          mediaKind: "trailer",
-          target: "episode",
-          onProgress: (percent) => setUploadProgress(`Uploading trailer: ${percent}%`),
-        });
-        setTrailerDirectUploadId(uploadId);
-        payload.trailerUploadId = uploadId;
+      if (trailerFile && !promoJobId) {
+        promoJobId = startUpload(trailerFile, { mediaKind: "trailer", target: "episode", label: `${title.trim()} · Trailer` });
+        setTrailerDirectUploadId(promoJobId);
       }
+      const mainJob = getJob(mainJobId);
+      const promoJob = getJob(promoJobId);
+      if (mainJob?.videoUploadId) payload.videoUploadId = mainJob.videoUploadId;
+      if (promoJob?.videoUploadId) payload.trailerUploadId = promoJob.videoUploadId;
+      const mainPending = Boolean(videoFile && !mainJob?.videoUploadId);
+      const trailerPending = Boolean(trailerFile && !promoJob?.videoUploadId);
+      payload.draft = mainPending || trailerPending ? true : !publishWhenReady;
 
       const data = new FormData();
       data.append("data", JSON.stringify(payload));
@@ -179,6 +182,12 @@ export default function EpisodeComponent({
       }
 
       const savedId = response.data.data?._id ?? episode._id;
+      if (savedId) {
+        if (mainJobId && mainPending) bindUpload(mainJobId, { contentId: savedId, target: "episode", mediaKind: "main", finalizeDraft: publishWhenReady });
+        if (promoJobId && trailerPending) bindUpload(promoJobId, { contentId: savedId, target: "episode", mediaKind: "trailer", finalizeDraft: publishWhenReady && !mainPending });
+        if (mainJobId && !mainPending) dismissUpload(mainJobId);
+        if (promoJobId && !trailerPending) dismissUpload(promoJobId);
+      }
       const subtitleResult = savedId
         ? await uploadSelectedSubtitle(savedId)
         : { ok: false, message: "The saved episode ID was missing from the server response." };
@@ -188,7 +197,6 @@ export default function EpisodeComponent({
           : `Episode saved, but the subtitle upload failed: ${subtitleResult.message}`,
         { type: subtitleResult.ok ? "success" : "warning" },
       );
-      setUploadProgress("");
       onSaved();
     } catch (error) {
       toast(error instanceof Error ? error.message : "The episode could not be saved.", {
@@ -265,8 +273,11 @@ export default function EpisodeComponent({
     }
   };
 
-  const readiness =
-    episode.videoStatus === "failed"
+  const readiness = boundUpload
+    ? boundUpload.status === "uploading" ? `Uploading ${boundUpload.progress}%` : boundUpload.status.replace("-", " ")
+    : episode.draft && episode.isVideoReady
+      ? "Draft · ready to publish"
+      : episode.videoStatus === "failed"
       ? `Video failed${episode.videoError ? `: ${episode.videoError}` : ""}`
       : episode.trailerStatus === "failed"
         ? `Trailer failed${episode.trailerError ? `: ${episode.trailerError}` : ""}`
@@ -343,6 +354,8 @@ export default function EpisodeComponent({
               }
               url={videoUrl}
               file={videoFile}
+              uploadJob={videoJob}
+              onUpload={() => videoFile && setVideoDirectUploadId(startUpload(videoFile, { mediaKind: "main", target: "episode", label: `${title.trim() || "New episode"} · Episode video` }))}
               onUrlChange={setVideoUrl}
               onFileChange={setVideoFile}
             />
@@ -357,6 +370,8 @@ export default function EpisodeComponent({
               }
               url={trailerUrl}
               file={trailerFile}
+              uploadJob={trailerJob}
+              onUpload={() => trailerFile && setTrailerDirectUploadId(startUpload(trailerFile, { mediaKind: "trailer", target: "episode", label: `${title.trim() || "New episode"} · Trailer` }))}
               onUrlChange={setTrailerUrl}
               onFileChange={setTrailerFile}
             />
@@ -377,9 +392,8 @@ export default function EpisodeComponent({
           />
 
           <div className="flex flex-col-reverse gap-3 border-t border-white/[0.07] pt-5 sm:flex-row sm:items-center sm:justify-between">
-            {uploadProgress ? (
-              <p className="text-sm font-medium text-white">{uploadProgress} · safe to retry</p>
-            ) : null}
+            <p className="text-xs text-grey_500">Uploads continue in Upload Centre after saving and closing.</p>
+            <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={publishWhenReady} onChange={event => setPublishWhenReady(event.target.checked)} className="h-4 w-4 accent-red-500" />Publish when ready</label>
             {!isNew ? (
               <button
                 type="button"
@@ -418,6 +432,8 @@ type MediaSourceFieldProps = {
   file: File | null;
   onUrlChange: (value: string) => void;
   onFileChange: (value: File | null) => void;
+  uploadJob?: UploadJob;
+  onUpload: () => void;
 };
 
 function MediaSourceField({
@@ -429,6 +445,8 @@ function MediaSourceField({
   file,
   onUrlChange,
   onFileChange,
+  uploadJob,
+  onUpload,
 }: MediaSourceFieldProps) {
   return (
     <fieldset className="rounded-2xl border border-white/[0.08] bg-white/[0.018] p-4">
@@ -475,11 +493,20 @@ function MediaSourceField({
           type="file"
           accept="video/*,.mp4,.mov,.m4v,.mxf"
           className="sr-only"
-          disabled={Boolean(url)}
+          disabled={Boolean(url) || Boolean(uploadJob)}
           onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
         />
       </label>
-      {file || url ? (
+      {file ? (
+        <div className="mt-3 rounded-xl border border-white/[0.08] bg-black/20 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs capitalize text-slate-400">{uploadJob?.status.replace("-", " ") ?? "Ready to upload"}</span>
+            {!uploadJob ? <button type="button" onClick={onUpload} className="rounded-lg bg-red-500 px-3 py-2 text-xs font-semibold text-white hover:bg-red-400">Upload file</button> : <span className="text-xs font-semibold text-white">{uploadJob.progress}%</span>}
+          </div>
+          {uploadJob ? <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.06]"><div className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-400 transition-all" style={{width: `${uploadJob.progress}%`}} /></div> : null}
+        </div>
+      ) : null}
+      {(file || url) && !uploadJob ? (
         <button
           type="button"
           onClick={() => {
