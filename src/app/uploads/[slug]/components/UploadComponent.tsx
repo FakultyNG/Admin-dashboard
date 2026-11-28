@@ -89,7 +89,7 @@ export interface IFile extends ImageProps {
 
 function formatVidClass(value: string, isReeplayOriginal = false) {
   const lower = value.toLowerCase();
-  if (lower === "exclusive" || isReeplayOriginal) return "Reeplay Original";
+  if (lower === "exclusive" || isReeplayOriginal) return "Original";
   if (lower === "premium") return "Premium";
   if (lower === "free") return "Free";
   if (lower === "ad") return "AD";
@@ -645,7 +645,7 @@ export const AddComponent = ({
           releasedDate: dateInputToLagosISOString(releaseDate),
           title: slug.includes("videos") ? subtitle : title,
           vidClass: class_ === "Free" ? "free" : "premium",
-          isReeplayOriginal: class_ === "Reeplay Original",
+          isReeplayOriginal: class_ === "Original",
           primaryColor: color,
           ...(!isSeries && { runtime: time }),
           ...(slug.includes("videos")
@@ -859,7 +859,7 @@ export const AddComponent = ({
                     selectData={[
                       "Free",
                       "Premium",
-                      "Reeplay Original",
+                      "Original",
                       // `${slug === "movies" ? "AD" : ""}`,
                     ].filter((x) => x !== "")}
                     className="border-border_grey text-grey_500 rounded-sm flex-1"
@@ -885,8 +885,8 @@ export const AddComponent = ({
                 <div className="rounded-xl border border-[#f04444]/25 bg-[#f04444]/5 px-4 py-3 text-sm text-grey_500">
                   <span className="font-medium text-white">Fixed store price:</span>{" "}
                   $0.59 per movie or $1.59 per season, with 30 days of access.
-                  {class_ === "Reeplay Original" &&
-                    " Reeplay Original is premium access with Reeplay branding."}
+                  {class_ === "Original" &&
+                    " Original is premium access with Reeplay branding."}
                 </div>
               )}
 
