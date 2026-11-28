@@ -113,9 +113,11 @@ export const ModalComponent = ({
           {
             name: title,
             position: Number(position),
+            ...(tab === "category" && {
+              active: status === "Active",
+            }),
             ...(tab === "category" && !isPersonalizedFeed && location !== "Select" && {
               location: location as CategoryLocation,
-              active: status === "Active",
             }),
           }
   
@@ -268,7 +270,7 @@ export const ModalComponent = ({
               </div>
             )}
 
-            {tab === "category" && !isPersonalizedFeed && (
+            {tab === "category" && (
               <div>
                 <label className={`${roboto_500.className} ml-2.5 text-base font-medium text-white`}>
                   STATUS *
